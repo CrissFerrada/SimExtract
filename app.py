@@ -1963,10 +1963,10 @@ with atab_stab:
     st.markdown("#### Efecto de la temperatura en la estabilidad de antocianinas")
     temp_stab = []
     antos_stab = poly_df[(poly_df["tipo"]=="EP") & (poly_df["clase"]=="Antocianina") & (poly_df["is_major"]==True)]
-    for t in range(20, 82, 2):
+    for t_val in range(20, 82, 2):
         for _, poly in antos_stab.iterrows():
-            r = stability_score(props, poly, t)
-            temp_stab.append({"T (°C)": t, "Polifenol": poly.get("abrev", poly["nombre"]), "Estab. (%)": r["total"]*100})
+            r = stability_score(props, poly, t_val)
+            temp_stab.append({"T (°C)": t_val, "Polifenol": poly.get("abrev", poly["nombre"]), "Estab. (%)": r["total"]*100})
     t_df = pd.DataFrame(temp_stab)
     fig_temp = px.line(t_df, x="T (°C)", y="Estab. (%)", color="Polifenol",
                        color_discrete_sequence=px.colors.qualitative.Vivid)
