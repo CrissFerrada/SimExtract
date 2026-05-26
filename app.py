@@ -11,7 +11,6 @@ Prohibida su reproducción o distribución sin autorización del autor.
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -83,21 +82,11 @@ st.markdown("""
 # ─────────────────────────────────────────────
 # DETECCIÓN DE IDIOMA DEL BROWSER
 # ─────────────────────────────────────────────
-if "lang" not in st.query_params:
-    components.html("""<script>
-(function(){
-    var bl=(navigator.language||navigator.userLanguage||'en').toLowerCase();
-    var lg=bl.startsWith('es')?'es':'en';
-    var url=new URL(window.parent.location.href);
-    url.searchParams.set('lang',lg);
-    window.parent.location.replace(url.toString());
-})();
-</script>""", height=0)
-    st.stop()
-
-LANG = st.query_params.get("lang", "en")
+# Idioma activo: viene del parámetro ?lang= en la URL (persistente).
+# Default: español. El selector en el sidebar permite cambiar en cualquier momento.
+LANG = st.query_params.get("lang", "es")
 if LANG not in ("es", "en"):
-    LANG = "en"
+    LANG = "es"
 
 # ─────────────────────────────────────────────
 # TRADUCCIONES (UI + descripciones principales)
