@@ -11,6 +11,7 @@ Prohibida su reproducción o distribución sin autorización del autor.
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -80,6 +81,248 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
+# DETECCIÓN DE IDIOMA DEL BROWSER
+# ─────────────────────────────────────────────
+if "lang" not in st.query_params:
+    components.html("""<script>
+(function(){
+    var bl=(navigator.language||navigator.userLanguage||'en').toLowerCase();
+    var lg=bl.startsWith('es')?'es':'en';
+    var url=new URL(window.parent.location.href);
+    url.searchParams.set('lang',lg);
+    window.parent.location.replace(url.toString());
+})();
+</script>""", height=0)
+    st.stop()
+
+LANG = st.query_params.get("lang", "en")
+if LANG not in ("es", "en"):
+    LANG = "en"
+
+# ─────────────────────────────────────────────
+# TRADUCCIONES (UI + descripciones principales)
+# ─────────────────────────────────────────────
+TR = {
+    # ── Sidebar ──
+    "sidebar_title":    {"es": "## 🫐 Simulador de NADES",                "en": "## 🫐 NADES Simulator"},
+    "sidebar_subtitle": {"es": "**para extraer polifenoles · Beta 0.6**", "en": "**for polyphenol extraction · Beta 0.6**"},
+    "lang_label":       {"es": "Idioma / Language",                       "en": "Language / Idioma"},
+    "plant_header":     {"es": "### 🌿 Parte de la planta",               "en": "### 🌿 Plant Part"},
+    "plant_radio":      {"es": "Seleccionar parte a simular",             "en": "Select plant part to simulate"},
+    "plant_radio_help": {"es": "Cambia la base de datos de polifenoles según la parte de la planta.",
+                         "en": "Changes the polyphenol database according to the plant part."},
+    "plant_fruit":      {"es": "🫐 Fruto (Baya)",                         "en": "🫐 Fruit (Berry)"},
+    "plant_leaves":     {"es": "🌿 Hojas",                                "en": "🌿 Leaves"},
+    "plant_stem":       {"es": "🪵 Tallo / Corteza",                      "en": "🪵 Stem / Bark"},
+    "nades_header":     {"es": "### ⚗️ Diseña tu NADES",                  "en": "### ⚗️ Design your NADES"},
+    "hba_label":        {"es": "HBA (Aceptor H-Bond)",                    "en": "HBA (H-Bond Acceptor)"},
+    "hbd_label":        {"es": "HBD (Donador H-Bond)",                    "en": "HBD (H-Bond Donor)"},
+    "ratio_label":      {"es": "Razón HBA : HBD",                        "en": "HBA : HBD Ratio"},
+    "water_label":      {"es": "Agua añadida (%)",                        "en": "Added Water (%)"},
+    "temp_label":       {"es": "Temperatura (°C)",                        "en": "Temperature (°C)"},
+    "weights_header":   {"es": "### ⚖️ Pesos de extracción simultánea",   "en": "### ⚖️ Simultaneous Extraction Weights"},
+    "ep_weight_label":  {"es": "Peso EP en score combinado",              "en": "EP weight in combined score"},
+    "ep_weight_help":   {"es": "0.55 = 55% EP · 45% NEP. Ajusta según el objetivo de tu extracción.",
+                         "en": "0.55 = 55% EP · 45% NEP. Adjust according to your extraction goal."},
+    "uae_header":       {"es": "### 🔊 Ultrasonido (UAE)",                "en": "### 🔊 Ultrasound (UAE)"},
+    "freq_label":       {"es": "Frecuencia (kHz)",                        "en": "Frequency (kHz)"},
+    "freq_help":        {"es": "0 kHz = extracción convencional sin ultrasonido. Óptimo ~20-25 kHz para máxima cavitación.",
+                         "en": "0 kHz = conventional extraction without ultrasound. Optimal ~20-25 kHz for maximum cavitation."},
+    "no_us":            {"es": "Sin ultrasonido (convencional)",          "en": "No ultrasound (conventional)"},
+    "low_freq_warn":    {"es": "⚠️ Baja frecuencia: alta energía — revisar estabilidad de antocianinas",
+                         "en": "⚠️ Low frequency: high energy — check anthocyanin stability"},
+    "proc_header":      {"es": "### 🌡️ Condiciones del Proceso",         "en": "### 🌡️ Process Conditions"},
+    "proc_temp_label":  {"es": "Temperatura extracción (°C)",             "en": "Extraction Temperature (°C)"},
+    "proc_temp_help":   {"es": "Rango óptimo 50-60°C (Paso 1 UAE). Afecta degradación térmica.",
+                         "en": "Optimal range 50-60°C (Step 1 UAE). Affects thermal degradation."},
+    "proc_time_label":  {"es": "Tiempo extracción (min)",                 "en": "Extraction Time (min)"},
+    "proc_time_help":   {"es": "Rango óptimo 9-30 min (Paso 1 UAE).",    "en": "Optimal range 9-30 min (Step 1 UAE)."},
+    "filter_header":    {"es": "### 🔬 Filtro de compuestos",             "en": "### 🔬 Compound Filter"},
+    "major_only":       {"es": "Solo compuestos principales",             "en": "Major compounds only"},
+    "major_help":       {"es": "Filtrar por is_major (concentración relativa > 10% del máximo)",
+                         "en": "Filter by is_major (relative concentration > 10% of maximum)"},
+    "calc_props":       {"es": "### 📐 Propiedades calculadas",           "en": "### 📐 Calculated Properties"},
+    "prop_pol":         {"es": "Polaridad (ETN)",                         "en": "Polarity (ETN)"},
+    "prop_visc":        {"es": "Viscosidad",                              "en": "Viscosity"},
+    "prop_pH":          {"es": "pH efectivo",                             "en": "Effective pH"},
+    "prop_hbd":         {"es": "Cap. HBD efectiva",                       "en": "Effective HBD Cap."},
+    "prop_antioxid":    {"es": "Antioxid. NADES",                        "en": "NADES Antioxid."},
+    # ── Pestañas principales ──
+    "tab1": {"es": "⚡ Resultados",             "en": "⚡ Results"},
+    "tab2": {"es": "🔬 Análisis",              "en": "🔬 Analysis"},
+    "tab3": {"es": "🔊 Proceso UAE · 3 Pasos", "en": "🔊 UAE Process · 3 Steps"},
+    "tab4": {"es": "📐 Optimización",          "en": "📐 Optimization"},
+    "tab5": {"es": "💰 Economía",              "en": "💰 Economics"},
+    "tab6": {"es": "📊 Mis Datos",             "en": "📊 My Data"},
+    "tab7": {"es": "🎯 Recomendador",          "en": "🎯 Recommender"},
+    "tab8": {"es": "📚 Metodología",           "en": "📚 Methodology"},
+    # ── Sub-tabs tab2 ──
+    "atab_ep":   {"es": "🟦 Extracción EP",  "en": "🟦 EP Extraction"},
+    "atab_nep":  {"es": "🟥 Extracción NEP", "en": "🟥 NEP Extraction"},
+    "atab_stab": {"es": "🟩 Estabilidad",    "en": "🟩 Stability"},
+    "atab_int":  {"es": "⚛️ Interacción",    "en": "⚛️ Interaction"},
+    # ── Sub-tabs tab4 ──
+    "otab_kin": {"es": "📈 Cinética + S:L",       "en": "📈 Kinetics + S:L"},
+    "otab_dex": {"es": "🧪 Diseño Experimental",  "en": "🧪 Experimental Design"},
+    # ── Sub-tabs tab7 ──
+    "rtab_rec": {"es": "🎯 Recomendador Global",  "en": "🎯 Global Recommender"},
+    "rtab_th":  {"es": "🧪 Cribado Tesis",        "en": "🧪 Thesis Screening"},
+    # ── Header principal ──
+    "main_title":   {"es": "Simulador de NADES para extraer polifenoles",
+                     "en": "NADES Simulator for Polyphenol Extraction"},
+    "author_line":  {"es": ("© Cristofher Ferrada · Tesis Doctoral 2026 · Beta 0.6 · "
+                            "Todos los derechos reservados · "
+                            "Modelos basados en literatura científica indexada (ver pestaña Metodología)"),
+                     "en": ("© Cristofher Ferrada · Doctoral Thesis 2026 · Beta 0.6 · "
+                            "All rights reserved · "
+                            "Models based on indexed scientific literature (see Methodology tab)")},
+    "nades_active": {"es": "NADES activo", "en": "Active NADES"},
+    "part_lbl":     {"es": "Parte",        "en": "Part"},
+    # ── Tab 1 ──
+    "t1_profile":   {"es": "#### Perfil del NADES",             "en": "#### NADES Profile"},
+    "t1_indices":   {"es": "#### Índices por polifenol",         "en": "#### Indices by polyphenol"},
+    "t1_global":    {"es": "#### Vista comparativa global",      "en": "#### Global comparative view"},
+    "t1_water":     {"es": "#### Efecto del % de agua en los índices (a ratio y T fijos)",
+                     "en": "#### Effect of water % on indices (fixed ratio and T)"},
+    "t1_export":    {"es": "#### 📥 Exportar resultados",        "en": "#### 📥 Export results"},
+    "t1_excel_btn": {"es": "📊 Generar Excel con todos los resultados", "en": "📊 Generate Excel with all results"},
+    "t1_excel_dl":  {"es": "💾 Descargar Excel",                 "en": "💾 Download Excel"},
+    "t1_excel_ok":  {"es": "Excel generado con 5 hojas: Propiedades NADES · Simulación · Cinética · Curva S:L · Resumen",
+                     "en": "Excel generated with 5 sheets: NADES Properties · Simulation · Kinetics · S:L Curve · Summary"},
+    "gauge_ep":     {"es": "Índice EP promedio",    "en": "Average EP Index"},
+    "gauge_nep":    {"es": "Índice NEP promedio",   "en": "Average NEP Index"},
+    "gauge_stab":   {"es": "Estabilidad promedio",  "en": "Average Stability"},
+    "gauge_comb":   {"es": "EP+NEP combinado",      "en": "Combined EP+NEP"},
+    "radar_pol":    {"es": "Polaridad",    "en": "Polarity"},
+    "radar_flu":    {"es": "Fluidez",      "en": "Fluidity"},
+    "radar_hbd":    {"es": "Cap. HBD",    "en": "HBD Cap."},
+    "radar_hba":    {"es": "Cap. HBA",    "en": "HBA Cap."},
+    "radar_acid":   {"es": "Acidez",      "en": "Acidity"},
+    "radar_antx":   {"es": "Antioxidante","en": "Antioxidant"},
+    "col_compound": {"es": "Compuesto",   "en": "Compound"},
+    "col_class":    {"es": "Clase",       "en": "Class"},
+    "col_type":     {"es": "Tipo",        "en": "Type"},
+    # ── Tab 2 ──
+    "t2_ep_title":   {"es": "### Extracción de Polifenoles Extraíbles (EP)",
+                      "en": "### Extractable Polyphenol (EP) Extraction"},
+    "t2_ep_ranking": {"es": "#### Ranking EP",                         "en": "#### EP Ranking"},
+    "t2_ep_factors": {"es": "#### Desglose de factores por polifenol", "en": "#### Factor breakdown by polyphenol"},
+    "t2_ep_filter":  {"es": "Filtrar por clase de polifenol",          "en": "Filter by polyphenol class"},
+    "filter_all":    {"es": "Todas",                                   "en": "All"},
+    "t2_nep_title":  {"es": "### Extracción de Polifenoles No Extraíbles (NEP)",
+                      "en": "### Non-Extractable Polyphenol (NEP) Extraction"},
+    "t2_nep_desc":   {"es": ("Los **NEP** (Polifenoles No Extraíbles) están asociados a la matriz "
+                             "vegetal — principalmente pared celular y proteínas — y no se liberan con "
+                             "solventes convencionales. El NADES actúa como agente **disruptivo de matriz** "
+                             "mediante su alta viscosidad, capacidad HBD/HBA y efecto de pH, en combinación "
+                             "con UAE para romper los enlaces covalentes y no covalentes que los retienen. "
+                             "Techo sin UAE: **85%** · Con UAE: hasta **95%**"),
+                      "en": ("**NEP** (Non-Extractable Polyphenols) are associated with the plant "
+                             "matrix — primarily cell wall and proteins — and are not released by "
+                             "conventional solvents. NADES acts as a **matrix-disrupting agent** "
+                             "through its high viscosity, HBD/HBA capacity and pH effect, combined "
+                             "with UAE to break the covalent and non-covalent bonds retaining them. "
+                             "Ceiling without UAE: **85%** · With UAE: up to **95%**")},
+    "t2_stab_title": {"es": "### Estabilidad de Polifenoles en Presencia del NADES",
+                      "en": "### Polyphenol Stability in the Presence of NADES"},
+    "t2_stab_desc":  {"es": ("**Mecanismo principal:** Los NADES forman redes de puentes de hidrógeno "
+                             "con los grupos **–OH fenólicos**, bloqueándolos físicamente del O₂ y "
+                             "radicales libres. Además, componentes como el ácido cítrico o málico "
+                             "**quelan Fe³⁺**, previniendo la oxidación catalítica de Fenton."),
+                      "en": ("**Main mechanism:** NADES form hydrogen-bond networks "
+                             "with **phenolic –OH groups**, physically blocking them from O₂ and "
+                             "free radicals. Additionally, components such as citric or malic acid "
+                             "**chelate Fe³⁺**, preventing Fenton catalytic oxidation.")},
+    "t2_int_title":  {"es": "### Interacción NADES–Polifenol",   "en": "### NADES–Polyphenol Interaction"},
+    # ── Tab 3 ──
+    "t3_uae_title":  {"es": "### Extracción Asistida por Ultrasonido (UAE)",
+                      "en": "### Ultrasound-Assisted Extraction (UAE)"},
+    "t3_uae_desc":   {"es": ("El ultrasonido genera **cavitación acústica**: burbujas microscópicas que "
+                             "colapsan y producen microjet y ondas de choque que **rompen la pared celular**, "
+                             "aumentan la transferencia de masa del NADES y liberan polifenoles unidos (NEP). "
+                             "La frecuencia óptima para máxima cavitación es **~20-25 kHz**."),
+                      "en": ("Ultrasound generates **acoustic cavitation**: microscopic bubbles that "
+                             "collapse and produce microjets and shock waves that **break the cell wall**, "
+                             "increase NADES mass transfer and release bound polyphenols (NEP). "
+                             "The optimal frequency for maximum cavitation is **~20-25 kHz**.")},
+    "t3_freq_h":     {"es": "#### Realce de extracción según frecuencia (kHz)",
+                      "en": "#### Extraction enhancement by frequency (kHz)"},
+    "t3_total_khz":  {"es": "##### Índice total de extracción vs kHz",
+                      "en": "##### Total extraction index vs kHz"},
+    "t3_increment":  {"es": "##### Incremento % respecto a extracción sin US",
+                      "en": "##### Increment % relative to extraction without US"},
+    "t3_3step":      {"es": "### Simulación del Proceso de 3 Pasos", "en": "### 3-Step Process Simulation"},
+    "t3_arrhenius":  {"es": "### Degradación Térmica — Modelo Arrhenius",
+                      "en": "### Thermal Degradation — Arrhenius Model"},
+    # ── Tab 4 ──
+    "t4_kin_title":  {"es": "### 📐 Cinética de Extracción",
+                      "en": "### 📐 Extraction Kinetics"},
+    "t4_kin_desc":   {"es": ("Modelo de **primer orden** para la evolución de la extracción EP y NEP con el tiempo. "
+                             "La constante de velocidad *k* depende de la viscosidad, temperatura y el UAE. "
+                             "El tiempo óptimo *t₉₀* es cuando se alcanza el 90% del rendimiento de equilibrio."),
+                      "en": ("**First-order model** for the time evolution of EP and NEP extraction. "
+                             "The rate constant *k* depends on viscosity, temperature and UAE. "
+                             "The optimal time *t₉₀* is when 90% of the equilibrium yield is reached.")},
+    "t4_dex_title":  {"es": "### 🧪 Generador de Diseño Experimental",
+                      "en": "### 🧪 Experimental Design Generator"},
+    "t4_dex_desc":   {"es": ("Genera la **matriz de ensayos** para optimizar la extracción con NADES. "
+                             "Elige el tipo de diseño y define los niveles de cada factor. "
+                             "Descarga la tabla como CSV para ejecutar los experimentos."),
+                      "en": ("Generates the **trial matrix** to optimize NADES extraction. "
+                             "Choose the design type and define the factor levels. "
+                             "Download the table as CSV to run the experiments.")},
+    "t4_design_type":{"es": "Tipo de diseño",        "en": "Design type"},
+    # ── Tab 5 ──
+    "t5_title":      {"es": "### 💰 Análisis Económico de la Extracción con NADES",
+                      "en": "### 💰 Economic Analysis of NADES Extraction"},
+    "t5_desc":       {"es": ("Estimación de costos para fabricar el NADES diseñado y realizar extracciones "
+                             "de polifenoles de *Berberis microphylla*. Precios USD grado laboratorio (reactivos analíticos)."),
+                      "en": ("Cost estimation for preparing the designed NADES and performing polyphenol "
+                             "extractions from *Berberis microphylla*. USD laboratory-grade prices (analytical reagents).")},
+    "t5_sample":     {"es": "Masa de muestra (g peso seco liofilizado)", "en": "Sample mass (g freeze-dried dry weight)"},
+    "t5_sl_ratio":   {"es": "Razón sólido:líquido (mL/g)",              "en": "Solid:liquid ratio (mL/g)"},
+    "t5_reps":       {"es": "N° de repeticiones/réplicas",              "en": "N° of repetitions/replicates"},
+    "t5_summary":    {"es": "#### Resumen de una extracción",           "en": "#### Single extraction summary"},
+    "t5_breakdown":  {"es": "#### Desglose de componentes",             "en": "#### Component breakdown"},
+    # ── Tab 6 ──
+    "t6_title":      {"es": "### 📊 Mis Datos — Importar y Comparar con el Modelo",
+                      "en": "### 📊 My Data — Import and Compare with Model"},
+    "t6_desc":       {"es": ("Carga tus resultados experimentales en formato CSV y compáralos "
+                             "con la predicción del simulador. El programa calcula el R² y muestra "
+                             "dónde el modelo se acerca o se aleja de la realidad."),
+                      "en": ("Upload your experimental results in CSV format and compare them "
+                             "with the simulator's prediction. The program calculates R² and shows "
+                             "where the model is close to or diverges from reality.")},
+    "t6_format":     {"es": "📄 Formato del CSV esperado",  "en": "📄 Expected CSV format"},
+    "t6_upload":     {"es": "Sube tu CSV experimental",    "en": "Upload your experimental CSV"},
+    # ── Tab 7 ──
+    "t7_rec_title":  {"es": "### 🎯 Recomendador Global de NADES",     "en": "### 🎯 Global NADES Recommender"},
+    "t7_th_title":   {"es": "### Cribado Comparativo — 6 NADES de la Tesis",
+                      "en": "### Comparative Screening — 6 Thesis NADES"},
+    "t7_th_desc":    {"es": ("Simulación de los 6 sistemas NADES del diseño experimental de **Etapa 1**. "
+                             "Criterios experimentales: **TPC** (Folin-Ciocalteu) · **TAC** (pH diferencial) "
+                             "· **DPPH** · **FRAP**"),
+                      "en": ("Simulation of the 6 NADES systems from the **Stage 1** experimental design. "
+                             "Experimental criteria: **TPC** (Folin-Ciocalteu) · **TAC** (pH differential) "
+                             "· **DPPH** · **FRAP**")},
+    # ── Tab 8 ──
+    "t8_title":      {"es": "### Fundamento Científico de los Modelos",
+                      "en": "### Scientific Foundation of the Models"},
+    # ── Común ──
+    "run_btn":       {"es": "▶ Ejecutar",      "en": "▶ Run"},
+    "export_csv":    {"es": "📥 Exportar CSV", "en": "📥 Export CSV"},
+    "no_data":       {"es": "No hay datos disponibles.",     "en": "No data available."},
+}
+
+def t(key: str) -> str:
+    """Return translated UI string for the active LANG."""
+    entry = TR.get(key)
+    if entry is None:
+        return key
+    return entry.get(LANG, entry.get("es", key))
+
+
+# ─────────────────────────────────────────────
 # DATOS (cacheados)
 # ─────────────────────────────────────────────
 @st.cache_data
@@ -102,29 +345,43 @@ THESIS_COLORS = [n["color"] for n in THESIS_NADES]
 # SIDEBAR — CONSTRUCTOR DE NADES EN TIEMPO REAL
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🫐 Simulador de NADES")
-    st.markdown("**para extraer polifenoles · Beta 0.6**")
+    st.markdown(t("sidebar_title"))
+    st.markdown(t("sidebar_subtitle"))
     st.markdown(
         '<span style="font-size:.75rem;color:#344a5e;font-weight:600">'
         '© Cristofher Ferrada · 2026 · Todos los derechos reservados</span>',
         unsafe_allow_html=True,
     )
+
+    # ── Selector de idioma ──
+    _lang_opts = {"es": "🇨🇱 Español", "en": "🇬🇧 English"}
+    _lang_sel = st.selectbox(
+        t("lang_label"),
+        options=list(_lang_opts.keys()),
+        format_func=lambda x: _lang_opts[x],
+        index=0 if LANG == "es" else 1,
+        key="lang_selector",
+    )
+    if _lang_sel != LANG:
+        st.query_params["lang"] = _lang_sel
+        st.rerun()
+
     st.divider()
 
     # ── Selector de parte de planta ──
-    st.markdown("### 🌿 Parte de la planta")
-    parte_opts = {
-        "🫐 Fruto (Baya)": "fruto",
-        "🌿 Hojas": "hojas",
-        "🪵 Tallo / Corteza": "tallo",
+    st.markdown(t("plant_header"))
+    _part_map = {
+        t("plant_fruit"):  "fruto",
+        t("plant_leaves"): "hojas",
+        t("plant_stem"):   "tallo",
     }
     parte_label = st.radio(
-        "Seleccionar parte a simular",
-        options=list(parte_opts.keys()),
+        t("plant_radio"),
+        options=list(_part_map.keys()),
         index=0,
-        help="Cambia la base de datos de polifenoles según la parte de la planta.",
+        help=t("plant_radio_help"),
     )
-    parte_planta = parte_opts[parte_label]
+    parte_planta = _part_map[parte_label]
     pp = PLANT_PART_INFO[parte_planta]
 
     # Mini-card de contexto en sidebar
@@ -143,35 +400,34 @@ with st.sidebar:
     )
     st.divider()
 
-    st.markdown("### ⚗️ Diseña tu NADES")
+    st.markdown(t("nades_header"))
 
-    hba_sel = st.selectbox("HBA (Aceptor H-Bond)",   list(HBA_COMPONENTS.keys()), index=0)
-    hbd_sel = st.selectbox("HBD (Donador H-Bond)",   list(HBD_COMPONENTS.keys()), index=0)
+    hba_sel = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0)
+    hbd_sel = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=0)
     ratio_sel = st.select_slider(
-        "Razón HBA : HBD",
+        t("ratio_label"),
         options=list(RATIOS_DISPONIBLES.keys()),
         value="1:1",
     )
-    water_pct = st.slider("Agua añadida (%)",    0,  50, 30, step=5)
-    temp_C    = st.slider("Temperatura (°C)",   20,  80, 40, step=5)
+    water_pct = st.slider(t("water_label"), 0,  50, 30, step=5)
+    temp_C    = st.slider(t("temp_label"),  20, 80, 40, step=5)
 
     st.divider()
-    st.markdown("### ⚖️ Pesos de extracción simultánea")
+    st.markdown(t("weights_header"))
     peso_ep = st.slider(
-        "Peso EP en score combinado",
+        t("ep_weight_label"),
         min_value=0.30, max_value=0.80, value=0.55, step=0.05,
-        help="0.55 = 55% EP · 45% NEP. Ajusta según el objetivo de tu extracción.",
+        help=t("ep_weight_help"),
     )
     peso_nep = round(1.0 - peso_ep, 2)
     st.caption(f"EP: {peso_ep:.0%}  ·  NEP: {peso_nep:.0%}")
 
     st.divider()
-    st.markdown("### 🔊 Ultrasonido (UAE)")
+    st.markdown(t("uae_header"))
     freq_us = st.slider(
-        "Frecuencia (kHz)",
+        t("freq_label"),
         min_value=0, max_value=100, value=0, step=5,
-        help="0 kHz = extracción convencional sin ultrasonido. "
-             "Óptimo ~20-25 kHz para máxima cavitación.",
+        help=t("freq_help"),
     )
     if freq_us > 0:
         peak = 22.0
@@ -186,19 +442,19 @@ with st.sidebar:
         _nep_b = round(0.28 * _cav * 100, 1)
         st.caption(f"Cavitación: {_cav*100:.0f}% · +EP: {_ep_b}% · +NEP: {_nep_b}%")
         if freq_us <= 30:
-            st.caption("⚠️ Baja frecuencia: alta energía — revisar estabilidad de antocianinas")
+            st.caption(t("low_freq_warn"))
     else:
-        st.caption("Sin ultrasonido (convencional)")
+        st.caption(t("no_us"))
 
     st.divider()
-    st.markdown("### 🌡️ Condiciones del Proceso")
+    st.markdown(t("proc_header"))
     proc_temp = st.slider(
-        "Temperatura extracción (°C)", 20, 80, 55, step=5,
-        help="Rango óptimo 50-60°C (Paso 1 UAE). Afecta degradación térmica.",
+        t("proc_temp_label"), 20, 80, 55, step=5,
+        help=t("proc_temp_help"),
     )
     proc_time = st.slider(
-        "Tiempo extracción (min)", 5, 60, 20, step=5,
-        help="Rango óptimo 9-30 min (Paso 1 UAE).",
+        t("proc_time_label"), 5, 60, 20, step=5,
+        help=t("proc_time_help"),
     )
     st.caption(
         f"T={proc_temp}°C · t={proc_time} min · "
@@ -206,11 +462,11 @@ with st.sidebar:
     )
 
     st.divider()
-    st.markdown("### 🔬 Filtro de compuestos")
+    st.markdown(t("filter_header"))
     solo_principales = st.toggle(
-        "Solo compuestos principales",
+        t("major_only"),
         value=False,
-        help="Filtrar por is_major (concentración relativa > 10% del máximo)",
+        help=t("major_help"),
     )
 
     ratio_hba, ratio_hbd = RATIOS_DISPONIBLES[ratio_sel]
@@ -222,7 +478,7 @@ with st.sidebar:
     )
 
     st.divider()
-    st.markdown("### 📐 Propiedades calculadas")
+    st.markdown(t("calc_props"))
 
     def prop_card(label, value, unit="", color="#1a6fa0"):
         st.markdown(
@@ -232,11 +488,11 @@ with st.sidebar:
             f'</div>', unsafe_allow_html=True,
         )
 
-    prop_card("Polaridad (ETN)",   f"{props['polaridad']:.3f}", "")
-    prop_card("Viscosidad",        f"{props['viscosidad']:.0f}", "cP",  "#7a2060")
-    prop_card("pH efectivo",       f"{props['pH']:.2f}",         "",    "#c05000" if props['pH'] < 4 else "#006050")
-    prop_card("Cap. HBD efectiva", f"{props['cap_hbd']:.2f}",   "",    "#006050")
-    prop_card("Antioxid. NADES",   f"{props['antioxidant_nades']:.2f}", "", "#5a3000")
+    prop_card(t("prop_pol"),     f"{props['polaridad']:.3f}", "")
+    prop_card(t("prop_visc"),   f"{props['viscosidad']:.0f}", "cP",  "#7a2060")
+    prop_card(t("prop_pH"),     f"{props['pH']:.2f}",         "",    "#c05000" if props['pH'] < 4 else "#006050")
+    prop_card(t("prop_hbd"),    f"{props['cap_hbd']:.2f}",   "",    "#006050")
+    prop_card(t("prop_antioxid"), f"{props['antioxidant_nades']:.2f}", "", "#5a3000")
 
     st.divider()
     st.caption(f"HBA: {HBA_COMPONENTS[hba_sel]['descripcion'][:60]}…")
@@ -250,7 +506,7 @@ poly_df = load_poly(parte_planta)
 # ─────────────────────────────────────────────
 # HEADER
 # ─────────────────────────────────────────────
-st.markdown('<p class="main-title">Simulador de NADES para extraer polifenoles</p>', unsafe_allow_html=True)
+st.markdown(f'<p class="main-title">{t("main_title")}</p>', unsafe_allow_html=True)
 _subtitle_ref = {
     "fruto": "EP: Ruiz et al. (2024) Horticulturae 10, 458 · NEP: modelo teórico novel",
     "hojas": "Hojas: Mocan et al. (2017) Front. Pharmacol. · Datos generalizados Berberis spp.",
@@ -264,9 +520,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="author-line">© Cristofher Ferrada · Tesis Doctoral 2026 · Beta 0.6 · '
-    'Todos los derechos reservados · '
-    'Modelos basados en literatura científica indexada (ver pestaña Metodología)</p>',
+    f'<p class="author-line">{t("author_line")}</p>',
     unsafe_allow_html=True,
 )
 
@@ -287,7 +541,7 @@ if parte_planta != "fruto":
     )
 
 nades_label = f"**{hba_sel.split('(')[0].strip()} : {hbd_sel}** ({ratio_sel}, {water_pct}% H₂O, {temp_C}°C)"
-st.info(f"NADES activo: {nades_label}  ·  Parte: {pp['label']}  ·  {pp['n_ep']} EP + {pp['n_nep']} NEP")
+st.info(f"{t('nades_active')}: {nades_label}  ·  {t('part_lbl')}: {pp['label']}  ·  {pp['n_ep']} EP + {pp['n_nep']} NEP")
 
 # ─────────────────────────────────────────────
 # SIMULACIÓN DEL NADES ACTUAL
@@ -312,14 +566,8 @@ avg_comb = sim_display["Combinado (%)"].mean() if len(sim_display) > 0 else 0.0
 # PESTAÑAS
 # ─────────────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-    "⚡ Resultados",
-    "🔬 Análisis",
-    "🔊 Proceso UAE · 3 Pasos",
-    "📐 Optimización",
-    "💰 Economía",
-    "📊 Mis Datos",
-    "🎯 Recomendador",
-    "📚 Metodología",
+    t("tab1"), t("tab2"), t("tab3"), t("tab4"),
+    t("tab5"), t("tab6"), t("tab7"), t("tab8"),
 ])
 
 
@@ -350,13 +598,13 @@ with tab1:
 
     g1, g2, g3, g4 = st.columns(4)
     with g1:
-        st.plotly_chart(gauge(avg_ep,   "Índice EP promedio",        "#2e86ab"), use_container_width=True)
+        st.plotly_chart(gauge(avg_ep,   t("gauge_ep"),   "#2e86ab"), use_container_width=True)
     with g2:
-        st.plotly_chart(gauge(avg_nep,  "Índice NEP promedio",       "#c44536"), use_container_width=True)
+        st.plotly_chart(gauge(avg_nep,  t("gauge_nep"),  "#c44536"), use_container_width=True)
     with g3:
-        st.plotly_chart(gauge(avg_stab, "Estabilidad promedio",      "#048a81"), use_container_width=True)
+        st.plotly_chart(gauge(avg_stab, t("gauge_stab"), "#048a81"), use_container_width=True)
     with g4:
-        st.plotly_chart(gauge(avg_comb, "EP+NEP combinado",          "#6b4226", max_val=100), use_container_width=True)
+        st.plotly_chart(gauge(avg_comb, t("gauge_comb"), "#6b4226", max_val=100), use_container_width=True)
 
     st.markdown(
         f'<div class="comb-badge">🎯 Score combinado EP+NEP: <b>{avg_comb:.1f}%</b> '
@@ -370,15 +618,15 @@ with tab1:
 
     # ── Radar del NADES ──
     with col_left:
-        st.markdown("#### Perfil del NADES")
+        st.markdown(t("t1_profile"))
         visc_norm = 1 - np.log10(max(props["viscosidad"], 1)) / np.log10(10000)
         radar_vals = {
-            "Polaridad":    props["polaridad"],
-            "Fluidez":      max(0, visc_norm),
-            "Cap. HBD":     props["cap_hbd"] / 10,
-            "Cap. HBA":     props["cap_hba"] / 10,
-            "Acidez":       max(0, (5 - props["pH"]) / 5),
-            "Antioxidante": props["antioxidant_nades"],
+            t("radar_pol"):  props["polaridad"],
+            t("radar_flu"):  max(0, visc_norm),
+            t("radar_hbd"):  props["cap_hbd"] / 10,
+            t("radar_hba"):  props["cap_hba"] / 10,
+            t("radar_acid"): max(0, (5 - props["pH"]) / 5),
+            t("radar_antx"): props["antioxidant_nades"],
         }
         cats = list(radar_vals.keys()) + [list(radar_vals.keys())[0]]
         vals = list(radar_vals.values()) + [list(radar_vals.values())[0]]
@@ -396,9 +644,9 @@ with tab1:
 
     # ── Tabla resumen de todos los polifenoles ──
     with col_right:
-        st.markdown("#### Índices por polifenol")
+        st.markdown(t("t1_indices"))
         tbl = sim_display[["abrev", "clase", "tipo", "EP (%)", "NEP (%)", "Estab. (%)", "Combinado (%)"]].copy()
-        tbl = tbl.rename(columns={"abrev": "Compuesto", "clase": "Clase", "tipo": "Tipo"})
+        tbl = tbl.rename(columns={"abrev": t("col_compound"), "clase": t("col_class"), "tipo": t("col_type")})
 
         st.dataframe(
             tbl.style
@@ -412,7 +660,7 @@ with tab1:
         )
 
     # ── Gráfico de barras comparativo EP vs NEP vs Combinado ──
-    st.markdown("#### Vista comparativa global")
+    st.markdown(t("t1_global"))
     melt = sim_display[["abrev","EP (%)","NEP (%)","Combinado (%)"]].melt(
         id_vars="abrev", var_name="Índice", value_name="Valor (%)"
     )
@@ -435,7 +683,7 @@ with tab1:
     )
 
     # ── Efecto del agua — curva de respuesta ──
-    st.markdown("#### Efecto del % de agua en los índices (a ratio y T fijos)")
+    st.markdown(t("t1_water"))
     water_range = range(0, 55, 5)
     water_curve = []
     for w in water_range:
@@ -474,8 +722,8 @@ with tab1:
 
     # ── Exportar resultados a Excel ──
     st.markdown("---")
-    st.markdown("#### 📥 Exportar resultados")
-    if st.button("📊 Generar Excel con todos los resultados", key="export_excel"):
+    st.markdown(t("t1_export"))
+    if st.button(t("t1_excel_btn"), key="export_excel"):
         import io
         buf = io.BytesIO()
         with pd.ExcelWriter(buf, engine="openpyxl") as writer:
@@ -521,12 +769,12 @@ with tab1:
 
         buf.seek(0)
         st.download_button(
-            label="💾 Descargar Excel",
+            label=t("t1_excel_dl"),
             data=buf,
             file_name=f"NADES_{hba_sel.split('(')[0].strip()[:15]}_{hbd_sel[:15]}_{parte_planta}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-        st.success("Excel generado con 5 hojas: Propiedades NADES · Simulación · Cinética · Curva S:L · Resumen")
+        st.success(t("t1_excel_ok"))
 
 
 # ══════════════════════════════════════════════════════════
@@ -534,8 +782,7 @@ with tab1:
 # ══════════════════════════════════════════════════════════
 with tab2:
     atab_ep, atab_nep, atab_stab, atab_int = st.tabs([
-        "🟦 Extracción EP", "🟥 Extracción NEP",
-        "🟩 Estabilidad", "⚛️ Interacción",
+        t("atab_ep"), t("atab_nep"), t("atab_stab"), t("atab_int"),
     ])
 
 
@@ -543,16 +790,11 @@ with tab2:
 # TAB 3 — PROCESO UAE · 3 PASOS
 # ══════════════════════════════════════════════════════════
 with tab3:
-    st.markdown("### Extracción Asistida por Ultrasonido (UAE)")
-    st.markdown(
-        "El ultrasonido genera **cavitación acústica**: burbujas microscópicas que "
-        "colapsan y producen microjet y ondas de choque que **rompen la pared celular**, "
-        "aumentan la transferencia de masa del NADES y liberan polifenoles unidos (NEP). "
-        "La frecuencia óptima para máxima cavitación es **~20-25 kHz**."
-    )
+    st.markdown(t("t3_uae_title"))
+    st.markdown(t("t3_uae_desc"))
 
     # ── Curva EP y NEP vs kHz ──
-    st.markdown("#### Realce de extracción según frecuencia (kHz)")
+    st.markdown(t("t3_freq_h"))
 
     freq_range = list(range(0, 105, 5))
     poly_ep_rep  = poly_df[(poly_df["tipo"]=="EP")  & (poly_df["is_major"]==True)].iloc[0]
@@ -583,7 +825,7 @@ with tab3:
     col_u1, col_u2 = st.columns(2)
 
     with col_u1:
-        st.markdown("##### Índice total de extracción vs kHz")
+        st.markdown(t("t3_total_khz"))
         fig_us_total = go.Figure()
         fig_us_total.add_hline(y=ep_base_val,  line_dash="dot", line_color="#2e86ab",
                                annotation_text=f"EP sin US: {ep_base_val:.1f}%",
@@ -613,7 +855,7 @@ with tab3:
         st.plotly_chart(fig_us_total, use_container_width=True)
 
     with col_u2:
-        st.markdown("##### Incremento % respecto a extracción sin US")
+        st.markdown(t("t3_increment"))
         fig_us_boost = go.Figure()
         fig_us_boost.add_trace(go.Scatter(
             x=curve_df["kHz"], y=curve_df["EP +%"],
@@ -734,7 +976,7 @@ with tab3:
     # Sección 2: Proceso de 3 Pasos (Ferrada 2026)
     # ════════════════════════════════════════════════════════
     st.markdown("---")
-    st.markdown("### 🔬 Simulación del Proceso de 3 Pasos (Ferrada 2026)")
+    st.markdown(t("t3_3step"))
     st.markdown(
         f'<div class="novel-badge">'
         f'T={proc_temp}°C · t={proc_time} min · UAE={freq_us} kHz · '
@@ -836,7 +1078,7 @@ with tab3:
     # Sección 3: Degradación Térmica por Clase (Arrhenius)
     # ════════════════════════════════════════════════════════
     st.markdown("---")
-    st.markdown("### 🌡️ Degradación Térmica por Clase (Modelo Arrhenius)")
+    st.markdown(t("t3_arrhenius"))
     st.caption(
         f"Temperatura de proceso: **{proc_temp}°C** · Tiempo: **{proc_time} min** · "
         "Factor protección NADES: k × 0.75 (Chanioti & Tzia 2017)"
@@ -921,7 +1163,7 @@ with tab3:
 
 # ── Sub-tab: Interacción NADES-Polifenol (dentro de tab2) ──
 with atab_int:
-    st.markdown("### ⚛️ Cómo Interactúa el NADES con los Polifenoles")
+    st.markdown(t("t2_int_title"))
     st.markdown(
         "Visualización de la compatibilidad fisicoquímica entre el NADES diseñado "
         "y cada polifenol del calafate. El NADES no solo **extrae** — también **protege** "
@@ -1254,7 +1496,7 @@ with atab_int:
 
 # ── Sub-tab: Extracción EP (dentro de tab2) ──
 with atab_ep:
-    st.markdown("### Extracción de Polifenoles Extraíbles (EP)")
+    st.markdown(t("t2_ep_title"))
     _ep_caption = {
         "fruto": "28 compuestos identificados por HPLC-DAD-ESI-MS/MS · Ruiz et al. (2024) Horticulturae 10, 458",
         "hojas": "12 compuestos EP — perfil general Berberis spp. · Mocan et al. (2017) Front. Pharmacol. 8, 234",
@@ -1285,15 +1527,15 @@ with atab_ep:
     ep_det_df = pd.DataFrame(ep_detail).sort_values("Total EP (%)", ascending=False)
 
     # ── Filtro por clase ──
-    clases_ep = ["Todas"] + sorted(poly_ep_base["clase"].unique().tolist())
-    clase_sel = st.selectbox("Filtrar por clase de polifenol", clases_ep, key="ep_clase")
-    if clase_sel != "Todas":
+    clases_ep = [t("filter_all")] + sorted(poly_ep_base["clase"].unique().tolist())
+    clase_sel = st.selectbox(t("t2_ep_filter"), clases_ep, key="ep_clase")
+    if clase_sel != t("filter_all"):
         ep_det_df = ep_det_df[ep_det_df["Clase"] == clase_sel]
 
     col_ep1, col_ep2 = st.columns([2, 3])
 
     with col_ep1:
-        st.markdown("#### Ranking EP")
+        st.markdown(t("t2_ep_ranking"))
         st.dataframe(
             ep_det_df[["Abrev","Clase","Conc. rel.","Principal","Total EP (%)"]].style
                .background_gradient(subset=["Total EP (%)"], cmap="Blues", vmin=0, vmax=100)
@@ -1303,7 +1545,7 @@ with atab_ep:
         )
 
     with col_ep2:
-        st.markdown("#### Desglose de factores por polifenol")
+        st.markdown(t("t2_ep_factors"))
         factores = ["Polaridad","pH","Cap. HBD","Viscosidad","Bonus Agua"]
         fig_ep_stack = go.Figure()
         colors_f = ["#2e86ab","#f18f01","#048a81","#a23b72","#c44536"]
@@ -1373,7 +1615,7 @@ with atab_ep:
 
 # ── Sub-tab: Extracción NEP (dentro de tab2) ──
 with atab_nep:
-    st.markdown("### Extracción de Polifenoles No Extraíbles (NEP)")
+    st.markdown(t("t2_nep_title"))
     _nep_badges = {
         "fruto": (
             "⚠️ Modelo teórico original · Sin literatura previa para "
@@ -1664,13 +1906,8 @@ with atab_nep:
 
 # ── Sub-tab: Estabilidad (dentro de tab2) ──
 with atab_stab:
-    st.markdown("### Estabilidad de Polifenoles en Presencia del NADES")
-    st.markdown(
-        "**Mecanismo principal:** Los NADES forman redes de puentes de hidrógeno "
-        "con los grupos **–OH fenólicos**, bloqueándolos físicamente del O₂ y "
-        "radicales libres. Además, componentes como el ácido cítrico o málico "
-        "**quelan Fe³⁺**, previniendo la oxidación catalítica de Fenton."
-    )
+    st.markdown(t("t2_stab_title"))
+    st.markdown(t("t2_stab_desc"))
 
     poly_stab_base = poly_df if not solo_principales else poly_df[poly_df["is_major"] == True]
 
@@ -1754,19 +1991,16 @@ with atab_stab:
 # TAB 5 — ECONOMÍA
 # ══════════════════════════════════════════════════════════
 with tab5:
-    st.markdown("### 💰 Análisis Económico de la Extracción con NADES")
-    st.markdown(
-        "Estimación de costos para fabricar el NADES diseñado y realizar extracciones "
-        "de polifenoles de *Berberis microphylla*. Precios USD grado laboratorio (reactivos analíticos)."
-    )
+    st.markdown(t("t5_title"))
+    st.markdown(t("t5_desc"))
 
     col_e1, col_e2, col_e3 = st.columns(3)
     with col_e1:
-        masa_muestra = st.number_input("Masa de muestra (g peso seco liofilizado)", min_value=0.1, max_value=50.0, value=1.0, step=0.5)
+        masa_muestra = st.number_input(t("t5_sample"), min_value=0.1, max_value=50.0, value=1.0, step=0.5)
     with col_e2:
-        ratio_sl_eco = st.number_input("Razón sólido:líquido (mL/g)", min_value=2.0, max_value=50.0, value=10.0, step=1.0)
+        ratio_sl_eco = st.number_input(t("t5_sl_ratio"), min_value=2.0, max_value=50.0, value=10.0, step=1.0)
     with col_e3:
-        n_repeticiones = st.number_input("N° de repeticiones/réplicas", min_value=1, max_value=20, value=3, step=1)
+        n_repeticiones = st.number_input(t("t5_reps"), min_value=1, max_value=20, value=3, step=1)
 
     eco = economic_analysis(
         hba_sel, hbd_sel, ratio_hba, ratio_hbd, water_pct,
@@ -1776,7 +2010,7 @@ with tab5:
     )
 
     st.markdown("---")
-    st.markdown("#### Resumen de una extracción")
+    st.markdown(t("t5_summary"))
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Volumen solvente", f"{eco['vol_total_ml']:.1f} mL")
@@ -1784,7 +2018,7 @@ with tab5:
     m3.metric("Costo {n}×".format(n=int(n_repeticiones)), f"USD {eco['costo_total_usd']*n_repeticiones:.4f}")
     m4.metric("vs EtOH 70%", f"USD {eco['costo_etoh_ref_usd']:.4f}", delta=f"{eco['costo_total_usd']-eco['costo_etoh_ref_usd']:.4f}")
 
-    st.markdown("#### Desglose de componentes")
+    st.markdown(t("t5_breakdown"))
     col_d1, col_d2 = st.columns(2)
 
     with col_d1:
@@ -1947,17 +2181,13 @@ with tab5:
 # TAB 4 — OPTIMIZACIÓN  (Cinética · Diseño Experimental)
 # ══════════════════════════════════════════════════════════
 with tab4:
-    otab_kin, otab_dex = st.tabs(["📈 Cinética + S:L", "🧪 Diseño Experimental"])
+    otab_kin, otab_dex = st.tabs([t("otab_kin"), t("otab_dex")])
 
 
 # ── Sub-tab: Cinética (dentro de tab4) ──
 with otab_kin:
-    st.markdown("### 📐 Cinética de Extracción")
-    st.markdown(
-        "Modelo de **primer orden** para la evolución de la extracción EP y NEP con el tiempo. "
-        "La constante de velocidad *k* depende de la viscosidad, temperatura y el UAE. "
-        "El tiempo óptimo *t₉₀* es cuando se alcanza el 90% del rendimiento de equilibrio."
-    )
+    st.markdown(t("t4_kin_title"))
+    st.markdown(t("t4_kin_desc"))
 
     col_k1, col_k2, col_k3 = st.columns(3)
     with col_k1:
@@ -2100,18 +2330,14 @@ with otab_kin:
 
 # ── Sub-tab: Diseño Experimental (dentro de tab4) ──
 with otab_dex:
-    st.markdown("### 🧪 Generador de Diseño Experimental")
-    st.markdown(
-        "Genera la **matriz de ensayos** para optimizar la extracción con NADES. "
-        "Elige el tipo de diseño y define los niveles de cada factor. "
-        "Descarga la tabla como CSV para ejecutar los experimentos."
-    )
+    st.markdown(t("t4_dex_title"))
+    st.markdown(t("t4_dex_desc"))
 
     col_dex1, col_dex2 = st.columns([1, 2])
 
     with col_dex1:
         design_type = st.selectbox(
-            "Tipo de diseño",
+            t("t4_design_type"),
             options=["box_behnken", "central_composite", "full_factorial"],
             format_func=lambda x: {
                 "box_behnken":       "Box-Behnken (3-4 factores)",
@@ -2217,15 +2443,11 @@ with otab_dex:
 # TAB 6 — MIS DATOS
 # ══════════════════════════════════════════════════════════
 with tab6:
-    st.markdown("### 📊 Mis Datos — Importar y Comparar con el Modelo")
-    st.markdown(
-        "Carga tus resultados experimentales en formato CSV y compáralos "
-        "con la predicción del simulador. El programa calcula el R² y muestra "
-        "dónde el modelo se acerca o se aleja de la realidad."
-    )
+    st.markdown(t("t6_title"))
+    st.markdown(t("t6_desc"))
 
     # ── Formato esperado ──
-    with st.expander("📄 Formato del CSV esperado", expanded=False):
+    with st.expander(t("t6_format"), expanded=False):
         ejemplo_df = pd.DataFrame({
             "NADES":    ["ChCl:Ac.Cítrico", "ChCl:Glicerol", "Betaína:Glicerol"],
             "HBA":      ["Cloruro de Colina (ChCl)", "Cloruro de Colina (ChCl)", "Betaína"],
@@ -2368,17 +2590,13 @@ with tab6:
 # TAB 7 — RECOMENDADOR  (Búsqueda global · Cribado Tesis)
 # ══════════════════════════════════════════════════════════
 with tab7:
-    rtab_rec, rtab_th = st.tabs(["🎯 Recomendador Global", "🧪 Cribado Tesis"])
+    rtab_rec, rtab_th = st.tabs([t("rtab_rec"), t("rtab_th")])
 
 
 # ── Sub-tab: Cribado Tesis (dentro de tab7) ──
 with rtab_th:
-    st.markdown("### Cribado Comparativo — 6 NADES de la Tesis")
-    st.markdown(
-        "Simulación de los 6 sistemas NADES del diseño experimental de **Etapa 1**. "
-        "Criterios experimentales: **TPC** (Folin-Ciocalteu) · **TAC** (pH diferencial) "
-        "· **DPPH** · **FRAP**"
-    )
+    st.markdown(t("t7_th_title"))
+    st.markdown(t("t7_th_desc"))
     if parte_planta != "fruto":
         st.warning(
             f"⚠️ El cribado de tesis está diseñado para **fruto (baya)**. "
@@ -2494,7 +2712,7 @@ with rtab_th:
 
 # ── Sub-tab: Recomendador Global (dentro de tab7) ──
 with rtab_rec:
-    st.markdown("### 🎯 Recomendador — Mejor NADES para Extracción Simultánea EP+NEP")
+    st.markdown(t("t7_rec_title"))
     st.markdown(
         '<div class="comb-badge">Evalúa automáticamente todas las combinaciones HBA × HBD × ratio '
         'y ordena por score combinado EP+NEP. Incluye penalización por asimetría entre fracciones.</div>',
@@ -2634,7 +2852,7 @@ with rtab_rec:
 # TAB 8 — METODOLOGÍA
 # ══════════════════════════════════════════════════════════
 with tab8:
-    st.markdown("### Fundamento Científico de los Modelos")
+    st.markdown(t("t8_title"))
 
     # ── Panel activo de fuente de datos ──
     st.markdown(
