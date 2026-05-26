@@ -15,15 +15,17 @@ Funcionalidades principales:
   - Diseño de NADES con 11 HBA × 23 HBD disponibles
   - Simulación de extracción EP (28 compuestos, Ruiz et al. 2024)
   - Modelo teórico novel de extracción NEP (Ferrada 2026)
-  - Extracción asistida por ultrasonido (UAE, 0-100 kHz)
+  - Simulación del Proceso de 3 Pasos: UAE + centrifugación + filtración
+  - Degradación térmica por clase (modelo Arrhenius, factor protección NADES)
+  - Extracción asistida por ultrasonido (UAE, 0-100 kHz, óptimo ~20-25 kHz)
   - Cinética de extracción + optimización razón S:L
-  - Análisis de incertidumbre Monte Carlo (modelo NEP)
+  - Análisis de incertidumbre Monte Carlo (modelos EP y NEP)
   - Análisis económico + reutilización del NADES
   - Generador de diseño experimental (Box-Behnken / CCD / Factorial)
   - Importar y comparar datos experimentales propios (CSV)
   - Exportar resultados a Excel (5 hojas)
   - Perfiles para Fruto, Hojas y Tallo/Corteza
-  - Recomendador automático (759 combinaciones)
+  - Recomendador automático (759 combinaciones) con UAE, T y tiempo
 
 ══════════════════════════════════════════════════════════════════
   MODOS DE USO SEGÚN PLATAFORMA
@@ -213,20 +215,41 @@ Funcionalidades principales:
      - Selecciona la parte de la planta (Fruto / Hojas / Tallo)
      - Elige HBA + HBD + Razón + % Agua + Temperatura
      - Ajusta la frecuencia de ultrasonido (0 = sin UAE)
-  3. Explora las pestañas:
-     - Resultados     : índices EP, NEP, Estabilidad + Exportar Excel
-     - Ultrasonido    : efecto UAE por frecuencia
-     - Interacción    : diagrama NADES-polifenol + heatmap
-     - Extracción EP  : detalle de los compuestos EP
-     - Extracción NEP : modelo novel + Monte Carlo
-     - Estabilidad    : protección oxidativa
-     - Economía       : costo + reutilización del NADES
-     - Cinética       : curva C(t) + optimización razón S:L
-     - Diseño Exp.    : generador Box-Behnken / CCD / Factorial
-     - Mis Datos      : importar CSV experimental + Parity Plot
-     - Cribado Tesis  : los 6 NADES del experimento
-     - Recomendador   : búsqueda automática del mejor NADES
-     - Metodología    : fundamento científico y referencias
+     - Configura temperatura y tiempo del proceso (Paso 1 UAE)
+  3. Explora las 8 pestañas:
+
+     ⚡ Resultados
+       Gauges EP/NEP/Estabilidad/Combinado en tiempo real
+       Tabla por polifenol · Curva de agua · Exportar a Excel
+
+     🔬 Análisis
+       Sub-pestañas: Extracción EP · Extracción NEP · Estabilidad
+       Interacción NADES-Polifenol (diagrama + heatmap)
+
+     🔊 Proceso UAE · 3 Pasos
+       Curvas de cavitación por frecuencia (0-100 kHz)
+       Simulación completa: Paso 1 (UAE+degrad.T) → Paso 2 (centrf.)
+       → Paso 3 (filtración) · Degradación Arrhenius por clase
+
+     📐 Optimización
+       Sub-pestañas: Cinética C(t) + razón S:L óptima
+       Generador diseño experimental (Box-Behnken / CCD / Factorial)
+
+     💰 Economía
+       Costo por extracción · Comparación vs solventes conv.
+       Reutilización del NADES (curva de ciclos)
+
+     📊 Mis Datos
+       Importar CSV experimental · Parity Plot · R² vs modelo
+
+     🎯 Recomendador
+       Búsqueda global 759 NADES con UAE, temperatura y tiempo
+       Cribado Tesis: comparación de los 6 NADES de la Etapa 1
+
+     📚 Metodología
+       Ecuaciones de todos los modelos · Referencias bibliográficas
+       Monte Carlo EP + NEP lado a lado · Cómo citar este software
+
   4. Para cerrar: cierra la consola (Windows) o Ctrl+C (Mac/Linux)
 
 ══════════════════════════════════════════════════════════════════
@@ -269,7 +292,7 @@ Funcionalidades principales:
 
   Autor     : Cristofher Ferrada
   Año       : 2026
-  Versión   : Beta 0.6
+  Versión   : Beta 0.6  (8 pestañas — reestructurado)
   Contexto  : Tesis Doctoral — Extracción de polifenoles de
               Berberis microphylla G. Forst con NADES
 
