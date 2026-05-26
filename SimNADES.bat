@@ -1,5 +1,5 @@
 @echo off
-title Simulador de NADES para extraer polifenoles — CFERRADA 2026 — Beta 0.6
+title SimNADES — Simulador NADES para Polifenoles — CFERRADA 2026 — Beta 0.6
 color 0A
 cd /d "%~dp0"
 
@@ -20,37 +20,46 @@ if exist ".venv\Scripts\streamlit.exe" goto :LAUNCH_VENV
 color 0E
 echo.
 echo  ==========================================
-echo   Simulador de NADES para extraer
-echo   polifenoles — Beta 0.6
-echo   (c) Cristofher Ferrada 2026
-echo   Todos los derechos reservados
+echo   SimNADES — Simulador NADES
+echo   para extraccion de polifenoles
+echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Primera instalacion
 echo   (solo ocurre una vez en este PC)
 echo  ==========================================
 echo.
 
-:: Verificar Python del sistema
-python --version >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    color 0C
-    echo.
-    echo  [ERROR] Python no esta instalado.
-    echo.
-    echo  Opciones:
-    echo   A) Descarga Python 3.11+ desde:
-    echo      https://www.python.org/downloads/
-    echo      Marca "Add Python to PATH" al instalar.
-    echo.
-    echo   B) Ejecuta PREPARAR_BUNDLE_COMPLETO_WINDOWS.bat
-    echo      para crear una version sin dependencias.
-    echo.
-    pause
-    exit /b 1
+:: Buscar Python: primero el Launcher (py), luego python3, luego python
+set PYTHON_CMD=
+where py    >nul 2>&1 && set PYTHON_CMD=py    && goto :CHECK_PY_OK
+where python3 >nul 2>&1 && set PYTHON_CMD=python3 && goto :CHECK_PY_OK
+where python  >nul 2>&1 && (
+    python --version >nul 2>&1
+    if %ERRORLEVEL% equ 0 set PYTHON_CMD=python && goto :CHECK_PY_OK
 )
 
+color 0C
+echo.
+echo  [ERROR] Python no encontrado.
+echo.
+echo  Opciones:
+echo   A) Descarga Python 3.11+ desde:
+echo      https://www.python.org/downloads/
+echo      Marca "Add Python to PATH" al instalar.
+echo.
+echo   B) Ejecuta PREPARAR_BUNDLE_COMPLETO_WINDOWS.bat
+echo      para crear una version sin dependencias.
+echo.
+pause
+exit /b 1
+
+:CHECK_PY_OK
+echo  Python encontrado: %PYTHON_CMD%
+%PYTHON_CMD% --version
+
+echo.
 echo  [1/3] Creando entorno virtual local...
-python -m venv .venv
+%PYTHON_CMD% -m venv .venv
 if %ERRORLEVEL% neq 0 (
     color 0C
     echo  [ERROR] No se pudo crear el entorno virtual.
@@ -74,7 +83,7 @@ if exist "wheels" (
 if %ERRORLEVEL% neq 0 (
     color 0C
     echo.
-    echo  [ERROR] Fallo la instalacion.
+    echo  [ERROR] Fallo la instalacion de dependencias.
     echo  Revisa tu conexion a internet y vuelve a intentar.
     pause & exit /b 1
 )
@@ -90,21 +99,24 @@ goto :LAUNCH_VENV
 :: ══════════════════════════════════════════════
 echo.
 echo  ==========================================
-echo   Simulador de NADES para extraer
-echo   polifenoles — Beta 0.6
-echo   (c) Cristofher Ferrada 2026
-echo   Todos los derechos reservados
+echo   SimNADES — Simulador NADES
+echo   para extraccion de polifenoles
+echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Berberis microphylla G. Forst
 echo   Fruto / Hojas / Tallo
 echo   Python embebido (sin instalacion)
 echo  ==========================================
 echo.
-echo  Iniciando... El navegador se abre solo.
+echo  Iniciando...
+echo  Si el navegador no se abre solo, ve a:
+echo      http://localhost:8501
+echo.
 echo  Para cerrar: cierra esta ventana.
 echo  ==========================================
 echo.
-"python-embed\Scripts\streamlit.exe" run app.py --server.headless false
+start "" http://localhost:8501
+"python-embed\Scripts\streamlit.exe" run app.py --server.headless true --server.port 8501
 pause
 exit /b 0
 
@@ -113,18 +125,21 @@ exit /b 0
 :: ══════════════════════════════════════════════
 echo.
 echo  ==========================================
-echo   Simulador de NADES para extraer
-echo   polifenoles — Beta 0.6
-echo   (c) Cristofher Ferrada 2026
-echo   Todos los derechos reservados
+echo   SimNADES — Simulador NADES
+echo   para extraccion de polifenoles
+echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Berberis microphylla G. Forst
 echo   Fruto / Hojas / Tallo
 echo  ==========================================
 echo.
-echo  Iniciando... El navegador se abre solo.
+echo  Iniciando...
+echo  Si el navegador no se abre solo, ve a:
+echo      http://localhost:8501
+echo.
 echo  Para cerrar: cierra esta ventana.
 echo  ==========================================
 echo.
-.venv\Scripts\streamlit.exe run app.py --server.headless false
+start "" http://localhost:8501
+.venv\Scripts\streamlit.exe run app.py --server.headless true --server.port 8501
 pause
