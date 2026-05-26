@@ -31,7 +31,7 @@ echo.
 
 :: Buscar Python: primero el Launcher (py), luego python3, luego python
 set PYTHON_CMD=
-where py    >nul 2>&1 && set PYTHON_CMD=py    && goto :CHECK_PY_OK
+where py      >nul 2>&1 && set PYTHON_CMD=py      && goto :CHECK_PY_OK
 where python3 >nul 2>&1 && set PYTHON_CMD=python3 && goto :CHECK_PY_OK
 where python  >nul 2>&1 && (
     python --version >nul 2>&1
@@ -108,15 +108,16 @@ echo   Fruto / Hojas / Tallo
 echo   Python embebido (sin instalacion)
 echo  ==========================================
 echo.
-echo  Iniciando...
-echo  Si el navegador no se abre solo, ve a:
+echo  Iniciando servidor... espera unos segundos.
+echo  El navegador se abrira solo cuando este listo.
+echo.
+echo  Si no se abre, ve manualmente a:
 echo      http://localhost:8501
 echo.
-echo  Para cerrar: cierra esta ventana.
+echo  Para cerrar el simulador: cierra esta ventana.
 echo  ==========================================
 echo.
-start "" http://localhost:8501
-"python-embed\Scripts\streamlit.exe" run app.py --server.headless true --server.port 8501
+"python-embed\Scripts\streamlit.exe" run app.py
 pause
 exit /b 0
 
@@ -133,13 +134,14 @@ echo   Berberis microphylla G. Forst
 echo   Fruto / Hojas / Tallo
 echo  ==========================================
 echo.
-echo  Iniciando...
-echo  Si el navegador no se abre solo, ve a:
+echo  Iniciando servidor... espera unos segundos.
+echo  El navegador se abrira solo cuando este listo.
+echo.
+echo  Si no se abre, ve manualmente a:
 echo      http://localhost:8501
 echo.
-echo  Para cerrar: cierra esta ventana.
+echo  Para cerrar el simulador: cierra esta ventana.
 echo  ==========================================
 echo.
-start "" http://localhost:8501
-.venv\Scripts\streamlit.exe run app.py --server.headless true --server.port 8501
+.venv\Scripts\streamlit.exe run app.py
 pause
