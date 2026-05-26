@@ -27,7 +27,7 @@ from model import (
     calculate_nades_properties,
     ep_extraction_score, nep_extraction_score, stability_score,
     run_full_simulation, compare_thesis_nades,
-    combined_score, sweep_all_nades,
+    combined_score, sweep_all_nades, is_same_compound,
     ultrasound_boost, economic_analysis,
     extraction_kinetics, sl_curve, nep_monte_carlo,
     nades_reuse_cycles, generate_experimental_design,
@@ -476,6 +476,15 @@ with st.sidebar:
         hba_sel, hbd_sel, ratio_hba, ratio_hbd,
         water_pct, temp_C, HBA_COMPONENTS, HBD_COMPONENTS,
     )
+
+    if is_same_compound(hba_sel, hbd_sel):
+        st.warning(
+            "⚠️ HBA y HBD son el mismo compuesto — esto **no** es un NADES sino un "
+            "compuesto puro. Selecciona componentes diferentes para formar una mezcla eutéctica."
+            if LANG == "es" else
+            "⚠️ HBA and HBD are the same compound — this is **not** a NADES but a "
+            "pure compound. Select different components to form a eutectic mixture."
+        )
 
     st.divider()
     st.markdown(t("calc_props"))

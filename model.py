@@ -572,6 +572,20 @@ def run_full_simulation(
     return pd.DataFrame(rows)
 
 
+def _compound_base_name(name: str) -> str:
+    """Normaliza el nombre de un componente eliminando sufijos de rol para comparar identidad química."""
+    import re
+    name = re.sub(r'\s*\(como\s+HB[AD]\)', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s*\(base libre\)', '',  name, flags=re.IGNORECASE)
+    name = re.sub(r'\s*\(anhidra?\)',    '',  name, flags=re.IGNORECASE)
+    return name.strip().lower()
+
+
+def is_same_compound(hba_name: str, hbd_name: str) -> bool:
+    """Devuelve True si HBA y HBD son el mismo compuesto (no formarían una mezcla real)."""
+    return _compound_base_name(hba_name) == _compound_base_name(hbd_name)
+
+
 def sweep_all_nades(
     hba_db: dict,
     hbd_db: dict,
@@ -585,6 +599,7 @@ def sweep_all_nades(
     """
     Barre todas las combinaciones HBA×HBD usando el proceso de 3 Pasos Integrados.
     Incluye UAE (freq_us), temperatura (temp_C) y tiempo (time_min).
+    Excluye combinaciones donde HBA y HBD son el mismo compuesto (no son mezclas).
     Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos.
     """
     from itertools import product as iproduct
@@ -592,6 +607,8 @@ def sweep_all_nades(
     results = []
 
     for hba_name, hbd_name, (rh, rd) in iproduct(hba_db, hbd_db, ratios):
+        if is_same_compound(hba_name, hbd_name):
+            continue
         try:
             props = calculate_nades_properties(
                 hba_name, hbd_name, rh, rd, water_pct, temp_C, hba_db, hbd_db,
