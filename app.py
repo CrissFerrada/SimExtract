@@ -30,6 +30,7 @@ from model import (
     ultrasound_boost, economic_analysis,
     extraction_kinetics, sl_curve, nep_monte_carlo,
     nades_reuse_cycles, generate_experimental_design,
+    thermal_degradation, simulate_3step_process, ep_monte_carlo,
 )
 
 # ─────────────────────────────────────────────
@@ -127,6 +128,7 @@ with st.sidebar:
     pp = PLANT_PART_INFO[parte_planta]
 
     # Mini-card de contexto en sidebar
+    _sidebar_nota = f'<br><small style="color:#8b4000"><b>{pp["nota_general"]}</b></small>' if pp["nota_general"] else ""
     st.markdown(
         f'<div class="part-card" style="background:{pp["color_light"]};'
         f'border-color:{pp["color"]}">'
@@ -135,7 +137,7 @@ with st.sidebar:
         f'TPC: {pp["tpc_rango"]}<br>'
         f'{pp["ep_nep"]}<br>'
         f'Ref: {pp["ref"]}</small>'
-        f'{"<br><small style=\"color:#8b4000\"><b>" + pp["nota_general"] + "</b></small>" if pp["nota_general"] else ""}'
+        f'{_sidebar_nota}'
         f'</div>',
         unsafe_allow_html=True,
     )
@@ -187,6 +189,21 @@ with st.sidebar:
             st.caption("⚠️ Baja frecuencia: alta energía — revisar estabilidad de antocianinas")
     else:
         st.caption("Sin ultrasonido (convencional)")
+
+    st.divider()
+    st.markdown("### 🌡️ Condiciones del Proceso")
+    proc_temp = st.slider(
+        "Temperatura extracción (°C)", 20, 80, 55, step=5,
+        help="Rango óptimo 50-60°C (Paso 1 UAE). Afecta degradación térmica.",
+    )
+    proc_time = st.slider(
+        "Tiempo extracción (min)", 5, 60, 20, step=5,
+        help="Rango óptimo 9-30 min (Paso 1 UAE).",
+    )
+    st.caption(
+        f"T={proc_temp}°C · t={proc_time} min · "
+        "Ref: Ferrada, C. Tesis Doctoral 2026 — Etapa 2, Paso 1"
+    )
 
     st.divider()
     st.markdown("### 🔬 Filtro de compuestos")
@@ -255,6 +272,7 @@ st.markdown(
 
 # Tarjeta de contexto de parte de planta
 if parte_planta != "fruto":
+    _nota_html = f'<br><b style="font-size:.78rem;color:#8b4000">{pp["nota_general"]}</b>' if pp["nota_general"] else ""
     st.markdown(
         f'<div style="background:{pp["color_light"]};border-left:5px solid {pp["color"]}; '
         f'border-radius:6px;padding:.6rem 1rem;margin-bottom:.5rem">'
@@ -263,7 +281,7 @@ if parte_planta != "fruto":
         f'<span style="font-size:.78rem;color:#344a5e">'
         f'TPC: {pp["tpc_dw"]} · Perfil: {pp["perfil"]} · '
         f'Ref: {pp["ref"]}</span>'
-        f'{"<br><b style=\\\"font-size:.78rem;color:#8b4000\\\">" + pp["nota_general"] + "</b>" if pp["nota_general"] else ""}'
+        f'{_nota_html}'
         f'</div>',
         unsafe_allow_html=True,
     )
@@ -293,18 +311,13 @@ avg_comb = sim_display["Combinado (%)"].mean() if len(sim_display) > 0 else 0.0
 # ─────────────────────────────────────────────
 # PESTAÑAS
 # ─────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "⚡ Resultados",
-    "🔊 Ultrasonido",
-    "⚛️ Interacción",
-    "🟦 Extracción EP",
-    "🟥 Extracción NEP",
-    "🟩 Estabilidad",
+    "🔬 Análisis",
+    "🔊 Proceso UAE · 3 Pasos",
+    "📐 Optimización",
     "💰 Economía",
-    "📐 Cinética",
-    "🧪 Diseño Exp.",
     "📊 Mis Datos",
-    "📋 Cribado Tesis",
     "🎯 Recomendador",
     "📚 Metodología",
 ])
@@ -517,9 +530,19 @@ with tab1:
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 2 — ULTRASONIDO ASISTIDO (UAE)
+# TAB 2 — ANÁLISIS  (EP · NEP · Estabilidad · Interacción)
 # ══════════════════════════════════════════════════════════
 with tab2:
+    atab_ep, atab_nep, atab_stab, atab_int = st.tabs([
+        "🟦 Extracción EP", "🟥 Extracción NEP",
+        "🟩 Estabilidad", "⚛️ Interacción",
+    ])
+
+
+# ══════════════════════════════════════════════════════════
+# TAB 3 — PROCESO UAE · 3 PASOS
+# ══════════════════════════════════════════════════════════
+with tab3:
     st.markdown("### Extracción Asistida por Ultrasonido (UAE)")
     st.markdown(
         "El ultrasonido genera **cavitación acústica**: burbujas microscópicas que "
@@ -697,7 +720,7 @@ with tab2:
         | 40–60 kHz | Moderado | Balance energía/estabilidad |
         | 60–100 kHz | Suave | Mínima degradación térmica |
 
-        **Techo NEP con ultrasonido: 92%** (vs 78% convencional)
+        **Techo NEP con ultrasonido: 95%** (vs 85% convencional)
         El ultrasonido físicamente rompe algunos enlaces C–C interflavánicos
         que la química del NADES sola no puede hidrolizar.
         """)
@@ -707,11 +730,197 @@ with tab2:
         st.latex(r"C_{acust} = e^{-\frac{(f-22)^2}{2\sigma^2}},\quad f_{opt}=22\,\text{kHz}")
         st.markdown("donde **f_uni** = factor de sitios de unión del compuesto (PAC > flavonol)")
 
+    # ════════════════════════════════════════════════════════
+    # Sección 2: Proceso de 3 Pasos (Ferrada 2026)
+    # ════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("### 🔬 Simulación del Proceso de 3 Pasos (Ferrada 2026)")
+    st.markdown(
+        f'<div class="novel-badge">'
+        f'T={proc_temp}°C · t={proc_time} min · UAE={freq_us} kHz · '
+        f'Paso 1: UAE+degradación · Paso 2: Centrifugación · Paso 3: Dilución+Filtración 0.22 μm'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("")
 
-# ══════════════════════════════════════════════════════════
-# TAB 3 — INTERACCIÓN NADES-POLIFENOL
-# ══════════════════════════════════════════════════════════
-with tab3:
+    with st.spinner("Calculando proceso de 3 pasos…"):
+        df_3step = simulate_3step_process(
+            props, poly_df, freq_us=freq_us,
+            temp_C=proc_temp, time_min=proc_time, peso_ep=peso_ep,
+        )
+
+    if len(df_3step) > 0:
+        avg_ep_3s   = df_3step["EP final (%)"].mean()
+        avg_nep_3s  = df_3step["NEP final (%)"].mean()
+        avg_deg_3s  = df_3step["Degrad. T (%)"].mean()
+        avg_comb_3s = df_3step["Combinado final (%)"].mean()
+
+        ms1, ms2, ms3, ms4 = st.columns(4)
+        ms1.metric("EP final promedio",    f"{avg_ep_3s:.1f}%",
+                   help="Tras los 3 pasos: UAE + centrifugación + filtración")
+        ms2.metric("NEP final promedio",   f"{avg_nep_3s:.1f}%")
+        ms3.metric("Degrad. T promedio",   f"{avg_deg_3s:.1f}%",
+                   help="Pérdida por temperatura (Arrhenius). NADES reduce un 25% vs EtOH.")
+        ms4.metric("EP+NEP combinado",     f"{avg_comb_3s:.1f}%")
+
+        col_3s1, col_3s2 = st.columns(2)
+        with col_3s1:
+            st.markdown("#### Pérdida por paso")
+            avg_ep_p1 = df_3step["EP Paso1 (%)"].mean()
+            avg_ep_p2 = df_3step["EP Paso2 (%)"].mean()
+            avg_ep_p3 = df_3step["EP final (%)"].mean()
+            avg_nep_p1 = df_3step["NEP Paso1 (%)"].mean()
+            avg_nep_p2 = df_3step["NEP Paso2 (%)"].mean()
+            avg_nep_p3 = df_3step["NEP final (%)"].mean()
+            pasos_df = pd.DataFrame({
+                "Paso": ["Bruto (sin proc.)", "Paso 1 (UAE+T)", "Paso 2 (Centrf.)", "Paso 3 (Filtrac.)"],
+                "EP (%)":  [df_3step["EP bruto (%)"].mean(), avg_ep_p1, avg_ep_p2, avg_ep_p3],
+                "NEP (%)": [df_3step["NEP bruto (%)"].mean(), avg_nep_p1, avg_nep_p2, avg_nep_p3],
+            })
+            fig_pasos3 = go.Figure()
+            fig_pasos3.add_trace(go.Scatter(
+                x=pasos_df["Paso"], y=pasos_df["EP (%)"],
+                name="EP", mode="lines+markers",
+                line=dict(color="#2e86ab", width=3), marker=dict(size=10),
+            ))
+            fig_pasos3.add_trace(go.Scatter(
+                x=pasos_df["Paso"], y=pasos_df["NEP (%)"],
+                name="NEP", mode="lines+markers",
+                line=dict(color="#c44536", width=3), marker=dict(size=10),
+            ))
+            fig_pasos3.update_layout(
+                height=300, yaxis_range=[0, 105], yaxis_title="Rendimiento promedio (%)",
+                legend=dict(orientation="h", y=-0.25),
+            )
+            st.plotly_chart(fig_pasos3, use_container_width=True)
+
+        with col_3s2:
+            st.markdown("#### EP y NEP finales por compuesto")
+            fig_3sc = go.Figure()
+            ep_data = df_3step[df_3step["tipo"] == "EP"]
+            nep_data = df_3step[df_3step["tipo"] == "NEP"]
+            fig_3sc.add_trace(go.Bar(
+                x=ep_data["abrev"], y=ep_data["EP final (%)"],
+                name="EP final", marker_color="#2e86ab",
+            ))
+            fig_3sc.add_trace(go.Bar(
+                x=nep_data["abrev"], y=nep_data["NEP final (%)"],
+                name="NEP final", marker_color="#c44536",
+            ))
+            fig_3sc.update_layout(
+                barmode="group", height=300,
+                xaxis_tickangle=-40, yaxis_range=[0, 105],
+                legend=dict(orientation="h", y=-0.35),
+            )
+            st.plotly_chart(fig_3sc, use_container_width=True)
+
+        st.markdown("#### Tabla detallada — 3 pasos por compuesto")
+        st.dataframe(
+            df_3step[["abrev","clase","tipo","EP bruto (%)","Degrad. T (%)","EP Paso1 (%)","EP Paso2 (%)","EP final (%)","NEP final (%)","Combinado final (%)"]].style
+               .background_gradient(subset=["EP final (%)"],        cmap="Blues",   vmin=0, vmax=100)
+               .background_gradient(subset=["NEP final (%)"],       cmap="Reds",    vmin=0, vmax=100)
+               .background_gradient(subset=["Degrad. T (%)"],       cmap="Oranges", vmin=0, vmax=25)
+               .background_gradient(subset=["Combinado final (%)"], cmap="YlOrBr",  vmin=0, vmax=100)
+               .format({c: "{:.1f}" for c in ["EP bruto (%)","Degrad. T (%)","EP Paso1 (%)","EP Paso2 (%)","EP final (%)","NEP final (%)","Combinado final (%)"]}),
+            use_container_width=True, hide_index=True, height=360,
+        )
+        st.caption(
+            "Paso 1: UAE + degradación térmica por Arrhenius (factor protección NADES 0.75) · "
+            "Paso 2: centrifugación 3000-4000 rpm, 10 min, 4°C → pérdida <4% (Saura-Calixto 2010) · "
+            "Paso 3: dilución H₂O 1:2–1:5 + filtración 0.22 μm → sin pérdida para PM <2000 Da · "
+            "Ref: Ferrada, C. Tesis Doctoral 2026 · Benvenutti et al. (2019) Food Res. Int. 119, 710"
+        )
+
+    # ════════════════════════════════════════════════════════
+    # Sección 3: Degradación Térmica por Clase (Arrhenius)
+    # ════════════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("### 🌡️ Degradación Térmica por Clase (Modelo Arrhenius)")
+    st.caption(
+        f"Temperatura de proceso: **{proc_temp}°C** · Tiempo: **{proc_time} min** · "
+        "Factor protección NADES: k × 0.75 (Chanioti & Tzia 2017)"
+    )
+
+    _clases_arr = [
+        "Antocianina", "Flavonol", "Flavan-3-ol",
+        "Ác. Hidroxicinámico", "Tanino Condensado", "Tanino Hidrolizable",
+    ]
+    arr_rows = []
+    for _cl in _clases_arr:
+        _r = thermal_degradation(proc_temp, proc_time, _cl)
+        arr_rows.append({
+            "Clase":            _cl,
+            "k(T) (1/min)":     _r["k_T"],
+            "Degradación (%)":  _r["degradacion_pct"],
+            "Retención (%)":    round(_r["retencion"] * 100, 2),
+        })
+    arr_df = pd.DataFrame(arr_rows)
+
+    col_arr1, col_arr2 = st.columns(2)
+    with col_arr1:
+        st.dataframe(
+            arr_df.style
+               .background_gradient(subset=["Degradación (%)"], cmap="Oranges", vmin=0, vmax=30)
+               .background_gradient(subset=["Retención (%)"],   cmap="Greens",  vmin=70, vmax=100)
+               .format({"k(T) (1/min)": "{:.6f}",
+                        "Degradación (%)": "{:.2f}",
+                        "Retención (%)": "{:.2f}"}),
+            use_container_width=True, hide_index=True,
+        )
+
+    with col_arr2:
+        fig_arr_bar = px.bar(
+            arr_df, x="Clase", y="Retención (%)",
+            color="Retención (%)", color_continuous_scale="RdYlGn",
+            range_color=[70, 100],
+        )
+        fig_arr_bar.add_hline(
+            y=90, line_dash="dot", line_color="#333",
+            annotation_text="90% umbral (pérdida ≤10%)",
+        )
+        fig_arr_bar.update_layout(
+            height=300, xaxis_tickangle=-25, showlegend=False,
+            yaxis_range=[0, 101],
+        )
+        st.plotly_chart(fig_arr_bar, use_container_width=True)
+
+    st.markdown("#### Curva retención vs temperatura por clase (tiempo fijo)")
+    _t_sweep = range(20, 82, 2)
+    arr_temp_rows = []
+    for _t in _t_sweep:
+        for _cl in _clases_arr:
+            _r2 = thermal_degradation(_t, proc_time, _cl)
+            arr_temp_rows.append({"T (°C)": _t, "Clase": _cl, "Retención (%)": round(_r2["retencion"]*100, 2)})
+    arr_temp_df = pd.DataFrame(arr_temp_rows)
+    fig_arr_t = px.line(
+        arr_temp_df, x="T (°C)", y="Retención (%)", color="Clase",
+        color_discrete_sequence=px.colors.qualitative.Set2,
+    )
+    fig_arr_t.add_vline(
+        x=proc_temp, line_dash="dot", line_color="#333",
+        annotation_text=f"T={proc_temp}°C",
+    )
+    fig_arr_t.add_hline(
+        y=90, line_dash="dash", line_color="#c44536",
+        annotation_text="90% umbral",
+    )
+    fig_arr_t.update_layout(
+        height=320, yaxis_range=[50, 101],
+        legend=dict(orientation="h", y=-0.35),
+    )
+    st.plotly_chart(fig_arr_t, use_container_width=True)
+    st.caption(
+        "Arrhenius: k(T) = k_ref × exp(−Ea/R × (1/T_ref − 1/T)) · "
+        "Ea (kJ/mol): Antocianinas 75 · Flavonoles 55 · Flavan-3-oles 60 · "
+        "Ác. Hidroxicinámicos 50 · Taninos Condensados 45 · Taninos Hidrolizables 42 · "
+        "Ref: Wang & Xu (2007) Food Chem. 101, 1338 · Fang (2011) Food Chem. 129, 267 · "
+        "Chanioti & Tzia (2017) Food Bioprocess Technol. 10, 1999 · Ferrada, C. Tesis Doctoral 2026"
+    )
+
+
+# ── Sub-tab: Interacción NADES-Polifenol (dentro de tab2) ──
+with atab_int:
     st.markdown("### ⚛️ Cómo Interactúa el NADES con los Polifenoles")
     st.markdown(
         "Visualización de la compatibilidad fisicoquímica entre el NADES diseñado "
@@ -1043,10 +1252,8 @@ with tab3:
     )
 
 
-# ══════════════════════════════════════════════════════════
-# TAB 4 — EXTRACCIÓN EP
-# ══════════════════════════════════════════════════════════
-with tab4:
+# ── Sub-tab: Extracción EP (dentro de tab2) ──
+with atab_ep:
     st.markdown("### Extracción de Polifenoles Extraíbles (EP)")
     _ep_caption = {
         "fruto": "28 compuestos identificados por HPLC-DAD-ESI-MS/MS · Ruiz et al. (2024) Horticulturae 10, 458",
@@ -1164,10 +1371,8 @@ with tab4:
     )
 
 
-# ══════════════════════════════════════════════════════════
-# TAB 5 — EXTRACCIÓN NEP  (MODELO NOVEL)
-# ══════════════════════════════════════════════════════════
-with tab5:
+# ── Sub-tab: Extracción NEP (dentro de tab2) ──
+with atab_nep:
     st.markdown("### Extracción de Polifenoles No Extraíbles (NEP)")
     _nep_badges = {
         "fruto": (
@@ -1217,11 +1422,14 @@ with tab5:
             use_container_width=True, hide_index=True,
         )
         st.markdown("---")
-        st.markdown("##### ¿Por qué techo al 78%?")
+        st.markdown("##### ¿Por qué techo al 85% (convencional) / 95% (con UAE)?")
         st.markdown(
             "Incluso el NADES ideal no puede liberar el 100% de los NEP: "
             "parte de los taninos condensados tienen enlaces C–C interflavánicos "
-            "que no son hidrolizables y requieren hidrólisis alcalina o enzimática."
+            "que no son hidrolizables sin UAE ni hidrólisis alcalina. "
+            "El UAE (20-25 kHz) rompe físicamente algunos de estos enlaces mediante cavitación "
+            "acústica, elevando el techo práctico al 95%. "
+            "Ref: Tiwari et al. (2010) Food Res. Int. 43, 1956."
         )
 
     with col_n2:
@@ -1454,10 +1662,8 @@ with tab5:
     )
 
 
-# ══════════════════════════════════════════════════════════
-# TAB 6 — ESTABILIDAD
-# ══════════════════════════════════════════════════════════
-with tab6:
+# ── Sub-tab: Estabilidad (dentro de tab2) ──
+with atab_stab:
     st.markdown("### Estabilidad de Polifenoles en Presencia del NADES")
     st.markdown(
         "**Mecanismo principal:** Los NADES forman redes de puentes de hidrógeno "
@@ -1545,9 +1751,9 @@ with tab6:
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 7 — ANÁLISIS ECONÓMICO
+# TAB 5 — ECONOMÍA
 # ══════════════════════════════════════════════════════════
-with tab7:
+with tab5:
     st.markdown("### 💰 Análisis Económico de la Extracción con NADES")
     st.markdown(
         "Estimación de costos para fabricar el NADES diseñado y realizar extracciones "
@@ -1738,9 +1944,14 @@ with tab7:
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 8 — CINÉTICA DE EXTRACCIÓN
+# TAB 4 — OPTIMIZACIÓN  (Cinética · Diseño Experimental)
 # ══════════════════════════════════════════════════════════
-with tab8:
+with tab4:
+    otab_kin, otab_dex = st.tabs(["📈 Cinética + S:L", "🧪 Diseño Experimental"])
+
+
+# ── Sub-tab: Cinética (dentro de tab4) ──
+with otab_kin:
     st.markdown("### 📐 Cinética de Extracción")
     st.markdown(
         "Modelo de **primer orden** para la evolución de la extracción EP y NEP con el tiempo. "
@@ -1887,10 +2098,8 @@ with tab8:
     )
 
 
-# ══════════════════════════════════════════════════════════
-# TAB 9 — DISEÑO EXPERIMENTAL
-# ══════════════════════════════════════════════════════════
-with tab9:
+# ── Sub-tab: Diseño Experimental (dentro de tab4) ──
+with otab_dex:
     st.markdown("### 🧪 Generador de Diseño Experimental")
     st.markdown(
         "Genera la **matriz de ensayos** para optimizar la extracción con NADES. "
@@ -2005,9 +2214,9 @@ with tab9:
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 10 — MIS DATOS (importar datos experimentales)
+# TAB 6 — MIS DATOS
 # ══════════════════════════════════════════════════════════
-with tab10:
+with tab6:
     st.markdown("### 📊 Mis Datos — Importar y Comparar con el Modelo")
     st.markdown(
         "Carga tus resultados experimentales en formato CSV y compáralos "
@@ -2156,9 +2365,14 @@ with tab10:
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 11 — CRIBADO TESIS (los 6 NADES de la Etapa 1)
+# TAB 7 — RECOMENDADOR  (Búsqueda global · Cribado Tesis)
 # ══════════════════════════════════════════════════════════
-with tab11:
+with tab7:
+    rtab_rec, rtab_th = st.tabs(["🎯 Recomendador Global", "🧪 Cribado Tesis"])
+
+
+# ── Sub-tab: Cribado Tesis (dentro de tab7) ──
+with rtab_th:
     st.markdown("### Cribado Comparativo — 6 NADES de la Tesis")
     st.markdown(
         "Simulación de los 6 sistemas NADES del diseño experimental de **Etapa 1**. "
@@ -2278,10 +2492,8 @@ with tab11:
     )
 
 
-# ══════════════════════════════════════════════════════════
-# TAB 12 — RECOMENDADOR (sweep de todos los NADES posibles)
-# ══════════════════════════════════════════════════════════
-with tab12:
+# ── Sub-tab: Recomendador Global (dentro de tab7) ──
+with rtab_rec:
     st.markdown("### 🎯 Recomendador — Mejor NADES para Extracción Simultánea EP+NEP")
     st.markdown(
         '<div class="comb-badge">Evalúa automáticamente todas las combinaciones HBA × HBD × ratio '
@@ -2290,13 +2502,17 @@ with tab12:
     )
     st.markdown("")
 
-    col_r1, col_r2, col_r3 = st.columns(3)
+    col_r1, col_r2, col_r3, col_r4, col_r5 = st.columns(5)
     with col_r1:
-        sweep_water = st.slider("Agua para búsqueda (%)", 0, 50, 30, step=5, key="sw_water")
+        sweep_water = st.slider("Agua (%)", 0, 50, 30, step=5, key="sw_water")
     with col_r2:
-        sweep_temp  = st.slider("Temperatura para búsqueda (°C)", 20, 80, 40, step=5, key="sw_temp")
+        sweep_temp  = st.slider("Temperatura (°C)", 20, 80, int(proc_temp), step=5, key="sw_temp")
     with col_r3:
-        sweep_peso  = st.slider("Peso EP en búsqueda", 0.30, 0.80, 0.55, step=0.05, key="sw_ep")
+        sweep_freq  = st.slider("UAE (kHz)", 0, 100, int(freq_us), step=5, key="sw_freq")
+    with col_r4:
+        sweep_time  = st.slider("Tiempo (min)", 5, 60, int(proc_time), step=5, key="sw_time")
+    with col_r5:
+        sweep_peso  = st.slider("Peso EP", 0.30, 0.80, 0.55, step=0.05, key="sw_ep")
 
     top_n = st.slider("Top N candidatos a mostrar", 5, 30, 15, step=5)
 
@@ -2306,7 +2522,8 @@ with tab12:
         with st.spinner("Evaluando todas las combinaciones HBA × HBD × ratio…"):
             sweep_df = sweep_all_nades(
                 HBA_COMPONENTS, HBD_COMPONENTS, poly_df,
-                water_pct=sweep_water, temp_C=sweep_temp, peso_ep=sweep_peso,
+                water_pct=sweep_water, temp_C=sweep_temp,
+                freq_us=sweep_freq, time_min=sweep_time, peso_ep=sweep_peso,
             )
 
         st.success(f"Búsqueda completada — {len(sweep_df)} combinaciones evaluadas")
@@ -2324,16 +2541,19 @@ with tab12:
         for rank, (_, row) in enumerate(top_df.iterrows()):
             m = medal[rank] if rank < len(medal) else ""
             comb_v = row.get("Combinado (%)", 0)
-            ep_v   = row.get("EP prom. (%)", 0)
-            nep_v  = row.get("NEP prom. (%)", 0)
+            ep_v   = row.get("EP final (%)", 0)
+            nep_v  = row.get("NEP final (%)", 0)
+            deg_v  = row.get("Degrad. T (%)", 0)
+            _hba_lbl = row["HBA"].split("(")[0].strip()
             st.markdown(
                 f'<div style="border:1px solid #6b4226;border-radius:8px;padding:.7rem 1rem;'
                 f'margin-bottom:.4rem;background:#fdf8f2">'
                 f'{m} <b>#{rank+1}</b> — '
-                f'<b>{row["HBA"].split("(")[0].strip()} : {row["HBD"]}</b> '
-                f'({row["Ratio"]} · {int(sweep_water)}% H₂O · {int(sweep_temp)}°C)<br>'
+                f'<b>{_hba_lbl} : {row["HBD"]}</b> '
+                f'({row["Ratio"]} · {int(sweep_water)}% H₂O · {int(sweep_temp)}°C · {int(sweep_freq)} kHz)<br>'
                 f'🎯 Combinado: <b style="color:#6b4226">{comb_v:.1f}%</b> &nbsp;|&nbsp; '
-                f'🟦 EP: <b>{ep_v:.1f}%</b> &nbsp; 🟥 NEP: <b>{nep_v:.1f}%</b>'
+                f'🟦 EP: <b>{ep_v:.1f}%</b> &nbsp; 🟥 NEP: <b>{nep_v:.1f}%</b> &nbsp; '
+                f'🌡️ Degrad.T: <b>{deg_v:.1f}%</b>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
@@ -2344,12 +2564,12 @@ with tab12:
         st.markdown("#### Score combinado — Top candidatos")
         fig_sw = go.Figure()
         fig_sw.add_trace(go.Bar(
-            y=top_df["NADES"][::-1], x=top_df["EP prom. (%)"][::-1],
-            name="EP", orientation="h", marker_color="#2e86ab",
+            y=top_df["NADES"][::-1], x=top_df["EP final (%)"][::-1],
+            name="EP final", orientation="h", marker_color="#2e86ab",
         ))
         fig_sw.add_trace(go.Bar(
-            y=top_df["NADES"][::-1], x=top_df["NEP prom. (%)"][::-1],
-            name="NEP", orientation="h", marker_color="#c44536",
+            y=top_df["NADES"][::-1], x=top_df["NEP final (%)"][::-1],
+            name="NEP final", orientation="h", marker_color="#c44536",
         ))
         fig_sw.update_layout(
             barmode="group", height=max(350, top_n_ * 28),
@@ -2362,17 +2582,17 @@ with tab12:
         # ── Scatter EP vs NEP coloreado por combinado ──
         st.markdown("#### Espacio de búsqueda EP vs NEP")
         fig_sc = px.scatter(
-            sweep_df, x="EP prom. (%)", y="NEP prom. (%)",
+            sweep_df, x="EP final (%)", y="NEP final (%)",
             color="Combinado (%)", size_max=10,
             color_continuous_scale="YlOrBr",
-            hover_data=["NADES","Ratio","HBA","HBD"],
-            labels={"EP prom. (%)": "Índice EP promedio (%)",
-                    "NEP prom. (%)": "Índice NEP promedio (%)"},
+            hover_data=["NADES","Ratio","HBA","HBD","Degrad. T (%)"],
+            labels={"EP final (%)": "EP final tras 3 pasos (%)",
+                    "NEP final (%)": "NEP final tras 3 pasos (%)"},
         )
         # Marcar top 5
         top5 = sweep_df.head(5)
         fig_sc.add_trace(go.Scatter(
-            x=top5["EP prom. (%)"], y=top5["NEP prom. (%)"],
+            x=top5["EP final (%)"], y=top5["NEP final (%)"],
             mode="markers+text",
             marker=dict(size=12, color="gold", symbol="star", line=dict(color="black", width=1)),
             text=["#"+str(i+1) for i in range(len(top5))],
@@ -2384,32 +2604,36 @@ with tab12:
 
         # ── Tabla completa ──
         st.markdown("#### Tabla completa de candidatos")
-        cols_sw = [c for c in ["NADES","HBA","HBD","Ratio","EP prom. (%)","NEP prom. (%)","Combinado (%)"]
+        cols_sw = [c for c in ["NADES","HBA","HBD","Ratio","EP final (%)","NEP final (%)","Degrad. T (%)","Combinado (%)","Estab. (%)"]
                    if c in sweep_df.columns]
         st.dataframe(
             sweep_df[cols_sw].style
-               .background_gradient(subset=["EP prom. (%)"],  cmap="Blues",  vmin=0, vmax=100)
-               .background_gradient(subset=["NEP prom. (%)"], cmap="Reds",   vmin=0, vmax=80)
-               .background_gradient(subset=["Combinado (%)"], cmap="YlOrBr", vmin=0, vmax=100)
-               .format({"EP prom. (%)": "{:.1f}", "NEP prom. (%)": "{:.1f}", "Combinado (%)": "{:.1f}"}),
+               .background_gradient(subset=["EP final (%)"],   cmap="Blues",   vmin=0, vmax=100)
+               .background_gradient(subset=["NEP final (%)"],  cmap="Reds",    vmin=0, vmax=100)
+               .background_gradient(subset=["Degrad. T (%)"],  cmap="Oranges", vmin=0, vmax=20)
+               .background_gradient(subset=["Combinado (%)"],  cmap="YlOrBr",  vmin=0, vmax=100)
+               .format({"EP final (%)": "{:.1f}", "NEP final (%)": "{:.1f}",
+                        "Degrad. T (%)": "{:.1f}", "Combinado (%)": "{:.1f}", "Estab. (%)": "{:.1f}"}),
             use_container_width=True, hide_index=True, height=400,
         )
     else:
         st.info("Presiona **Ejecutar búsqueda global** para encontrar el NADES óptimo para extracción simultánea EP+NEP.")
         st.markdown("""
         **¿Cómo funciona el Recomendador?**
-        - Evalúa todas las combinaciones: 6 HBA × 17 HBD × 3 ratios = **306 combinaciones**
-        - Para cada una calcula EP promedio, NEP promedio y el score combinado
+        - Evalúa todas las combinaciones: 11 HBA × 23 HBD × 3 ratios = **759 combinaciones**
+        - Para cada una simula el **Proceso de 3 Pasos** completo (UAE + centrifugación + filtración)
+        - Incluye degradación térmica por clase (Arrhenius) y boost UAE por cavitación
         - **Score combinado** = `peso_EP × EP + peso_NEP × NEP − 0.05 × (EP − NEP)²`
         - La penalización cuadrática premia NADES que equilibran ambas fracciones
-        - Ordena de mayor a menor score combinado
+        - Ordena de mayor a menor score combinado · Columna **Degrad. T (%)** = pérdida por temperatura
+        - Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos integrados
         """)
 
 
 # ══════════════════════════════════════════════════════════
-# TAB 13 — METODOLOGÍA
+# TAB 8 — METODOLOGÍA
 # ══════════════════════════════════════════════════════════
-with tab13:
+with tab8:
     st.markdown("### Fundamento Científico de los Modelos")
 
     # ── Panel activo de fuente de datos ──
@@ -2422,8 +2646,8 @@ with tab13:
         f'<b>TPC:</b> {pp["tpc_dw"]}<br>'
         f'<b>Perfil:</b> {pp["perfil"]}<br>'
         f'<b>Ref. principal:</b> {pp["ref"]}'
-        f'{"<br><b style=\\\"color:#8b4000\\\">" + pp["nota_general"] + "</b>" if pp["nota_general"] else ""}'
-        f'</small></div>',
+        + (f'<br><b style="color:#8b4000">{pp["nota_general"]}</b>' if pp["nota_general"] else "")
+        + '</small></div>',
         unsafe_allow_html=True,
     )
     st.markdown("")
@@ -2585,3 +2809,126 @@ with tab13:
     **Modelo novel:**
     - **Ferrada, C.** (2026). Tesis Doctoral — Score combinado EP+NEP; modelo NEP; extracción simultánea con NADES; hojas y tallo Berberis.
     """)
+
+    st.markdown("---")
+
+    # ── Modelo 5: Degradación Térmica + Proceso 3 Pasos ──
+    with st.expander("Modelo 5 — Degradación Térmica (Arrhenius) + Proceso 3 Pasos", expanded=False):
+        col_m5a, col_m5b = st.columns(2)
+        with col_m5a:
+            st.markdown("""
+            **Degradación Térmica — Arrhenius:**
+            | Clase | Ea (kJ/mol) | T umbral (°C) |
+            |---|---|---|
+            | Antocianina | 75 | 45 |
+            | Flavonol | 55 | 60 |
+            | Flavan-3-ol | 60 | 55 |
+            | Ác. Hidroxicinámico | 50 | 65 |
+            | Tanino Condensado | 45 | 70 |
+            | Tanino Hidrolizable | 42 | 70 |
+
+            **Factor protección NADES:** k × 0.75 (Chanioti & Tzia 2017 — NADES mantiene 92% vs ~70% EtOH)
+
+            **Proceso 3 Pasos (Ferrada 2026):**
+            - **Paso 1:** UAE + degradación T → ep_P1 = EP × ret_T
+            - **Paso 2:** Centrifugación → ep_P2 = ep_P1 × 0.96 (pérdida <4%)
+            - **Paso 3:** Filtración 0.22 μm → sin pérdida si PM < 2000 Da
+            """)
+        with col_m5b:
+            st.latex(r"k(T) = k_{ref} \cdot e^{-\frac{E_a}{R}\left(\frac{1}{T_{ref}}-\frac{1}{T}\right)}")
+            st.latex(r"k_{NADES}(T) = 0.75 \cdot k(T)")
+            st.latex(r"C_{ret}(t) = e^{-k_{NADES} \cdot t}")
+            st.latex(r"EP_{P1} = EP_{bruto} \cdot C_{ret}(t_{proc})")
+            st.latex(r"NEP_{P1} = NEP_{bruto} \cdot (1 - 0.45 \cdot (1 - C_{ret}))")
+            st.caption(
+                "NEP más protegido en la matriz → pierde solo 45% de lo que pierde EP · "
+                "Ref: Wang & Xu (2007) Food Chem. 101, 1338 · Fang (2011) 129, 267 · "
+                "Ferrada, C. Tesis Doctoral 2026"
+            )
+
+    # ── Modelo 6: Monte Carlo EP + NEP ──
+    st.markdown("---")
+    st.markdown("### 🎲 Análisis de Incertidumbre — Monte Carlo (EP + NEP)")
+    st.markdown(
+        "Estimación de la incertidumbre de los modelos EP y NEP mediante perturbación "
+        "aleatoria de los parámetros del NADES. El modelo EP (consolidado en literatura) "
+        "tiene menor incertidumbre (±12%) que el modelo NEP (teórico novel, ±20%)."
+    )
+
+    mc_col1, mc_col2 = st.columns(2)
+
+    with mc_col1:
+        st.markdown("#### Monte Carlo — Modelo EP")
+        if st.button("▶ MC EP (400 iteraciones)", key="mc_ep_run"):
+            with st.spinner("Simulando 400 perturbaciones EP…"):
+                mc_ep = ep_monte_carlo(props, poly_df, n_iter=400, uncertainty=0.12)
+            st.session_state["mc_ep_result"] = mc_ep
+
+        if "mc_ep_result" in st.session_state:
+            mc_ep = st.session_state["mc_ep_result"]
+            if mc_ep["samples"]:
+                ep1, ep2, ep3, ep4 = st.columns(4)
+                ep1.metric("EP medio",  f"{mc_ep['mean']:.1f}%")
+                ep2.metric("Desv. std", f"±{mc_ep['std']:.1f}%")
+                ep3.metric("IC 90%",    f"[{mc_ep['p5']:.1f}–{mc_ep['p95']:.1f}]%")
+                ep4.metric("CV",        f"{mc_ep['cv']:.1f}%")
+
+                fig_mc_ep = go.Figure()
+                fig_mc_ep.add_trace(go.Histogram(
+                    x=mc_ep["samples"], nbinsx=30,
+                    marker_color="#2e86ab", opacity=0.75,
+                    name="Distribución EP (%)",
+                ))
+                fig_mc_ep.add_vline(x=mc_ep["mean"], line_dash="solid", line_color="#333",
+                                    annotation_text=f"Media: {mc_ep['mean']:.1f}%")
+                fig_mc_ep.add_vrect(x0=mc_ep["p5"], x1=mc_ep["p95"],
+                                    fillcolor="rgba(46,134,171,0.12)",
+                                    annotation_text="IC 90%", annotation_position="top left")
+                fig_mc_ep.update_layout(
+                    height=280, xaxis_title="Índice EP (%)", yaxis_title="Frecuencia",
+                    showlegend=False,
+                )
+                st.plotly_chart(fig_mc_ep, use_container_width=True)
+                st.caption(
+                    f"N=400 · Perturbación ±12%: cap_HBD, pH, viscosidad, polaridad · "
+                    "Incertidumbre menor que NEP (modelo más consolidado en literatura) · "
+                    "Ref: Espino et al. (2016) Talanta 162, 412"
+                )
+
+    with mc_col2:
+        st.markdown("#### Monte Carlo — Modelo NEP")
+        if st.button("▶ MC NEP (400 iteraciones)", key="mc_nep_run2"):
+            with st.spinner("Simulando 400 perturbaciones NEP…"):
+                mc_nep2 = nep_monte_carlo(props, poly_df, n_iter=400, uncertainty=0.20)
+            st.session_state["mc_nep_result2"] = mc_nep2
+
+        if "mc_nep_result2" in st.session_state:
+            mc_nep2 = st.session_state["mc_nep_result2"]
+            if mc_nep2["samples"]:
+                np1, np2, np3, np4 = st.columns(4)
+                np1.metric("NEP medio",  f"{mc_nep2['mean']:.1f}%")
+                np2.metric("Desv. std",  f"±{mc_nep2['std']:.1f}%")
+                np3.metric("IC 90%",     f"[{mc_nep2['p5']:.1f}–{mc_nep2['p95']:.1f}]%")
+                np4.metric("CV",         f"{mc_nep2['cv']:.1f}%")
+
+                fig_mc_nep = go.Figure()
+                fig_mc_nep.add_trace(go.Histogram(
+                    x=mc_nep2["samples"], nbinsx=30,
+                    marker_color="#c44536", opacity=0.75,
+                    name="Distribución NEP (%)",
+                ))
+                fig_mc_nep.add_vline(x=mc_nep2["mean"], line_dash="solid", line_color="#333",
+                                     annotation_text=f"Media: {mc_nep2['mean']:.1f}%")
+                fig_mc_nep.add_vrect(x0=mc_nep2["p5"], x1=mc_nep2["p95"],
+                                     fillcolor="rgba(196,69,54,0.12)",
+                                     annotation_text="IC 90%", annotation_position="top left")
+                fig_mc_nep.update_layout(
+                    height=280, xaxis_title="Índice NEP (%)", yaxis_title="Frecuencia",
+                    showlegend=False,
+                )
+                st.plotly_chart(fig_mc_nep, use_container_width=True)
+                st.caption(
+                    f"N=400 · Perturbación ±20%: cap_HBD, cap_HBA, pH, viscosidad, polaridad, antioxidante · "
+                    "Mayor incertidumbre (modelo teórico novel sin validación experimental aún) · "
+                    "Ref: Saltelli et al. (2004) Sensitivity Analysis in Practice · Ferrada, C. Tesis Doctoral 2026"
+                )

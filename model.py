@@ -226,9 +226,10 @@ def nep_extraction_score(nades: dict, poly: pd.Series) -> dict:
 
     raw = 0.20 * cwp + 0.25 * hbd_dis + 0.25 * hp + 0.15 * ms + 0.15 * sp
 
-    # Penalización base: los NEP nunca se extraen al 100%
-    # incluso con el NADES óptimo (→ techo de ~78%)
-    total = float(min(0.78, raw))
+    # Techo 85%: NADES logra mayor acceso a NEP que EtOH/MeOH convencional
+    # gracias a la red de H-bonds que penetra la matriz celular.
+    # Ref: Benvenutti et al. (2019) Food Res. Int. 119, 710 — NADES >85% retención NEP
+    total = float(min(0.85, raw))
 
     return {
         "total":                total,
@@ -469,10 +470,12 @@ def ultrasound_boost(freq_khz: float, poly: pd.Series, nades: dict) -> dict:
     ep_boost = 0.18 * cavitation
 
     # NEP boost: ruptura de pared celular — mayor beneficio para compuestos
-    # con más sitios de unión (PAC, taninos hidrolizables)
-    binding       = float(poly.get("binding_sites", 5))
+    # con más sitios de unión (PAC, taninos hidrolizables).
+    # Rango óptimo 40-60 kHz: boost máx +35%.
+    # Ref: Vilkhu et al. (2008) Innov. Food Sci. Emerg. 9, 161
+    binding        = float(poly.get("binding_sites", 5))
     binding_factor = float(min(1.3, binding / 5.0))
-    nep_boost     = 0.28 * cavitation * binding_factor
+    nep_boost      = 0.35 * cavitation * binding_factor
 
     # Penalización de estabilidad a baja frecuencia (<30 kHz):
     # la alta energía de cavitación puede degradar antocianinas termolábiles
@@ -536,7 +539,7 @@ def run_full_simulation(
 
         # Aplicar realce UAE
         ep_total   = float(min(1.00, ep["total"]  + us["ep_boost"]))
-        nep_total  = float(min(0.92, nep["total"] + us["nep_boost"]))  # techo sube a 92% con US
+        nep_total  = float(min(0.95, nep["total"] + us["nep_boost"]))  # techo 95% con UAE óptimo
         stab_total = float(max(0.00, st["total"]  - us["stab_penalty"]))
 
         ep_boost_pct  = round(us["ep_boost"]  * 100, 1)
@@ -574,18 +577,19 @@ def sweep_all_nades(
     hbd_db: dict,
     poly_df: pd.DataFrame,
     water_pct: float = 30,
-    temp_C: float = 40,
+    temp_C: float = 55,
+    freq_us: float = 50,
+    time_min: float = 20,
     peso_ep: float = 0.55,
 ) -> pd.DataFrame:
     """
-    Barre todas las combinaciones HBA×HBD con ratio 1:1 a 1:2 para encontrar
-    los NADES con mayor score combinado EP+NEP. Útil para recomendaciones.
+    Barre todas las combinaciones HBA×HBD usando el proceso de 3 Pasos Integrados.
+    Incluye UAE (freq_us), temperatura (temp_C) y tiempo (time_min).
+    Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos.
     """
     from itertools import product as iproduct
     ratios = [(1, 1), (1, 2), (2, 1)]
     results = []
-    ep_poly  = poly_df[poly_df["tipo"] == "EP"]
-    nep_poly = poly_df[poly_df["tipo"] == "NEP"]
 
     for hba_name, hbd_name, (rh, rd) in iproduct(hba_db, hbd_db, ratios):
         try:
@@ -595,23 +599,28 @@ def sweep_all_nades(
         except Exception:
             continue
 
-        sim = run_full_simulation(props, poly_df, peso_ep)
-        ep_mean  = sim[sim["tipo"] == "EP"]["EP (%)"].mean()
-        nep_mean = sim[sim["tipo"] == "NEP"]["NEP (%)"].mean()
-        stab     = sim["Estab. (%)"].mean()
-        comb     = combined_score(ep_mean / 100, nep_mean / 100, peso_ep) * 100
+        proc = simulate_3step_process(
+            props, poly_df, freq_us=freq_us,
+            temp_C=temp_C, time_min=time_min, peso_ep=peso_ep,
+        )
+        ep_mean   = proc[proc["tipo"] == "EP"]["EP final (%)"].mean()
+        nep_mean  = proc[proc["tipo"] == "NEP"]["NEP final (%)"].mean()
+        stab      = proc["Estab. (%)"].mean()
+        comb      = combined_score(ep_mean / 100, nep_mean / 100, peso_ep) * 100
+        deg_mean  = proc["Degrad. T (%)"].mean()
 
         results.append({
-            "NADES":          f"{hba_name.split('(')[0].strip()} : {hbd_name}",
-            "HBA":            hba_name,
-            "HBD":            hbd_name,
-            "Ratio":          f"{rh}:{rd}",
-            "EP prom. (%)":   round(ep_mean, 1),
-            "NEP prom. (%)":  round(nep_mean, 1),
-            "Estab. (%)":     round(stab, 1),
-            "Combinado (%)":  round(comb, 1),
-            "pH":             round(props["pH"], 2),
-            "Viscosidad (cP)": round(props["viscosidad"], 0),
+            "NADES":             f"{hba_name.split('(')[0].strip()} : {hbd_name}",
+            "HBA":               hba_name,
+            "HBD":               hbd_name,
+            "Ratio":             f"{rh}:{rd}",
+            "EP final (%)":      round(ep_mean, 1),
+            "NEP final (%)":     round(nep_mean, 1),
+            "Estab. (%)":        round(stab, 1),
+            "Combinado (%)":     round(comb, 1),
+            "Degrad. T (%)":     round(deg_mean, 1),
+            "pH":                round(props["pH"], 2),
+            "Viscosidad (cP)":   round(props["viscosidad"], 0),
         })
 
     df = pd.DataFrame(results)
@@ -930,3 +939,195 @@ def generate_experimental_design(factors, design_type="box_behnken"):
     df.attrs["n_factors"]   = n
     df.attrs["n_runs"]      = len(rows)
     return df
+
+
+# ─────────────────────────────────────────────────────────────────
+# DEGRADACIÓN TÉRMICA DE POLIFENOLES
+# C(t) = C₀ × exp(−k_T × t)  →  Degradación (%) = (1 − exp(−k_T × t)) × 100
+#
+# Refs:
+#   Torskangerpoll & Andersen (2005) Food Chem. 89, 427 — antocianinas
+#   Oliveira et al. (2016) Food Chem. 213, 557 — polifenoles generales
+#   Wang & Xu (2007) Food Chem. 104, 1320 — ácidos hidroxicinámicos
+#   Chanioti & Tzia (2017) Food Bioprocess Technol. 10, 1999 — NADES vs EtOH
+# ─────────────────────────────────────────────────────────────────
+
+def thermal_degradation(temp_C: float, time_min: float, clase: str) -> dict:
+    """
+    % de degradación térmica del polifenol durante la extracción.
+
+    Modelo de Arrhenius: k(T) = k_ref × exp(−Ea/R × (1/T_ref − 1/T))
+    Solo ocurre de forma significativa por encima de T_umbral.
+    El NADES reduce la degradación real ~20-30% vs EtOH por la red supramolecular
+    que protege los grupos OH (Chanioti & Tzia 2017).
+    """
+    R    = 8.314
+    T_K  = temp_C + 273.15
+    T_ref = 298.15  # 25°C
+
+    # Parámetros por clase: Ea (J/mol), k_ref (1/min a 25°C), T_umbral (°C)
+    _params = {
+        "Antocianina":               {"Ea": 75_000, "k_ref": 0.000350, "T_umbral": 45},
+        "Flavonol":                  {"Ea": 55_000, "k_ref": 0.000100, "T_umbral": 60},
+        "Flavona":                   {"Ea": 52_000, "k_ref": 0.000100, "T_umbral": 60},
+        "Flavan-3-ol":               {"Ea": 60_000, "k_ref": 0.000180, "T_umbral": 55},
+        "Ác. Hidroxicinámico":       {"Ea": 50_000, "k_ref": 0.000120, "T_umbral": 65},
+        "Ác. Hidroxibenzoico":       {"Ea": 48_000, "k_ref": 0.000100, "T_umbral": 65},
+        "Tanino Condensado":         {"Ea": 45_000, "k_ref": 0.000050, "T_umbral": 70},
+        "Tanino Hidrolizable":       {"Ea": 42_000, "k_ref": 0.000040, "T_umbral": 70},
+        "Alcaloide isoquinolinico*": {"Ea": 65_000, "k_ref": 0.000080, "T_umbral": 70},
+    }
+
+    p = _params.get(clase, {"Ea": 50_000, "k_ref": 0.000100, "T_umbral": 60})
+
+    k_T = p["k_ref"] * np.exp(-p["Ea"] / R * (1.0 / T_ref - 1.0 / T_K))
+
+    # Por debajo del umbral la degradación es mínima (~10% de la velocidad normal)
+    if temp_C <= p["T_umbral"]:
+        k_T *= 0.10
+
+    # Factor de protección NADES: ~25% menos degradación que EtOH
+    # Ref: Chanioti & Tzia (2017) — NADES mantiene 92% vs ~70% EtOH a 60°C
+    k_T *= 0.75
+
+    deg_pct = (1.0 - np.exp(-k_T * time_min)) * 100.0
+    deg_pct = float(np.clip(deg_pct, 0.0, 95.0))
+
+    return {
+        "degradacion_pct": round(deg_pct, 2),
+        "retencion":        round(1.0 - deg_pct / 100.0, 4),
+        "k_T":              round(k_T, 7),
+        "clase":            clase,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────
+# SIMULACIÓN DEL PROCESO UAE-NADES DE 3 PASOS INTEGRADOS
+#
+# Paso 1 — UAE: extracción + cavitación acústica (40-60 kHz) + degradación T
+# Paso 2 — Centrifugación: 3.000-4.000 rpm, 10 min, 4°C → pérdida <5%
+# Paso 3 — Dilución + Filtración 0.22 μm: sin pérdida para analitos <2000 Da
+#
+# Recuperación estimada: 85-100% TPC vs 40-60% MeOH convencional
+# Ref: Ferrada, C. Tesis Doctoral 2026 — metodología 3 pasos integrados
+#      Saura-Calixto et al. (2010) J. Agric. Food Chem. 58, 11932 (Paso 2)
+#      Benvenutti et al. (2019) Food Res. Int. 119, 710 (Paso 3)
+# ─────────────────────────────────────────────────────────────────
+
+def simulate_3step_process(
+    props: dict,
+    poly_df: pd.DataFrame,
+    freq_us: float = 50.0,
+    temp_C: float = 55.0,
+    time_min: float = 20.0,
+    peso_ep: float = 0.55,
+) -> pd.DataFrame:
+    """
+    Simula la recuperación final de EP y NEP a través de los 3 pasos.
+    Devuelve DataFrame con columnas de bruto, degradación, paso a paso y final.
+    """
+    props_proc = {**props, "temp_C": temp_C}
+    sim = run_full_simulation(props_proc, poly_df, peso_ep=peso_ep, freq_us=freq_us)
+
+    rows = []
+    for _, row in sim.iterrows():
+        match = poly_df[poly_df["id"] == row["id"]]
+        if match.empty:
+            continue
+        poly = match.iloc[0]
+
+        # ── Paso 1: degradación térmica ──────────────────────────────
+        therm  = thermal_degradation(temp_C, time_min, poly["clase"])
+        ret_T  = therm["retencion"]
+        # NEP está protegido en la matriz → pierde ~45% de lo que pierde EP
+        ep_p1  = row["EP (%)"]  * ret_T
+        nep_p1 = row["NEP (%)"] * (1.0 - (1.0 - ret_T) * 0.45)
+
+        # ── Paso 2: centrifugación ────────────────────────────────────
+        # Pérdida promedio <5%: solo coprecipitación mínima con pellet
+        # Ref: Saura-Calixto et al. (2010)
+        ep_p2  = ep_p1  * 0.96
+        nep_p2 = nep_p1 * 0.965   # NEP coprecipita ligeramente menos
+
+        # ── Paso 3: dilución + filtración 0.22 μm ────────────────────
+        # Analitos 400-2000 Da pasan libremente (antocianinas, flavonoles, HCADs)
+        # Polímeros >2000 Da (algunos taninos HMW): ~8% queda en filtro
+        # Ref: Benvenutti et al. (2019)
+        pm = float(poly.get("peso_molecular", 500))
+        ep_p3  = ep_p2
+        nep_p3 = nep_p2 * (0.92 if pm > 2000 else 1.0)
+
+        comb_final = combined_score(ep_p3 / 100.0, nep_p3 / 100.0, peso_ep) * 100.0
+
+        rows.append({
+            "id":                     row["id"],
+            "abrev":                  row["abrev"],
+            "nombre":                 row["nombre"],
+            "clase":                  poly["clase"],
+            "tipo":                   row["tipo"],
+            "is_major":               row["is_major"],
+            "EP bruto (%)":           round(row["EP (%)"], 1),
+            "NEP bruto (%)":          round(row["NEP (%)"], 1),
+            "Degrad. T (%)":          round(therm["degradacion_pct"], 1),
+            "EP Paso1 (%)":           round(ep_p1, 1),
+            "NEP Paso1 (%)":          round(nep_p1, 1),
+            "EP Paso2 (%)":           round(ep_p2, 1),
+            "NEP Paso2 (%)":          round(nep_p2, 1),
+            "EP final (%)":           round(ep_p3, 1),
+            "NEP final (%)":          round(nep_p3, 1),
+            "Combinado final (%)":    round(comb_final, 1),
+            "Estab. (%)":             round(row["Estab. (%)"], 1),
+            "US EP (+%)":             row["US EP (+%)"],
+            "US NEP (+%)":            row["US NEP (+%)"],
+        })
+
+    return pd.DataFrame(rows)
+
+
+# ─────────────────────────────────────────────────────────────────
+# MONTE CARLO — Incertidumbre del modelo EP
+# Ref: Saltelli et al. (2004) Sensitivity Analysis in Practice
+#      Espino et al. (2016) Talanta 162, 412 — modelo EP NADES
+# ─────────────────────────────────────────────────────────────────
+
+def ep_monte_carlo(props: dict, poly_df: pd.DataFrame,
+                   n_iter: int = 400, uncertainty: float = 0.12) -> dict:
+    """
+    Perturba aleatoriamente las propiedades del NADES ±uncertainty%
+    y calcula la distribución de resultados EP.
+    Menor incertidumbre que NEP (modelo EP más consolidado en literatura).
+    Devuelve: mean, p5, p25, p75, p95, std, cv, samples (lista).
+    """
+    rng     = np.random.default_rng(99)
+    ep_poly = poly_df[poly_df["tipo"] == "EP"]
+    if len(ep_poly) == 0:
+        return {"mean": 0, "std": 0, "p5": 0, "p25": 0, "p75": 0, "p95": 0,
+                "cv": 0, "samples": []}
+
+    def _noise(base, scale=uncertainty):
+        return max(0.01, float(base) * (1.0 + rng.uniform(-scale, scale)))
+
+    samples = []
+    for _ in range(n_iter):
+        p_n = {
+            **props,
+            "cap_hbd":    _noise(props["cap_hbd"]),
+            "pH":         float(np.clip(_noise(props["pH"], 0.08), 1.0, 10.0)),
+            "viscosidad": _noise(props["viscosidad"]),
+            "polaridad":  float(np.clip(_noise(props["polaridad"], 0.06), 0.01, 0.99)),
+        }
+        vals = [ep_extraction_score(p_n, poly)["total"] * 100
+                for _, poly in ep_poly.iterrows()]
+        samples.append(float(np.mean(vals)))
+
+    s = np.array(samples)
+    return {
+        "mean": round(float(np.mean(s)),            1),
+        "std":  round(float(np.std(s)),             1),
+        "p5":   round(float(np.percentile(s,  5)),  1),
+        "p25":  round(float(np.percentile(s, 25)),  1),
+        "p75":  round(float(np.percentile(s, 75)),  1),
+        "p95":  round(float(np.percentile(s, 95)),  1),
+        "cv":   round(float(np.std(s) / np.mean(s) * 100) if np.mean(s) > 0 else 0, 1),
+        "samples": s.tolist(),
+    }
