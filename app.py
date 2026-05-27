@@ -13,6 +13,7 @@ Prohibida su reproducción o distribución sin autorización del autor.
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 import pandas as pd
 import numpy as np
 
@@ -154,8 +155,26 @@ TR = {
     "otab_kin": {"es": "📈 Cinética + S:L",       "en": "📈 Kinetics + S:L"},
     "otab_dex": {"es": "🧪 Diseño Experimental",  "en": "🧪 Experimental Design"},
     # ── Sub-tabs tab7 ──
-    "rtab_rec": {"es": "🎯 Recomendador Global",  "en": "🎯 Global Recommender"},
-    "rtab_th":  {"es": "🧪 Cribado Tesis",        "en": "🧪 Thesis Screening"},
+    "rtab_rec":  {"es": "🎯 Recomendador Global",   "en": "🎯 Global Recommender"},
+    "rtab_comp": {"es": "⚖️ Comparador NADES",      "en": "⚖️ NADES Comparator"},
+    "rtab_th":   {"es": "🧪 Cribado Tesis",         "en": "🧪 Thesis Screening"},
+    # ── Modo Tesis ──
+    "modo_tesis_lbl":  {"es": "🎓 Modo Tesis",          "en": "🎓 Thesis Mode"},
+    "modo_tesis_help": {"es": "Activa numeración de figuras (F1.1, F1.2…) y leyendas formales para la tesis doctoral.",
+                        "en": "Enables figure numbering (F1.1, F1.2…) and formal captions for the doctoral thesis."},
+    # ── Informe HTML (F3) ──
+    "t1_report_btn":  {"es": "📄 Generar Informe HTML completo",  "en": "📄 Generate full HTML Report"},
+    "t1_report_dl":   {"es": "💾 Descargar Informe HTML",         "en": "💾 Download HTML Report"},
+    "t1_report_ok":   {"es": "Informe generado — descarga disponible abajo.",
+                       "en": "Report generated — download available below."},
+    # ── Comparador F1 ──
+    "comp_title": {"es": "### ⚖️ Comparador de NADES — Análisis Lado a Lado",
+                   "en": "### ⚖️ NADES Comparator — Side-by-Side Analysis"},
+    "comp_desc":  {"es": "Configura dos NADES y compara directamente EP, NEP, Estabilidad y Score combinado.",
+                   "en": "Configure two NADES and directly compare EP, NEP, Stability and Combined Score."},
+    "comp_nades_a": {"es": "### NADES A", "en": "### NADES A"},
+    "comp_nades_b": {"es": "### NADES B", "en": "### NADES B"},
+    "comp_run":     {"es": "⚖️ Comparar NADES A vs B", "en": "⚖️ Compare NADES A vs B"},
     # ── Header principal ──
     "main_title":   {"es": "Simulador de NADES para extraer polifenoles",
                      "en": "NADES Simulator for Polyphenol Extraction"},
@@ -311,6 +330,27 @@ def t(key: str) -> str:
     return entry.get(LANG, entry.get("es", key))
 
 
+# ── Contador de figuras para Modo Tesis ──
+_fig_counter: dict = {}
+
+def fig_caption(tab_n: int, desc: str) -> None:
+    """Show a formal figure caption when Thesis Mode is active.
+
+    Call AFTER st.plotly_chart() to place the caption below the figure.
+    Only renders when modo_tesis is True (evaluated at call-time from session_state).
+    """
+    if not st.session_state.get("modo_tesis_toggle", False):
+        return
+    key = f"tab{tab_n}"
+    _fig_counter[key] = _fig_counter.get(key, 0) + 1
+    st.markdown(
+        f'<p style="font-size:.75rem;color:#344a5e;text-align:center;'
+        f'margin-top:-12px;margin-bottom:8px">'
+        f'<i>Figura {tab_n}.{_fig_counter[key]} — {desc}</i></p>',
+        unsafe_allow_html=True,
+    )
+
+
 # ─────────────────────────────────────────────
 # DATOS (cacheados)
 # ─────────────────────────────────────────────
@@ -457,6 +497,16 @@ with st.sidebar:
         value=False,
         help=t("major_help"),
     )
+
+    st.divider()
+    modo_tesis = st.toggle(
+        t("modo_tesis_lbl"),
+        value=False,
+        help=t("modo_tesis_help"),
+        key="modo_tesis_toggle",
+    )
+    if modo_tesis:
+        st.caption("🎓 Numeración de figuras activa (F1.1, F2.1…)")
 
     ratio_hba, ratio_hbd = RATIOS_DISPONIBLES[ratio_sel]
 
@@ -773,6 +823,164 @@ with tab1:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
         st.success(t("t1_excel_ok"))
+
+    # ── F3: Generar Informe HTML completo ──
+    st.markdown("---")
+    st.markdown("#### 📄 Exportar Informe HTML")
+    st.caption(
+        "Genera un informe HTML completo con figuras interactivas (Plotly), "
+        "tablas de resultados y propiedades del NADES. Listo para imprimir como PDF desde el navegador."
+    )
+    if st.button(t("t1_report_btn"), key="btn_gen_report"):
+        # ── Construir el HTML ──
+        _tpc_ref = "Ruiz et al. (2024) Horticulturae 10, 458" if parte_planta == "fruto" else "Datos generalizados Berberis spp."
+        _nades_name = f"{hba_sel.split('(')[0].strip()} : {hbd_sel} ({ratio_sel})"
+        _include_plotly = "cdn"   # primer figura carga Plotly CDN
+
+        # 1) Reconstruir figuras para el informe
+        _rep_fig_rad  = go.Figure(go.Scatterpolar(
+            r=vals, theta=cats, fill="toself", name=_nades_name,
+            fillcolor="rgba(46,134,171,0.2)", line=dict(color="#2e86ab", width=2),
+        ))
+        _rep_fig_rad.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+            height=300, margin=dict(l=30,r=30,t=30,b=30),
+            title=f"Perfil fisicoquímico — {_nades_name}",
+        )
+
+        _rep_fig_cmp  = px.bar(
+            melt, x="abrev", y="Valor (%)", color="Índice",
+            barmode="group", color_discrete_map=color_map,
+            labels={"abrev": "Polifenol", "Valor (%)": "Índice (%)"},
+            title=f"Índices EP · NEP · Combinado — {_nades_name}",
+        )
+        _rep_fig_cmp.update_layout(height=350, xaxis_tickangle=-40)
+
+        _rep_fig_water = go.Figure()
+        _rep_fig_water.add_trace(go.Scatter(x=wc_df["Agua (%)"], y=wc_df["EP"],  name="EP",  line=dict(color="#2e86ab")))
+        _rep_fig_water.add_trace(go.Scatter(x=wc_df["Agua (%)"], y=wc_df["NEP"], name="NEP", line=dict(color="#c44536")))
+        _rep_fig_water.add_trace(go.Scatter(x=wc_df["Agua (%)"], y=wc_df["Estab."], name="Estab.", line=dict(color="#048a81")))
+        _rep_fig_water.add_trace(go.Scatter(x=wc_df["Agua (%)"], y=wc_df["Combinado"], name="Combinado", line=dict(color="#6b4226", dash="dash")))
+        _rep_fig_water.add_vline(x=water_pct, line_dash="dot", annotation_text=f"Actual {water_pct}%")
+        _rep_fig_water.update_layout(
+            height=300, xaxis_title="Agua (%)", yaxis_title="Índice (%)", yaxis_range=[0,100],
+            title="Efecto del % agua en los índices de extracción",
+        )
+
+        # 2) Tabla de propiedades
+        _props_html = pd.DataFrame([
+            {"Propiedad": "HBA", "Valor": hba_sel},
+            {"Propiedad": "HBD", "Valor": hbd_sel},
+            {"Propiedad": "Ratio HBA:HBD", "Valor": ratio_sel},
+            {"Propiedad": "Agua añadida (%)", "Valor": f"{water_pct}%"},
+            {"Propiedad": "Temperatura", "Valor": f"{temp_C} °C"},
+            {"Propiedad": "UAE (kHz)", "Valor": f"{freq_us} kHz"},
+            {"Propiedad": "Polaridad (ETN)", "Valor": f"{props['polaridad']:.3f}"},
+            {"Propiedad": "Viscosidad (cP)", "Valor": f"{props['viscosidad']:.0f}"},
+            {"Propiedad": "pH efectivo", "Valor": f"{props['pH']:.2f}"},
+            {"Propiedad": "Cap. HBD", "Valor": f"{props['cap_hbd']:.2f}"},
+            {"Propiedad": "Parte de planta", "Valor": pp["label"]},
+            {"Propiedad": "EP promedio (%)", "Valor": f"{avg_ep:.1f}"},
+            {"Propiedad": "NEP promedio (%)", "Valor": f"{avg_nep:.1f}"},
+            {"Propiedad": "Estabilidad promedio (%)", "Valor": f"{avg_stab:.1f}"},
+            {"Propiedad": "Score combinado (%)", "Valor": f"{avg_comb:.1f}"},
+        ]).to_html(index=False, border=0, classes="rep-table")
+
+        # 3) Tabla de simulación
+        _sim_html = tbl.to_html(index=False, border=0, classes="rep-table", float_format="%.1f")
+
+        # 4) Figuras como HTML
+        _fig_html_rad   = pio.to_html(_rep_fig_rad,   full_html=False, include_plotlyjs=_include_plotly)
+        _fig_html_cmp   = pio.to_html(_rep_fig_cmp,   full_html=False, include_plotlyjs=False)
+        _fig_html_water = pio.to_html(_rep_fig_water,  full_html=False, include_plotlyjs=False)
+
+        # 5) Numeración de figuras si modo_tesis
+        _fig_prefix = ""
+        if st.session_state.get("modo_tesis_toggle", False):
+            _fig_prefix = "<p><i>Figura 1.1</i></p>"
+            _fig2_prefix = "<p><i>Figura 1.2</i></p>"
+            _fig3_prefix = "<p><i>Figura 1.3</i></p>"
+        else:
+            _fig_prefix = _fig2_prefix = _fig3_prefix = ""
+
+        # 6) Ensamblar HTML
+        _html_report = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Informe NADES — {_nades_name}</title>
+  <style>
+    body {{font-family:Arial,sans-serif;max-width:1100px;margin:auto;padding:2rem;color:#0d1f35}}
+    h1   {{color:#0d3b6e;border-bottom:3px solid #0d3b6e;padding-bottom:.4rem}}
+    h2   {{color:#1a6fa0;margin-top:2rem}}
+    h3   {{color:#344a5e}}
+    .rep-table {{border-collapse:collapse;width:100%;margin-bottom:1.5rem}}
+    .rep-table td,.rep-table th {{border:1px solid #ccc;padding:.45rem .8rem;font-size:.88rem}}
+    .rep-table th {{background:#0d3b6e;color:white;font-weight:700}}
+    .rep-table tr:nth-child(even) {{background:#f0f4f8}}
+    .badge {{display:inline-block;background:#c8f0d0;border:1px solid #1a8a40;
+             border-radius:4px;padding:.2rem .6rem;font-size:.82rem;color:#0a3d1a;font-weight:600}}
+    .fig-caption {{font-size:.77rem;color:#344a5e;text-align:center;margin-top:-10px;font-style:italic}}
+    footer {{margin-top:3rem;font-size:.75rem;color:#888;border-top:1px solid #ddd;padding-top:1rem}}
+  </style>
+</head>
+<body>
+  <h1>🫐 Informe de Extracción con NADES</h1>
+  <p><b>NADES activo:</b> {_nades_name} &nbsp;&nbsp;
+     <b>Parte de planta:</b> {pp["label"]} &nbsp;&nbsp;
+     <b>Fecha:</b> 2026-05-26</p>
+  <p><b>Autor:</b> Cristofher Ferrada &nbsp;&nbsp;
+     <b>Versión:</b> Simulador NADES Beta 0.6 &nbsp;&nbsp;
+     <b>Tesis Doctoral 2026</b></p>
+  <p class="badge">Score combinado EP+NEP: {avg_comb:.1f}%
+     (peso EP={peso_ep:.0%} · NEP={1-peso_ep:.0%})</p>
+
+  <h2>1. Propiedades del NADES y Resultados Globales</h2>
+  {_props_html}
+
+  <h2>2. Perfil Fisicoquímico del NADES</h2>
+  {_fig_prefix}
+  {_fig_html_rad}
+  <p class="fig-caption">Perfil normalizado (0–1) de las propiedades clave del NADES.
+  Ref: Espino et al. (2016) Talanta 162, 412.</p>
+
+  <h2>3. Índices EP · NEP · Combinado por Polifenol</h2>
+  {_sim_html}
+  {_fig2_prefix}
+  {_fig_html_cmp}
+  <p class="fig-caption">EP: Ruiz et al. (2024) Horticulturae 10, 458 · NEP: Ferrada (2026) novel · Score combinado: Ferrada (2026)</p>
+
+  <h2>4. Efecto del % Agua en los Índices de Extracción</h2>
+  {_fig3_prefix}
+  {_fig_html_water}
+  <p class="fig-caption">Curva calculada con ratio={ratio_sel}, T={temp_C}°C, UAE={freq_us} kHz.
+  Ref: Dai et al. (2013) Anal. Chim. Acta 766, 61 · Chanioti &amp; Tzia (2017)</p>
+
+  <h2>5. Contexto de la Planta</h2>
+  <p><b>{pp["label"]}:</b> {pp["nombre"]}<br>
+  TPC: {pp["tpc_dw"]} · Perfil: {pp["perfil"]}<br>
+  Referencia principal: {pp["ref"]}</p>
+  <p>Base de datos de polifenoles: {_tpc_ref}</p>
+
+  <footer>
+    Generado por: Simulador de NADES para extracción de polifenoles — Beta 0.6<br>
+    © Cristofher Ferrada · Tesis Doctoral 2026 · Todos los derechos reservados<br>
+    Modelos basados en literatura científica indexada (ver pestaña Metodología en la app)
+  </footer>
+</body>
+</html>"""
+
+        st.session_state["html_report"] = _html_report
+        st.success(t("t1_report_ok"))
+
+    if "html_report" in st.session_state:
+        st.download_button(
+            label=t("t1_report_dl"),
+            data=st.session_state["html_report"].encode("utf-8"),
+            file_name=f"Informe_NADES_{hba_sel.split('(')[0].strip()[:12]}_{hbd_sel[:12]}_{parte_planta}.html",
+            mime="text/html",
+        )
 
 
 # ══════════════════════════════════════════════════════════
@@ -2479,6 +2687,8 @@ with tab6:
     if uploaded is not None:
         try:
             exp_df = pd.read_csv(uploaded)
+            # F2 — Persistir en session_state para uso por Recomendador
+            st.session_state["exp_df"] = exp_df
             st.success(f"Archivo cargado: {len(exp_df)} filas, {len(exp_df.columns)} columnas")
             st.dataframe(exp_df, use_container_width=True, hide_index=True)
 
@@ -2568,6 +2778,77 @@ with tab6:
                             .format({c: "{:.1f}" for c in comp_df.columns if "(%)" in c or "(pp)" in c}),
                         use_container_width=True, hide_index=True,
                     )
+
+                    # ── F2: Calibración automática del peso EP ──
+                    st.markdown("---")
+                    st.markdown("#### 🔬 F2 — Calibrar peso EP con mis datos experimentales")
+                    st.markdown(
+                        "Encuentra el valor de **peso EP** que minimiza el error entre la predicción "
+                        "del modelo y tus datos de **TPC experimental**. "
+                        "Ejecuta un barrido en el rango 0.30–0.80."
+                    )
+                    if st.button("🔍 Calibrar peso EP automáticamente", key="btn_calibrate_ep"):
+                        calib_rows = []
+                        for p_test in np.arange(0.30, 0.85, 0.05):
+                            p_test = round(float(p_test), 2)
+                            err_sum = 0.0
+                            n_rows  = 0
+                            for _, row_c in exp_df.iterrows():
+                                hba_c = str(row_c["HBA"])
+                                hbd_c = str(row_c["HBD"])
+                                hba_mc = next((k for k in HBA_COMPONENTS if hba_c in k or k in hba_c), None)
+                                hbd_mc = next((k for k in HBD_COMPONENTS if hbd_c in k or k in hbd_c), None)
+                                if hba_mc is None or hbd_mc is None:
+                                    continue
+                                from data import RATIOS_DISPONIBLES as _R2
+                                rp = _R2.get(str(row_c.get("Ratio", "1:1")), (1, 1))
+                                p_c = calculate_nades_properties(
+                                    hba_mc, hbd_mc, rp[0], rp[1],
+                                    int(row_c["Agua (%)"]), int(row_c["Temp (°C)"]),
+                                    HBA_COMPONENTS, HBD_COMPONENTS,
+                                )
+                                s_c = run_full_simulation(p_c, poly_df, peso_ep=p_test, freq_us=0)
+                                ep_c = s_c[s_c["tipo"] == "EP"]["EP (%)"].mean()
+                                tpc_c = min(100.0, float(row_c["TPC_exp"]) / 5.0)
+                                err_sum += (ep_c - tpc_c) ** 2
+                                n_rows  += 1
+                            rmse_c = np.sqrt(err_sum / n_rows) if n_rows > 0 else float("nan")
+                            calib_rows.append({"Peso EP": p_test, "RMSE (pp)": round(rmse_c, 2)})
+
+                        if calib_rows:
+                            calib_df = pd.DataFrame(calib_rows)
+                            best_peso_row = calib_df.loc[calib_df["RMSE (pp)"].idxmin()]
+                            best_peso_val = best_peso_row["Peso EP"]
+
+                            st.session_state["calib_peso_ep"] = best_peso_val
+                            st.success(
+                                f"✅ Peso EP óptimo encontrado: **{best_peso_val:.2f}** "
+                                f"(RMSE mínimo: {best_peso_row['RMSE (pp)']:.2f} pp)"
+                            )
+
+                            fig_calib = go.Figure()
+                            fig_calib.add_trace(go.Scatter(
+                                x=calib_df["Peso EP"], y=calib_df["RMSE (pp)"],
+                                mode="lines+markers", name="RMSE",
+                                line=dict(color="#6b4226", width=2),
+                                marker=dict(size=8),
+                            ))
+                            fig_calib.add_vline(
+                                x=best_peso_val, line_dash="dot", line_color="#048a81",
+                                annotation_text=f"Óptimo: {best_peso_val:.2f}",
+                            )
+                            fig_calib.update_layout(
+                                height=280,
+                                xaxis_title="Peso EP en score combinado",
+                                yaxis_title="RMSE (pp)",
+                                title="Calibración: RMSE vs peso EP",
+                            )
+                            st.plotly_chart(fig_calib, use_container_width=True)
+                            st.info(
+                                f"💡 Ajusta el deslizador **Peso EP en score combinado** del sidebar a "
+                                f"**{best_peso_val:.2f}** para calibrar el simulador con tus datos."
+                            )
+
                 else:
                     st.warning("No se encontraron filas con HBA/HBD reconocidos por el simulador. "
                                "Verifica que los nombres coincidan con los del sidebar.")
@@ -2588,7 +2869,281 @@ with tab6:
 # TAB 7 — RECOMENDADOR  (Búsqueda global · Cribado Tesis)
 # ══════════════════════════════════════════════════════════
 with tab7:
-    rtab_rec, rtab_th = st.tabs([t("rtab_rec"), t("rtab_th")])
+    rtab_rec, rtab_comp, rtab_th = st.tabs([t("rtab_rec"), t("rtab_comp"), t("rtab_th")])
+
+
+# ── Sub-tab: Comparador de NADES F1 (dentro de tab7) ──
+with rtab_comp:
+    st.markdown(t("comp_title"))
+    st.markdown(t("comp_desc"))
+
+    col_a_hdr, col_b_hdr = st.columns(2)
+    with col_a_hdr:
+        st.markdown(t("comp_nades_a"))
+        comp_hba_a  = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0,  key="comp_hba_a")
+        comp_hbd_a  = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=1,  key="comp_hbd_a")
+        comp_ratio_a = st.select_slider(t("ratio_label"), options=list(RATIOS_DISPONIBLES.keys()), value="1:1", key="comp_ratio_a")
+        comp_water_a = st.slider(t("water_label"),   0, 50, 30, step=5, key="comp_water_a")
+        comp_temp_a  = st.slider(t("temp_label"),   20, 80, 40, step=5, key="comp_temp_a")
+        comp_freq_a  = st.slider("UAE A (kHz)",      0,100,  0, step=5, key="comp_freq_a")
+
+    with col_b_hdr:
+        st.markdown(t("comp_nades_b"))
+        comp_hba_b  = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=2,  key="comp_hba_b")
+        comp_hbd_b  = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=3,  key="comp_hbd_b")
+        comp_ratio_b = st.select_slider(t("ratio_label"), options=list(RATIOS_DISPONIBLES.keys()), value="1:2", key="comp_ratio_b")
+        comp_water_b = st.slider(t("water_label"),   0, 50, 30, step=5, key="comp_water_b")
+        comp_temp_b  = st.slider(t("temp_label"),   20, 80, 40, step=5, key="comp_temp_b")
+        comp_freq_b  = st.slider("UAE B (kHz)",      0,100,  0, step=5, key="comp_freq_b")
+
+    comp_peso_ep = st.slider(
+        t("ep_weight_label"), min_value=0.30, max_value=0.80, value=0.55, step=0.05, key="comp_peso",
+    )
+
+    if is_same_compound(comp_hba_a, comp_hbd_a):
+        st.warning("⚠️ NADES A: HBA y HBD son el mismo compuesto — no es un NADES válido.")
+    if is_same_compound(comp_hba_b, comp_hbd_b):
+        st.warning("⚠️ NADES B: HBA y HBD son el mismo compuesto — no es un NADES válido.")
+
+    run_comp = st.button(t("comp_run"), type="primary", key="btn_run_comp")
+
+    if run_comp:
+        _rha, _rda = RATIOS_DISPONIBLES[comp_ratio_a]
+        _rhb, _rdb = RATIOS_DISPONIBLES[comp_ratio_b]
+        props_a = calculate_nades_properties(
+            comp_hba_a, comp_hbd_a, _rha, _rda,
+            comp_water_a, comp_temp_a, HBA_COMPONENTS, HBD_COMPONENTS,
+        )
+        props_b = calculate_nades_properties(
+            comp_hba_b, comp_hbd_b, _rhb, _rdb,
+            comp_water_b, comp_temp_b, HBA_COMPONENTS, HBD_COMPONENTS,
+        )
+        sim_a = run_full_simulation(props_a, poly_df, peso_ep=comp_peso_ep, freq_us=comp_freq_a)
+        sim_b = run_full_simulation(props_b, poly_df, peso_ep=comp_peso_ep, freq_us=comp_freq_b)
+
+        def _avg(df, col, tipo=None):
+            sub = df[df["tipo"] == tipo] if tipo else df
+            return sub[col].mean() if len(sub) > 0 else 0.0
+
+        comp_metrics = {
+            "NADES A": {
+                "label": f"{comp_hba_a.split('(')[0].strip()} : {comp_hbd_a} ({comp_ratio_a})",
+                "EP (%)": _avg(sim_a, "EP (%)", "EP"),
+                "NEP (%)": _avg(sim_a, "NEP (%)", "NEP"),
+                "Estab. (%)": _avg(sim_a, "Estab. (%)"),
+                "Combinado (%)": _avg(sim_a, "Combinado (%)"),
+                "pH": props_a["pH"],
+                "Viscosidad (cP)": props_a["viscosidad"],
+                "Polaridad": props_a["polaridad"],
+                "props": props_a,
+                "sim": sim_a,
+            },
+            "NADES B": {
+                "label": f"{comp_hba_b.split('(')[0].strip()} : {comp_hbd_b} ({comp_ratio_b})",
+                "EP (%)": _avg(sim_b, "EP (%)", "EP"),
+                "NEP (%)": _avg(sim_b, "NEP (%)", "NEP"),
+                "Estab. (%)": _avg(sim_b, "Estab. (%)"),
+                "Combinado (%)": _avg(sim_b, "Combinado (%)"),
+                "pH": props_b["pH"],
+                "Viscosidad (cP)": props_b["viscosidad"],
+                "Polaridad": props_b["polaridad"],
+                "props": props_b,
+                "sim": sim_b,
+            },
+        }
+        st.session_state["comp_metrics"] = comp_metrics
+        st.session_state["comp_peso_ep"] = comp_peso_ep
+
+    if "comp_metrics" in st.session_state:
+        cm = st.session_state["comp_metrics"]
+        cm_peso = st.session_state.get("comp_peso_ep", 0.55)
+        a_data = cm["NADES A"]
+        b_data = cm["NADES B"]
+
+        st.markdown("---")
+        st.markdown("### 📊 Resultados de la comparación")
+
+        # ── Gauges A vs B ──
+        ga1, ga2, ga3, ga4, gb1, gb2, gb3, gb4 = st.columns(8)
+        gauge_cols_a = [ga1, ga2, ga3, ga4]
+        gauge_cols_b = [gb1, gb2, gb3, gb4]
+        gauge_keys = [("EP (%)", "EP", "#2e86ab"), ("NEP (%)", "NEP", "#c44536"),
+                      ("Estab. (%)", "Estabilidad", "#048a81"), ("Combinado (%)", "Combinado", "#6b4226")]
+
+        def _mini_gauge(val, title, color, label):
+            delta = val - label if isinstance(label, float) else 0
+            return val
+
+        # Mostrar métricas lado a lado
+        st.markdown(
+            f'<div style="display:flex;gap:1rem;margin-bottom:.5rem">'
+            f'<div style="flex:1;background:#e8f4f9;border-radius:8px;padding:.8rem;border-left:4px solid #2e86ab">'
+            f'<b style="color:#2e86ab">NADES A</b><br>'
+            f'<small>{a_data["label"]}</small><br>'
+            f'<b>{comp_water_a}% H₂O · {comp_temp_a}°C · {comp_freq_a} kHz</b>'
+            f'</div>'
+            f'<div style="flex:1;background:#fdf2f2;border-radius:8px;padding:.8rem;border-left:4px solid #c44536">'
+            f'<b style="color:#c44536">NADES B</b><br>'
+            f'<small>{b_data["label"]}</small><br>'
+            f'<b>{comp_water_b}% H₂O · {comp_temp_b}°C · {comp_freq_b} kHz</b>'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        # Tabla de métricas comparativas
+        _metrics_names = ["EP (%)", "NEP (%)", "Estab. (%)", "Combinado (%)", "pH", "Viscosidad (cP)", "Polaridad"]
+        comp_tbl = pd.DataFrame({
+            "Métrica": _metrics_names,
+            "NADES A": [round(a_data[m], 2) if isinstance(a_data[m], float) else a_data[m] for m in _metrics_names],
+            "NADES B": [round(b_data[m], 2) if isinstance(b_data[m], float) else b_data[m] for m in _metrics_names],
+        })
+        comp_tbl["Δ (A−B)"] = comp_tbl["NADES A"] - comp_tbl["NADES B"]
+
+        def _color_delta(val):
+            if val > 1:
+                return "color: #0a3d1a; font-weight:700"
+            elif val < -1:
+                return "color: #8b0000; font-weight:700"
+            return ""
+
+        st.dataframe(
+            comp_tbl.style
+                .applymap(_color_delta, subset=["Δ (A−B)"])
+                .format({"NADES A": "{:.2f}", "NADES B": "{:.2f}", "Δ (A−B)": "{:+.2f}"}),
+            use_container_width=True, hide_index=True,
+        )
+        fig_caption(7, f"Comparación de métricas: {a_data['label']} vs {b_data['label']}")
+
+        # ── Gráfico de barras agrupadas ──
+        st.markdown("#### Comparación de índices de extracción")
+        fig_comp_bar = go.Figure()
+        _idx_labels = ["EP (%)", "NEP (%)", "Estab. (%)", "Combinado (%)"]
+        _idx_colors = ["#2e86ab", "#c44536", "#048a81", "#6b4226"]
+        _idx_a_vals = [a_data[k] for k in _idx_labels]
+        _idx_b_vals = [b_data[k] for k in _idx_labels]
+        fig_comp_bar.add_trace(go.Bar(
+            name="NADES A", x=_idx_labels, y=_idx_a_vals,
+            marker_color="#2e86ab", text=[f"{v:.1f}%" for v in _idx_a_vals],
+            textposition="outside",
+        ))
+        fig_comp_bar.add_trace(go.Bar(
+            name="NADES B", x=_idx_labels, y=_idx_b_vals,
+            marker_color="#c44536", text=[f"{v:.1f}%" for v in _idx_b_vals],
+            textposition="outside",
+        ))
+        fig_comp_bar.update_layout(
+            barmode="group", height=350,
+            yaxis_range=[0, 110], yaxis_title="Índice promedio (%)",
+            legend=dict(orientation="h", y=-0.2),
+        )
+        st.plotly_chart(fig_comp_bar, use_container_width=True)
+        fig_caption(7, f"Índices de extracción comparados: NADES A vs B (peso EP={cm_peso:.0%})")
+
+        # ── Radar overlay ──
+        st.markdown("#### Perfil comparativo (radar)")
+        _radar_cats = [t("radar_pol"), t("radar_flu"), t("radar_hbd"), t("radar_hba"), t("radar_acid"), t("radar_antx")]
+        def _radar_vals_from_props(p):
+            vn = 1 - np.log10(max(p["viscosidad"], 1)) / np.log10(10000)
+            return [
+                p["polaridad"],
+                max(0, vn),
+                p["cap_hbd"] / 10,
+                p["cap_hba"] / 10,
+                max(0, (5 - p["pH"]) / 5),
+                p["antioxidant_nades"],
+            ]
+
+        rv_a = _radar_vals_from_props(a_data["props"])
+        rv_b = _radar_vals_from_props(b_data["props"])
+        cats_closed = _radar_cats + [_radar_cats[0]]
+
+        fig_comp_rad = go.Figure()
+        fig_comp_rad.add_trace(go.Scatterpolar(
+            r=rv_a + [rv_a[0]], theta=cats_closed, fill="toself",
+            name="NADES A", fillcolor="rgba(46,134,171,0.15)",
+            line=dict(color="#2e86ab", width=2),
+        ))
+        fig_comp_rad.add_trace(go.Scatterpolar(
+            r=rv_b + [rv_b[0]], theta=cats_closed, fill="toself",
+            name="NADES B", fillcolor="rgba(196,69,54,0.15)",
+            line=dict(color="#c44536", width=2),
+        ))
+        fig_comp_rad.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+            height=380, legend=dict(orientation="h", y=-0.15),
+        )
+        st.plotly_chart(fig_comp_rad, use_container_width=True)
+        fig_caption(7, "Perfil de propiedades fisicoquímicas NADES A vs B (normalizado 0–1)")
+
+        # ── Curva de agua para ambos ──
+        st.markdown("#### Curva extracción EP vs % agua — A y B")
+        _wrange = range(0, 55, 5)
+        _curve_a, _curve_b = [], []
+        _rha2, _rda2 = RATIOS_DISPONIBLES[comp_ratio_a]
+        _rhb2, _rdb2 = RATIOS_DISPONIBLES[comp_ratio_b]
+        for _wc in _wrange:
+            _pa = calculate_nades_properties(comp_hba_a, comp_hbd_a, _rha2, _rda2, _wc, comp_temp_a, HBA_COMPONENTS, HBD_COMPONENTS)
+            _sa = run_full_simulation(_pa, poly_df, peso_ep=cm_peso, freq_us=comp_freq_a)
+            _curve_a.append({"Agua (%)": _wc, "EP": _sa[_sa["tipo"]=="EP"]["EP (%)"].mean() if len(_sa) > 0 else 0})
+            _pb = calculate_nades_properties(comp_hba_b, comp_hbd_b, _rhb2, _rdb2, _wc, comp_temp_b, HBA_COMPONENTS, HBD_COMPONENTS)
+            _sb = run_full_simulation(_pb, poly_df, peso_ep=cm_peso, freq_us=comp_freq_b)
+            _curve_b.append({"Agua (%)": _wc, "EP": _sb[_sb["tipo"]=="EP"]["EP (%)"].mean() if len(_sb) > 0 else 0})
+
+        _cdf_a = pd.DataFrame(_curve_a)
+        _cdf_b = pd.DataFrame(_curve_b)
+        fig_comp_water = go.Figure()
+        fig_comp_water.add_trace(go.Scatter(
+            x=_cdf_a["Agua (%)"], y=_cdf_a["EP"], name="NADES A — EP",
+            line=dict(color="#2e86ab", width=2), mode="lines+markers",
+        ))
+        fig_comp_water.add_trace(go.Scatter(
+            x=_cdf_b["Agua (%)"], y=_cdf_b["EP"], name="NADES B — EP",
+            line=dict(color="#c44536", width=2, dash="dash"), mode="lines+markers",
+        ))
+        fig_comp_water.add_vline(x=comp_water_a, line_dash="dot", line_color="#2e86ab", annotation_text=f"A: {comp_water_a}%")
+        fig_comp_water.add_vline(x=comp_water_b, line_dash="dot", line_color="#c44536", annotation_text=f"B: {comp_water_b}%")
+        fig_comp_water.update_layout(
+            height=300, xaxis_title="Agua añadida (%)", yaxis_title="EP promedio (%)",
+            yaxis_range=[0, 100], legend=dict(orientation="h", y=-0.25),
+        )
+        st.plotly_chart(fig_comp_water, use_container_width=True)
+        fig_caption(7, "Efecto del % agua en el índice EP: NADES A (azul) vs NADES B (rojo punteado)")
+
+        # ── Veredicto ──
+        delta_comb = a_data["Combinado (%)"] - b_data["Combinado (%)"]
+        if abs(delta_comb) < 2:
+            _veredicto = "⚖️ **Empate técnico** — diferencia < 2 pp. Ambos NADES son equivalentes para este objetivo."
+            _v_color = "#666"
+        elif delta_comb > 0:
+            _veredicto = f"🏆 **NADES A es superior** por {delta_comb:.1f} pp de score combinado."
+            _v_color = "#2e86ab"
+        else:
+            _veredicto = f"🏆 **NADES B es superior** por {-delta_comb:.1f} pp de score combinado."
+            _v_color = "#c44536"
+
+        st.markdown(
+            f'<div style="border:2px solid {_v_color};border-radius:10px;padding:1rem;'
+            f'background:#f8faff;margin-top:.5rem">'
+            f'<span style="color:{_v_color};font-size:1.05rem">{_veredicto}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            f"Peso EP = {cm_peso:.0%} · Peso NEP = {1-cm_peso:.0%} · "
+            "Score combinado incluye penalización por asimetría EP/NEP · "
+            "Ref: Ferrada, C. Tesis Doctoral 2026"
+        )
+    else:
+        st.info("Configura NADES A y B en los paneles de arriba y presiona **Comparar NADES A vs B**.")
+        st.markdown("""
+        **¿Qué muestra el comparador?**
+        - Tabla de métricas con diferencias (Δ) resaltadas
+        - Gráfico de barras agrupadas de EP · NEP · Estabilidad · Combinado
+        - Radar overlay de propiedades fisicoquímicas
+        - Curva de extracción EP vs % agua para ambos NADES
+        - **Veredicto automático** con el NADES ganador
+        """)
 
 
 # ── Sub-tab: Cribado Tesis (dentro de tab7) ──
