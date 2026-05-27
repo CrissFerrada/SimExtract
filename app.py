@@ -689,6 +689,7 @@ with tab1:
             height=320, margin=dict(l=30,r=30,t=30,b=30),
         )
         st.plotly_chart(fig_rad, use_container_width=True)
+        fig_caption(1, f"Perfil fisicoquímico del NADES activo — {nades_label}")
 
     # ── Tabla resumen de todos los polifenoles ──
     with col_right:
@@ -723,6 +724,7 @@ with tab1:
         legend=dict(orientation="h", y=-0.35),
     )
     st.plotly_chart(fig_cmp, use_container_width=True)
+    fig_caption(1, "Índices EP · NEP · Score combinado por polifenol. EP: Ruiz et al. (2024). NEP: Ferrada (2026).")
     st.caption(
         "Ref EP: Ruiz et al. (2024) Horticulturae 10, 458 — 28 compuestos HPLC-DAD-ESI-MS/MS · "
         "Modelo EP: Espino et al. (2016) Talanta 162, 412 (polaridad, HBD, pH) · "
@@ -762,6 +764,7 @@ with tab1:
         legend=dict(orientation="h", y=-0.25),
     )
     st.plotly_chart(fig_water, use_container_width=True)
+    fig_caption(1, f"Efecto del % agua en índices de extracción (ratio={ratio_sel}, T={temp_C}°C). Ref: Dai et al. (2013).")
     st.caption(
         "Los índices se recalculan automáticamente al cambiar los parámetros del sidebar. "
         "Ref curva agua: Dai et al. (2013) Anal. Chim. Acta 766, 61 (efecto dilución en propiedades DES) · "
