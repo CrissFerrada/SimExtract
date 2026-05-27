@@ -2712,138 +2712,514 @@ with rtab_th:
 with rtab_rec:
     st.markdown(t("t7_rec_title"))
     st.markdown(
-        '<div class="comb-badge">Evalúa automáticamente todas las combinaciones HBA × HBD × ratio '
-        'y ordena por score combinado EP+NEP. Incluye penalización por asimetría entre fracciones.</div>',
+        '<div class="comb-badge">Evalúa automáticamente las 759 combinaciones HBA × HBD × ratio '
+        'y encuentra el NADES óptimo según tu objetivo. Tres modos de búsqueda disponibles.</div>',
         unsafe_allow_html=True,
     )
     st.markdown("")
 
-    col_r1, col_r2, col_r3, col_r4, col_r5 = st.columns(5)
-    with col_r1:
-        sweep_water = st.slider("Agua (%)", 0, 50, 30, step=5, key="sw_water")
-    with col_r2:
-        sweep_temp  = st.slider("Temperatura (°C)", 20, 80, int(proc_temp), step=5, key="sw_temp")
-    with col_r3:
-        sweep_freq  = st.slider("UAE (kHz)", 0, 100, int(freq_us), step=5, key="sw_freq")
-    with col_r4:
-        sweep_time  = st.slider("Tiempo (min)", 5, 60, int(proc_time), step=5, key="sw_time")
-    with col_r5:
-        sweep_peso  = st.slider("Peso EP", 0.30, 0.80, 0.55, step=0.05, key="sw_ep")
+    # ── Selector de modo ──
+    rec_mode = st.radio(
+        "**Modo de búsqueda:**",
+        ["🎯  Por objetivo EP / NEP", "💧  Optimizar % de agua", "🔧  Búsqueda completa"],
+        horizontal=True,
+        key="rec_mode_radio",
+        help=(
+            "🎯 Por objetivo: el simulador busca el NADES óptimo y el % agua óptimo automáticamente según tu prioridad\n"
+            "💧 Optimizar agua: fija el % agua y encuentra el mejor NADES para esa condición\n"
+            "🔧 Búsqueda completa: control total de todos los parámetros"
+        ),
+    )
+    st.markdown("---")
 
-    top_n = st.slider("Top N candidatos a mostrar", 5, 30, 15, step=5)
+    # ═══════════════════════════════════════════════════════════════
+    # MODO 1 — Por objetivo EP / NEP
+    # ═══════════════════════════════════════════════════════════════
+    if rec_mode.startswith("🎯"):
+        st.markdown("### 🎯 Recomendador por Objetivo")
+        st.markdown(
+            "Elige qué fracción quieres priorizar. El simulador barre **todas las combinaciones de NADES** "
+            "en 5 niveles de agua (10–50%) y devuelve las **condiciones óptimas completas** "
+            "(mejor NADES + % agua + temperatura + UAE)."
+        )
 
-    run_sweep = st.button("🔍 Ejecutar búsqueda global", type="primary")
+        col_o1, col_o2 = st.columns(2)
+        with col_o1:
+            obj_temp = st.slider("Temperatura del proceso (°C)", 20, 80, 40, step=5, key="obj_temp")
+        with col_o2:
+            obj_freq = st.slider("Frecuencia UAE (kHz, 0 = sin US)", 0, 100, 20, step=5, key="obj_freq")
 
-    if run_sweep:
-        with st.spinner("Evaluando todas las combinaciones HBA × HBD × ratio…"):
-            sweep_df = sweep_all_nades(
-                HBA_COMPONENTS, HBD_COMPONENTS, poly_df,
-                water_pct=sweep_water, temp_C=sweep_temp,
-                freq_us=sweep_freq, time_min=sweep_time, peso_ep=sweep_peso,
+        st.markdown("")
+        st.markdown("**¿Qué quieres maximizar?**")
+        c_ep, c_bal, c_nep = st.columns(3)
+        with c_ep:
+            btn_ep = st.button(
+                "🔵 Maximizar EP\n(polifenoles extraíbles)",
+                use_container_width=True, key="btn_ep_obj",
+                help="Peso EP = 0.80 — ideal para cuantificar polifenoles libres por HPLC",
+            )
+        with c_bal:
+            btn_bal = st.button(
+                "⚖️ Balance EP + NEP\n(extracción total)",
+                use_container_width=True, type="primary", key="btn_bal_obj",
+                help="Peso EP = 0.55 — score combinado equilibrado EP+NEP simultáneos",
+            )
+        with c_nep:
+            btn_nep = st.button(
+                "🔴 Maximizar NEP\n(polifenoles no extraíbles)",
+                use_container_width=True, key="btn_nep_obj",
+                help="Peso EP = 0.25 — prioriza taninos condensados/hidrolizables de la matriz",
             )
 
-        st.success(f"Búsqueda completada — {len(sweep_df)} combinaciones evaluadas")
-        st.session_state["sweep_result"] = sweep_df
-        st.session_state["sweep_top_n"]  = top_n
+        if btn_ep:
+            st.session_state["obj_target"] = "ep"
+            st.session_state["obj_temp_v"] = obj_temp
+            st.session_state["obj_freq_v"] = obj_freq
+            st.session_state.pop("obj_result", None)
+        elif btn_bal:
+            st.session_state["obj_target"] = "balance"
+            st.session_state["obj_temp_v"] = obj_temp
+            st.session_state["obj_freq_v"] = obj_freq
+            st.session_state.pop("obj_result", None)
+        elif btn_nep:
+            st.session_state["obj_target"] = "nep"
+            st.session_state["obj_temp_v"] = obj_temp
+            st.session_state["obj_freq_v"] = obj_freq
+            st.session_state.pop("obj_result", None)
 
-    if "sweep_result" in st.session_state:
-        sweep_df = st.session_state["sweep_result"]
-        top_n_   = st.session_state.get("sweep_top_n", top_n)
-        top_df   = sweep_df.head(top_n_)
+        obj_target = st.session_state.get("obj_target")
 
-        # ── Top N en tarjetas ──
-        st.markdown(f"#### Top {top_n_} NADES recomendados")
-        medal = ["🥇","🥈","🥉"] + [""] * (top_n_ - 3)
-        for rank, (_, row) in enumerate(top_df.iterrows()):
-            m = medal[rank] if rank < len(medal) else ""
-            comb_v = row.get("Combinado (%)", 0)
-            ep_v   = row.get("EP final (%)", 0)
-            nep_v  = row.get("NEP final (%)", 0)
-            deg_v  = row.get("Degrad. T (%)", 0)
-            _hba_lbl = row["HBA"].split("(")[0].strip()
+        if obj_target is not None and "obj_result" not in st.session_state:
+            _peso_map_obj  = {"ep": 0.80, "balance": 0.55, "nep": 0.25}
+            _label_map_obj = {"ep": "Maximizar EP", "balance": "Balance EP+NEP", "nep": "Maximizar NEP"}
+            _color_map_obj = {"ep": "#2e86ab", "balance": "#6b4226", "nep": "#c44536"}
+            peso_rec_obj   = _peso_map_obj[obj_target]
+            _t_obj = st.session_state.get("obj_temp_v", obj_temp)
+            _f_obj = st.session_state.get("obj_freq_v", obj_freq)
+
+            best_rows_obj = []
+            with st.spinner(
+                f"Buscando el mejor NADES para «{_label_map_obj[obj_target]}»…  "
+                f"(5 niveles de agua × 759 NADES)"
+            ):
+                for w_obj in [10, 20, 30, 40, 50]:
+                    df_w_obj = sweep_all_nades(
+                        HBA_COMPONENTS, HBD_COMPONENTS, poly_df,
+                        water_pct=w_obj, temp_C=_t_obj,
+                        freq_us=_f_obj, time_min=30, peso_ep=peso_rec_obj,
+                    )
+                    if not df_w_obj.empty:
+                        r_obj = df_w_obj.iloc[0].copy()
+                        r_obj["Agua óptima (%)"] = w_obj
+                        best_rows_obj.append(r_obj)
+
+            if best_rows_obj:
+                best_all_obj = (
+                    pd.DataFrame(best_rows_obj)
+                    .sort_values("Combinado (%)", ascending=False)
+                    .reset_index(drop=True)
+                )
+                st.session_state["obj_result"] = best_all_obj
+                st.session_state["obj_label"]  = _label_map_obj[obj_target]
+                st.session_state["obj_color"]  = _color_map_obj[obj_target]
+                st.session_state["obj_peso"]   = peso_rec_obj
+
+        if "obj_result" in st.session_state:
+            best_all_obj = st.session_state["obj_result"]
+            obj_label    = st.session_state.get("obj_label", "")
+            obj_color    = st.session_state.get("obj_color", "#6b4226")
+            obj_peso_v   = st.session_state.get("obj_peso", 0.55)
+            best_obj     = best_all_obj.iloc[0]
+            _t_obj_v     = st.session_state.get("obj_temp_v", 40)
+            _f_obj_v     = st.session_state.get("obj_freq_v", 20)
+            _agua_opt    = int(best_obj["Agua óptima (%)"])
+
+            # ── Tarjeta ganadora ──
+            st.markdown(f"### 🏆 Mejor NADES para: *{obj_label}*")
+            _bg_obj = "#e8f4f9" if obj_color == "#2e86ab" else "#fdf2f2" if obj_color == "#c44536" else "#fdf8f2"
             st.markdown(
-                f'<div style="border:1px solid #6b4226;border-radius:8px;padding:.7rem 1rem;'
-                f'margin-bottom:.4rem;background:#fdf8f2">'
-                f'{m} <b>#{rank+1}</b> — '
-                f'<b>{_hba_lbl} : {row["HBD"]}</b> '
-                f'({row["Ratio"]} · {int(sweep_water)}% H₂O · {int(sweep_temp)}°C · {int(sweep_freq)} kHz)<br>'
-                f'🎯 Combinado: <b style="color:#6b4226">{comb_v:.1f}%</b> &nbsp;|&nbsp; '
-                f'🟦 EP: <b>{ep_v:.1f}%</b> &nbsp; 🟥 NEP: <b>{nep_v:.1f}%</b> &nbsp; '
-                f'🌡️ Degrad.T: <b>{deg_v:.1f}%</b>'
+                f'<div style="border:3px solid {obj_color};border-radius:12px;padding:1.2rem 1.5rem;'
+                f'background:{_bg_obj};margin-bottom:1rem">'
+                f'<span style="font-size:1.6rem">🥇</span> '
+                f'<b style="font-size:1.2rem;color:{obj_color}">'
+                f'{best_obj["HBA"].split("(")[0].strip()} : {best_obj["HBD"]}</b>'
+                f'&nbsp;&nbsp;<span style="color:#666">({best_obj["Ratio"]})</span>'
+                f'<br><br>'
+                f'<b>💧 % Agua óptimo:</b>&nbsp;'
+                f'<span style="font-size:1.15rem;color:{obj_color}"><b>{_agua_opt}%</b></span>'
+                f'&emsp;|&emsp;'
+                f'<b>🌡️ Temperatura:</b>&nbsp;<span style="font-size:1.1rem"><b>{_t_obj_v}°C</b></span>'
+                f'&emsp;|&emsp;'
+                f'<b>🔊 UAE:</b>&nbsp;<span style="font-size:1.1rem"><b>{_f_obj_v} kHz</b></span>'
+                f'<br><br>'
+                f'🔵 <b>EP:</b>&nbsp;<span style="font-size:1.2rem;color:#2e86ab">'
+                f'<b>{best_obj["EP final (%)"]:.1f}%</b></span>'
+                f'&emsp;&emsp;'
+                f'🔴 <b>NEP:</b>&nbsp;<span style="font-size:1.2rem;color:#c44536">'
+                f'<b>{best_obj["NEP final (%)"]:.1f}%</b></span>'
+                f'&emsp;&emsp;'
+                f'🎯 <b>Combinado:</b>&nbsp;<span style="font-size:1.2rem;color:{obj_color}">'
+                f'<b>{best_obj["Combinado (%)"]:.1f}%</b></span>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
 
-        st.markdown("---")
+            # ── Curva EP / NEP vs % agua para el NADES ganador ──
+            st.markdown("#### Curva de extracción vs % Agua — NADES ganador")
+            _ratio_str_obj = best_obj["Ratio"]
+            _rh_obj, _rd_obj = (int(x) for x in _ratio_str_obj.split(":")) if ":" in _ratio_str_obj else (1, 1)
+            agua_curve_obj = []
+            for wc_obj in range(0, 55, 5):
+                _pw_obj = calculate_nades_properties(
+                    best_obj["HBA"], best_obj["HBD"], _rh_obj, _rd_obj,
+                    wc_obj, _t_obj_v, HBA_COMPONENTS, HBD_COMPONENTS,
+                )
+                _proc_obj = simulate_3step_process(
+                    _pw_obj, poly_df,
+                    freq_us=_f_obj_v, temp_C=_t_obj_v, time_min=30, peso_ep=obj_peso_v,
+                )
+                ep_oc  = _proc_obj[_proc_obj["tipo"]=="EP"]["EP final (%)"].mean()  if not _proc_obj.empty else 0
+                nep_oc = _proc_obj[_proc_obj["tipo"]=="NEP"]["NEP final (%)"].mean() if not _proc_obj.empty else 0
+                agua_curve_obj.append({"Agua (%)": wc_obj, "EP (%)": round(ep_oc, 1), "NEP (%)": round(nep_oc, 1)})
 
-        # ── Gráfico de barras horizontales del Top N ──
-        st.markdown("#### Score combinado — Top candidatos")
-        fig_sw = go.Figure()
-        fig_sw.add_trace(go.Bar(
-            y=top_df["NADES"][::-1], x=top_df["EP final (%)"][::-1],
-            name="EP final", orientation="h", marker_color="#2e86ab",
-        ))
-        fig_sw.add_trace(go.Bar(
-            y=top_df["NADES"][::-1], x=top_df["NEP final (%)"][::-1],
-            name="NEP final", orientation="h", marker_color="#c44536",
-        ))
-        fig_sw.update_layout(
-            barmode="group", height=max(350, top_n_ * 28),
-            xaxis_title="Índice (%)", xaxis_range=[0, 100],
-            legend=dict(orientation="h", y=-0.15),
-            margin=dict(l=220),
-        )
-        st.plotly_chart(fig_sw, use_container_width=True)
+            agua_df_obj = pd.DataFrame(agua_curve_obj)
+            fig_agua_obj = go.Figure()
+            fig_agua_obj.add_trace(go.Scatter(
+                x=agua_df_obj["Agua (%)"], y=agua_df_obj["EP (%)"],
+                name="EP (%)", line=dict(color="#2e86ab", width=3), mode="lines+markers",
+                marker=dict(size=7),
+            ))
+            fig_agua_obj.add_trace(go.Scatter(
+                x=agua_df_obj["Agua (%)"], y=agua_df_obj["NEP (%)"],
+                name="NEP (%)", line=dict(color="#c44536", width=3), mode="lines+markers",
+                marker=dict(size=7),
+            ))
+            fig_agua_obj.add_vline(
+                x=_agua_opt, line_dash="dot", line_color=obj_color,
+                annotation_text=f"Óptimo: {_agua_opt}%", annotation_position="top right",
+            )
+            fig_agua_obj.update_layout(
+                height=320, xaxis_title="Agua (%)", yaxis_title="Extracción final (%)",
+                yaxis_range=[0, 100], legend=dict(orientation="h", y=-0.25),
+            )
+            st.plotly_chart(fig_agua_obj, use_container_width=True)
+            st.caption(
+                "Curva calculada con Proceso 3 Pasos (UAE + centrifugación + filtración) · "
+                f"T = {_t_obj_v}°C · UAE = {_f_obj_v} kHz · "
+                "La línea punteada marca el % agua con el mejor score combinado encontrado"
+            )
 
-        # ── Scatter EP vs NEP coloreado por combinado ──
-        st.markdown("#### Espacio de búsqueda EP vs NEP")
-        fig_sc = px.scatter(
-            sweep_df, x="EP final (%)", y="NEP final (%)",
-            color="Combinado (%)", size_max=10,
-            color_continuous_scale="YlOrBr",
-            hover_data=["NADES","Ratio","HBA","HBD","Degrad. T (%)"],
-            labels={"EP final (%)": "EP final tras 3 pasos (%)",
-                    "NEP final (%)": "NEP final tras 3 pasos (%)"},
-        )
-        # Marcar top 5
-        top5 = sweep_df.head(5)
-        fig_sc.add_trace(go.Scatter(
-            x=top5["EP final (%)"], y=top5["NEP final (%)"],
-            mode="markers+text",
-            marker=dict(size=12, color="gold", symbol="star", line=dict(color="black", width=1)),
-            text=["#"+str(i+1) for i in range(len(top5))],
-            textposition="top center",
-            name="Top 5",
-        ))
-        fig_sc.update_layout(height=420)
-        st.plotly_chart(fig_sc, use_container_width=True)
+            # ── Top candidato por nivel de agua ──
+            st.markdown("#### Mejor NADES por cada nivel de agua evaluado")
+            st.dataframe(
+                best_all_obj[["HBA","HBD","Ratio","Agua óptima (%)","EP final (%)","NEP final (%)","Combinado (%)"]]
+                .style
+                .background_gradient(subset=["EP final (%)"],  cmap="Blues",  vmin=0, vmax=100)
+                .background_gradient(subset=["NEP final (%)"], cmap="Reds",   vmin=0, vmax=100)
+                .background_gradient(subset=["Combinado (%)"], cmap="YlOrBr", vmin=0, vmax=100)
+                .format({"EP final (%)": "{:.1f}", "NEP final (%)": "{:.1f}", "Combinado (%)": "{:.1f}"}),
+                use_container_width=True, hide_index=True,
+            )
+            st.caption(
+                "Cada fila = el NADES ganador encontrado para ese nivel de agua específico. "
+                "La fila #1 (arriba) es el óptimo global entre todos los niveles."
+            )
 
-        # ── Tabla completa ──
-        st.markdown("#### Tabla completa de candidatos")
-        cols_sw = [c for c in ["NADES","HBA","HBD","Ratio","EP final (%)","NEP final (%)","Degrad. T (%)","Combinado (%)","Estab. (%)"]
-                   if c in sweep_df.columns]
-        st.dataframe(
-            sweep_df[cols_sw].style
-               .background_gradient(subset=["EP final (%)"],   cmap="Blues",   vmin=0, vmax=100)
-               .background_gradient(subset=["NEP final (%)"],  cmap="Reds",    vmin=0, vmax=100)
-               .background_gradient(subset=["Degrad. T (%)"],  cmap="Oranges", vmin=0, vmax=20)
-               .background_gradient(subset=["Combinado (%)"],  cmap="YlOrBr",  vmin=0, vmax=100)
-               .format({"EP final (%)": "{:.1f}", "NEP final (%)": "{:.1f}",
-                        "Degrad. T (%)": "{:.1f}", "Combinado (%)": "{:.1f}", "Estab. (%)": "{:.1f}"}),
-            use_container_width=True, hide_index=True, height=400,
+        elif obj_target is None:
+            st.info("👆 Ajusta temperatura y UAE, luego presiona uno de los tres botones para encontrar el NADES óptimo.")
+            st.markdown("""
+            | Botón | Peso EP | Peso NEP | Ideal para... |
+            |---|---|---|---|
+            | 🔵 Maximizar EP | 80% | 20% | Análisis HPLC de polifenoles libres |
+            | ⚖️ Balance | 55% | 45% | Extracción total simultánea EP+NEP |
+            | 🔴 Maximizar NEP | 25% | 75% | Recuperación de taninos de la pared celular |
+
+            > El simulador evalúa **759 combinaciones × 5 niveles de agua = 3 795 simulaciones**
+            > y devuelve el mejor resultado con sus condiciones exactas.
+            """)
+
+    # ═══════════════════════════════════════════════════════════════
+    # MODO 2 — Optimizar % de agua
+    # ═══════════════════════════════════════════════════════════════
+    elif rec_mode.startswith("💧"):
+        st.markdown("### 💧 Optimizar % de Agua")
+        st.markdown(
+            "Ajusta el % de agua con el deslizador y encuentra qué NADES es el mejor "
+            "**exactamente en esa condición**. También muestra cómo varía la extracción "
+            "del NADES ganador al cambiar el % de agua."
         )
+
+        col_w1, col_w2, col_w3 = st.columns(3)
+        with col_w1:
+            water_opt  = st.slider("% Agua a evaluar", 0, 50, 30, step=5, key="opt_water_pct")
+        with col_w2:
+            water_temp = st.slider("Temperatura (°C)", 20, 80, 40, step=5, key="opt_water_temp")
+        with col_w3:
+            water_freq = st.slider("UAE (kHz)", 0, 100, 20, step=5, key="opt_water_freq")
+
+        water_peso = st.slider("Peso EP en score combinado", 0.30, 0.80, 0.55, step=0.05, key="opt_water_peso")
+
+        if st.button(
+            f"🔍 Encontrar mejor NADES para {water_opt}% agua",
+            type="primary", key="btn_water_opt",
+        ):
+            with st.spinner(f"Evaluando 759 NADES con {water_opt}% de agua…"):
+                water_sweep_df = sweep_all_nades(
+                    HBA_COMPONENTS, HBD_COMPONENTS, poly_df,
+                    water_pct=water_opt, temp_C=water_temp,
+                    freq_us=water_freq, time_min=30, peso_ep=water_peso,
+                )
+            st.session_state["water_sweep_df"]   = water_sweep_df
+            st.session_state["water_sweep_w"]    = water_opt
+            st.session_state["water_sweep_temp"] = water_temp
+            st.session_state["water_sweep_freq"] = water_freq
+            st.session_state["water_sweep_peso"] = water_peso
+
+        if "water_sweep_df" in st.session_state:
+            w_df   = st.session_state["water_sweep_df"]
+            w_val  = st.session_state["water_sweep_w"]
+            w_temp = st.session_state["water_sweep_temp"]
+            w_freq = st.session_state["water_sweep_freq"]
+            w_peso = st.session_state["water_sweep_peso"]
+            top_w  = w_df.head(10)
+            best_w = w_df.iloc[0]
+
+            st.success(f"🏆 Mejor NADES con {w_val}% agua · {w_temp}°C · {w_freq} kHz")
+            st.markdown(
+                f'<div style="border:2px solid #048a81;border-radius:10px;padding:1rem 1.2rem;background:#f0fff8">'
+                f'<b style="color:#048a81;font-size:1.15rem">'
+                f'{best_w["HBA"].split("(")[0].strip()} : {best_w["HBD"]}</b>'
+                f'&nbsp;&nbsp;<span style="color:#666">({best_w["Ratio"]})</span><br><br>'
+                f'💧 <b>Agua:</b> {w_val}%'
+                f'&emsp;|&emsp;🌡️ <b>T:</b> {w_temp}°C'
+                f'&emsp;|&emsp;🔊 <b>UAE:</b> {w_freq} kHz<br><br>'
+                f'🔵 EP: <b style="color:#2e86ab">{best_w["EP final (%)"]:.1f}%</b>'
+                f'&emsp;🔴 NEP: <b style="color:#c44536">{best_w["NEP final (%)"]:.1f}%</b>'
+                f'&emsp;🎯 Combinado: <b style="color:#048a81">{best_w["Combinado (%)"]:.1f}%</b>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown("")
+
+            # ── Curva EP / NEP vs % agua para el NADES ganador ──
+            st.markdown("#### Curva de extracción vs % Agua — NADES ganador")
+            _ratio_w = best_w["Ratio"]
+            _rh_w, _rd_w = (int(x) for x in _ratio_w.split(":")) if ":" in _ratio_w else (1, 1)
+            curve_data_w = []
+            for wc_w in range(0, 55, 5):
+                pw_wc = calculate_nades_properties(
+                    best_w["HBA"], best_w["HBD"], _rh_w, _rd_w,
+                    wc_w, w_temp, HBA_COMPONENTS, HBD_COMPONENTS,
+                )
+                proc_wc = simulate_3step_process(
+                    pw_wc, poly_df,
+                    freq_us=w_freq, temp_C=w_temp, time_min=30, peso_ep=w_peso,
+                )
+                ep_wc  = proc_wc[proc_wc["tipo"]=="EP"]["EP final (%)"].mean()  if not proc_wc.empty else 0
+                nep_wc = proc_wc[proc_wc["tipo"]=="NEP"]["NEP final (%)"].mean() if not proc_wc.empty else 0
+                curve_data_w.append({"Agua (%)": wc_w, "EP (%)": round(ep_wc, 1), "NEP (%)": round(nep_wc, 1)})
+
+            cdf_w = pd.DataFrame(curve_data_w)
+            fig_cw = go.Figure()
+            fig_cw.add_trace(go.Scatter(
+                x=cdf_w["Agua (%)"], y=cdf_w["EP (%)"],
+                name="EP (%)", line=dict(color="#2e86ab", width=3), mode="lines+markers",
+                marker=dict(size=7),
+            ))
+            fig_cw.add_trace(go.Scatter(
+                x=cdf_w["Agua (%)"], y=cdf_w["NEP (%)"],
+                name="NEP (%)", line=dict(color="#c44536", width=3), mode="lines+markers",
+                marker=dict(size=7),
+            ))
+            fig_cw.add_vline(
+                x=w_val, line_dash="dot", line_color="#048a81",
+                annotation_text=f"Evaluado: {w_val}%",
+            )
+            fig_cw.update_layout(
+                height=320, xaxis_title="Agua (%)", yaxis_title="Extracción final (%)",
+                yaxis_range=[0, 100], legend=dict(orientation="h", y=-0.25),
+            )
+            st.plotly_chart(fig_cw, use_container_width=True)
+            st.caption(
+                "Curva del NADES ganador con el % agua variando de 0 a 50% · "
+                "La línea punteada marca el % agua evaluado · "
+                "Proceso 3 Pasos completo (UAE + centrifugación + filtración)"
+            )
+
+            # ── Top 10 tabla ──
+            st.markdown(f"#### Top 10 NADES para {w_val}% agua")
+            cols_w = [c for c in ["NADES","HBA","HBD","Ratio","EP final (%)","NEP final (%)","Degrad. T (%)","Combinado (%)","Estab. (%)"]
+                      if c in top_w.columns]
+            st.dataframe(
+                top_w[cols_w].style
+                   .background_gradient(subset=["EP final (%)"],  cmap="Blues",   vmin=0, vmax=100)
+                   .background_gradient(subset=["NEP final (%)"], cmap="Reds",    vmin=0, vmax=100)
+                   .background_gradient(subset=["Combinado (%)"], cmap="YlOrBr",  vmin=0, vmax=100)
+                   .format({"EP final (%)": "{:.1f}", "NEP final (%)": "{:.1f}",
+                            "Degrad. T (%)": "{:.1f}", "Combinado (%)": "{:.1f}", "Estab. (%)": "{:.1f}"}),
+                use_container_width=True, hide_index=True,
+            )
+
+            # ── Gráfico de barras Top 10 ──
+            fig_bar_w = go.Figure()
+            fig_bar_w.add_trace(go.Bar(
+                y=top_w["NADES"][::-1], x=top_w["EP final (%)"][::-1],
+                name="EP final", orientation="h", marker_color="#2e86ab",
+            ))
+            fig_bar_w.add_trace(go.Bar(
+                y=top_w["NADES"][::-1], x=top_w["NEP final (%)"][::-1],
+                name="NEP final", orientation="h", marker_color="#c44536",
+            ))
+            fig_bar_w.update_layout(
+                barmode="group", height=max(300, len(top_w) * 30),
+                xaxis_title="Índice (%)", xaxis_range=[0, 100],
+                legend=dict(orientation="h", y=-0.15),
+                margin=dict(l=220),
+            )
+            st.plotly_chart(fig_bar_w, use_container_width=True)
+
+        else:
+            st.info(f"Ajusta los parámetros y presiona **Encontrar mejor NADES para {water_opt}% agua**.")
+            st.markdown("""
+            💡 **¿Cuándo usar este modo?**
+            - Tienes una restricción de % agua (ej: ≤20% para compatibilidad con HPLC)
+            - Quieres comparar qué NADES es el mejor exactamente en esa condición de agua
+            - Ver cómo el % de agua afecta la extracción del NADES ganador
+            """)
+
+    # ═══════════════════════════════════════════════════════════════
+    # MODO 3 — Búsqueda completa (control total)
+    # ═══════════════════════════════════════════════════════════════
     else:
-        st.info("Presiona **Ejecutar búsqueda global** para encontrar el NADES óptimo para extracción simultánea EP+NEP.")
-        st.markdown("""
-        **¿Cómo funciona el Recomendador?**
-        - Evalúa todas las combinaciones: 11 HBA × 23 HBD × 3 ratios = **759 combinaciones**
-        - Para cada una simula el **Proceso de 3 Pasos** completo (UAE + centrifugación + filtración)
-        - Incluye degradación térmica por clase (Arrhenius) y boost UAE por cavitación
-        - **Score combinado** = `peso_EP × EP + peso_NEP × NEP − 0.05 × (EP − NEP)²`
-        - La penalización cuadrática premia NADES que equilibran ambas fracciones
-        - Ordena de mayor a menor score combinado · Columna **Degrad. T (%)** = pérdida por temperatura
-        - Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos integrados
-        """)
+        st.markdown("### 🔧 Búsqueda Completa")
+        st.markdown(
+            "Control total sobre todos los parámetros. Ideal para explorar el espacio de búsqueda "
+            "y comparar combinaciones específicas."
+        )
+
+        col_r1, col_r2, col_r3, col_r4, col_r5 = st.columns(5)
+        with col_r1:
+            sweep_water = st.slider("Agua (%)", 0, 50, 30, step=5, key="sw_water")
+        with col_r2:
+            sweep_temp  = st.slider("Temperatura (°C)", 20, 80, int(proc_temp), step=5, key="sw_temp")
+        with col_r3:
+            sweep_freq  = st.slider("UAE (kHz)", 0, 100, int(freq_us), step=5, key="sw_freq")
+        with col_r4:
+            sweep_time  = st.slider("Tiempo (min)", 5, 60, int(proc_time), step=5, key="sw_time")
+        with col_r5:
+            sweep_peso  = st.slider("Peso EP", 0.30, 0.80, 0.55, step=0.05, key="sw_ep")
+
+        top_n = st.slider("Top N candidatos a mostrar", 5, 30, 15, step=5)
+
+        run_sweep = st.button("🔍 Ejecutar búsqueda global", type="primary")
+
+        if run_sweep:
+            with st.spinner("Evaluando todas las combinaciones HBA × HBD × ratio…"):
+                sweep_df = sweep_all_nades(
+                    HBA_COMPONENTS, HBD_COMPONENTS, poly_df,
+                    water_pct=sweep_water, temp_C=sweep_temp,
+                    freq_us=sweep_freq, time_min=sweep_time, peso_ep=sweep_peso,
+                )
+
+            st.success(f"Búsqueda completada — {len(sweep_df)} combinaciones evaluadas")
+            st.session_state["sweep_result"] = sweep_df
+            st.session_state["sweep_top_n"]  = top_n
+
+        if "sweep_result" in st.session_state:
+            sweep_df = st.session_state["sweep_result"]
+            top_n_   = st.session_state.get("sweep_top_n", top_n)
+            top_df   = sweep_df.head(top_n_)
+
+            # ── Top N en tarjetas ──
+            st.markdown(f"#### Top {top_n_} NADES recomendados")
+            medal = ["🥇","🥈","🥉"] + [""] * (top_n_ - 3)
+            for rank, (_, row) in enumerate(top_df.iterrows()):
+                m = medal[rank] if rank < len(medal) else ""
+                comb_v = row.get("Combinado (%)", 0)
+                ep_v   = row.get("EP final (%)", 0)
+                nep_v  = row.get("NEP final (%)", 0)
+                deg_v  = row.get("Degrad. T (%)", 0)
+                _hba_lbl = row["HBA"].split("(")[0].strip()
+                st.markdown(
+                    f'<div style="border:1px solid #6b4226;border-radius:8px;padding:.7rem 1rem;'
+                    f'margin-bottom:.4rem;background:#fdf8f2">'
+                    f'{m} <b>#{rank+1}</b> — '
+                    f'<b>{_hba_lbl} : {row["HBD"]}</b> '
+                    f'({row["Ratio"]} · {int(sweep_water)}% H₂O · {int(sweep_temp)}°C · {int(sweep_freq)} kHz)<br>'
+                    f'🎯 Combinado: <b style="color:#6b4226">{comb_v:.1f}%</b> &nbsp;|&nbsp; '
+                    f'🟦 EP: <b>{ep_v:.1f}%</b> &nbsp; 🟥 NEP: <b>{nep_v:.1f}%</b> &nbsp; '
+                    f'🌡️ Degrad.T: <b>{deg_v:.1f}%</b>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+
+            st.markdown("---")
+
+            # ── Gráfico de barras horizontales del Top N ──
+            st.markdown("#### Score combinado — Top candidatos")
+            fig_sw = go.Figure()
+            fig_sw.add_trace(go.Bar(
+                y=top_df["NADES"][::-1], x=top_df["EP final (%)"][::-1],
+                name="EP final", orientation="h", marker_color="#2e86ab",
+            ))
+            fig_sw.add_trace(go.Bar(
+                y=top_df["NADES"][::-1], x=top_df["NEP final (%)"][::-1],
+                name="NEP final", orientation="h", marker_color="#c44536",
+            ))
+            fig_sw.update_layout(
+                barmode="group", height=max(350, top_n_ * 28),
+                xaxis_title="Índice (%)", xaxis_range=[0, 100],
+                legend=dict(orientation="h", y=-0.15),
+                margin=dict(l=220),
+            )
+            st.plotly_chart(fig_sw, use_container_width=True)
+
+            # ── Scatter EP vs NEP coloreado por combinado ──
+            st.markdown("#### Espacio de búsqueda EP vs NEP")
+            fig_sc = px.scatter(
+                sweep_df, x="EP final (%)", y="NEP final (%)",
+                color="Combinado (%)", size_max=10,
+                color_continuous_scale="YlOrBr",
+                hover_data=["NADES","Ratio","HBA","HBD","Degrad. T (%)"],
+                labels={"EP final (%)": "EP final tras 3 pasos (%)",
+                        "NEP final (%)": "NEP final tras 3 pasos (%)"},
+            )
+            top5 = sweep_df.head(5)
+            fig_sc.add_trace(go.Scatter(
+                x=top5["EP final (%)"], y=top5["NEP final (%)"],
+                mode="markers+text",
+                marker=dict(size=12, color="gold", symbol="star", line=dict(color="black", width=1)),
+                text=["#"+str(i+1) for i in range(len(top5))],
+                textposition="top center",
+                name="Top 5",
+            ))
+            fig_sc.update_layout(height=420)
+            st.plotly_chart(fig_sc, use_container_width=True)
+
+            # ── Tabla completa ──
+            st.markdown("#### Tabla completa de candidatos")
+            cols_sw = [c for c in ["NADES","HBA","HBD","Ratio","EP final (%)","NEP final (%)","Degrad. T (%)","Combinado (%)","Estab. (%)"]
+                       if c in sweep_df.columns]
+            st.dataframe(
+                sweep_df[cols_sw].style
+                   .background_gradient(subset=["EP final (%)"],  cmap="Blues",   vmin=0, vmax=100)
+                   .background_gradient(subset=["NEP final (%)"], cmap="Reds",    vmin=0, vmax=100)
+                   .background_gradient(subset=["Degrad. T (%)"], cmap="Oranges", vmin=0, vmax=20)
+                   .background_gradient(subset=["Combinado (%)"], cmap="YlOrBr",  vmin=0, vmax=100)
+                   .format({"EP final (%)": "{:.1f}", "NEP final (%)": "{:.1f}",
+                            "Degrad. T (%)": "{:.1f}", "Combinado (%)": "{:.1f}", "Estab. (%)": "{:.1f}"}),
+                use_container_width=True, hide_index=True, height=400,
+            )
+        else:
+            st.info("Ajusta los parámetros y presiona **Ejecutar búsqueda global** para encontrar el NADES óptimo.")
+            st.markdown("""
+            **¿Cómo funciona?**
+            - Evalúa todas las combinaciones: 11 HBA × 23 HBD × 3 ratios = **759 combinaciones**
+            - Para cada una simula el **Proceso de 3 Pasos** completo (UAE + centrifugación + filtración)
+            - **Score combinado** = `peso_EP × EP + peso_NEP × NEP − 0.05 × (EP − NEP)²`
+            - La penalización cuadrática premia NADES que equilibran ambas fracciones
+            - Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos integrados
+            """)
 
 
 # ══════════════════════════════════════════════════════════
