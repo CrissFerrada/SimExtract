@@ -18,7 +18,7 @@
 
 Simulador interactivo para el diseño y evaluación de **Solventes Eutécticos Profundos Naturales (NADES)** aplicados a la extracción de polifenoles de *Berberis microphylla* G. Forst (calafate).
 
-Desarrollado como parte de una **Tesis Doctoral** en la Universidad Austral de Chile, el simulador integra modelos fisicoquímicos basados en literatura científica indexada con un modelo teórico original para la extracción de Polifenoles No Extraíbles (NEP).
+Desarrollado como parte de una **Tesis Doctoral** en la Pontificia Universidad Católica de Valparaíso (PUCV), el simulador integra modelos fisicoquímicos basados en literatura científica indexada con un modelo teórico original para la extracción de Polifenoles No Extraíbles (NEP).
 
 ## Funcionalidades principales
 
@@ -70,7 +70,7 @@ openpyxl>=3.1.0
 ### Windows (recomendado — sin configuración)
 
 ```
-Doble clic en:  Simulador de NADES para extraer polifenoles CFERRADA 2026.bat
+Doble clic en:  SimNADES.bat
 ```
 
 La primera vez instala las dependencias automáticamente (2–5 min). Las siguientes veces abre directamente en el navegador.
@@ -110,7 +110,7 @@ requirements.txt → Dependencias Python
 LEEME.txt       → Guía de usuario completa (Windows/macOS/Linux)
 
 Lanzadores:
-  Simulador de NADES... .bat     → Windows
+  SimNADES.bat                   → Windows
   Lanzar_macOS.command           → macOS
   Lanzar_Linux.sh                → Linux
 ```
@@ -119,18 +119,31 @@ Lanzadores:
 
 Los modelos implementados están basados en literatura científica indexada:
 
-- **EP:** Espino et al. (2016) *Talanta* 162, 412 — polaridad, HBD, pH
-- **NEP:** Ferrada, C. (2026) Tesis Doctoral — modelo mecanístico novel
-- **UAE:** Tiwari et al. (2010) *Food Res. Int.* 43, 1956 — cavitación acústica
-- **Arrhenius:** Wang & Xu (2007) *Food Chem.* 101, 1338 — degradación polifenoles
-- **Datos EP fruto:** Ruiz et al. (2024) *Horticulturae* 10, 458 — 28 compuestos HPLC
-- **Estabilidad:** Benvenutti et al. (2019) *Food Res. Int.* 119, 710 — NADES y antocianinas
+**Extracción de Polifenoles:**
+- Espino et al. (2016) *Talanta* 162, 412-419 — modelo fisicoquímico (polaridad, HBD, pH)
+- Ruiz et al. (2024) *Horticulturae* 10(5), 458 — 28 compuestos polifenólicos HPLC-DAD
+
+**Extracción No Extractable (NEP):**
+- Ferrada, C. (2026) Tesis Doctoral PUCV — modelo mecanístico novel (sin precedente)
+- Saura-Calixto et al. (2010) *J. Agric. Food Chem.* 58(21), 11932-11938 — cuantificación NEP
+
+**Ultrasonido (UAE):**
+- Tiwari et al. (2010) *Food Res. Int.* 43(7), 1956-1966 — cavitación acústica
+- Mason et al. (2011) *Ultrason. Sonochem.* 18, 226-241 — mecanismos de extracción por UAE
+
+**Degradación Térmica:**
+- Wang & Xu (2007) *Food Chem.* 101(4), 1338-1344 — modelo Arrhenius polifenoles
+- Buchweitz et al. (2016) *Food Res. Int.* 89, 966-974 — estabilidad térmica compuestos fenólicos
+
+**NADES y Estabilidad:**
+- Benvenutti et al. (2019) *Food Res. Int.* 119, 710-718 — NADES y protección antocianinas
+- Florindo et al. (2019) *ACS Sustain. Chem. Eng.* 7, 2509-2523 — NADES aplicaciones sostenibles
 
 ## Citar este software
 
 Si utilizas este simulador en publicaciones científicas, por favor cita:
 
-> Ferrada, C. (2026). *Simulador NADES para extracción de polifenoles de Berberis microphylla G. Forst* (Beta 0.6) [Software]. Tesis Doctoral, Universidad Austral de Chile. https://github.com/CrissFerrada/SimNADES
+> Ferrada, C. (2026). *Simulador NADES para extracción de polifenoles de Berberis microphylla G. Forst* (Beta 0.6) [Software]. Tesis Doctoral, Pontificia Universidad Católica de Valparaíso (PUCV). https://github.com/CrissFerrada/SimNADES
 
 ## Autor y licencia
 
@@ -148,7 +161,7 @@ Si utilizas este simulador en publicaciones científicas, por favor cita:
 
 Interactive simulator for the design and evaluation of **Natural Deep Eutectic Solvents (NADES)** applied to polyphenol extraction from *Berberis microphylla* G. Forst (calafate berry).
 
-Developed as part of a **PhD thesis** (Universidad Austral de Chile, 2026). The simulator integrates physicochemical models from indexed scientific literature with a novel theoretical model for Non-Extractable Polyphenol (NEP) extraction — a contribution with no prior literature precedent for this species + NADES combination.
+Developed as part of a **PhD thesis** (Pontificia Universidad Católica de Valparaíso - PUCV, 2026). The simulator integrates physicochemical models from indexed scientific literature with a novel theoretical model for Non-Extractable Polyphenol (NEP) extraction — a contribution with no prior literature precedent for this species + NADES combination.
 
 ### Key features
 
@@ -178,7 +191,7 @@ streamlit run app.py
 
 ### Citation
 
-> Ferrada, C. (2026). *NADES Simulator for polyphenol extraction from Berberis microphylla G. Forst* (Beta 0.6) [Software]. PhD Thesis, Universidad Austral de Chile. https://github.com/CrissFerrada/SimNADES
+> Ferrada, C. (2026). *NADES Simulator for polyphenol extraction from Berberis microphylla G. Forst* (Beta 0.6) [Software]. PhD Thesis, Pontificia Universidad Católica de Valparaíso (PUCV). https://github.com/CrissFerrada/SimNADES
 
 ### License
 

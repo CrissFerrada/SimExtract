@@ -294,6 +294,7 @@ Funcionalidades principales:
   Versión   : Beta 0.6  (8 pestañas — reestructurado)
   Contexto  : Tesis Doctoral — Extracción de polifenoles de
               Berberis microphylla G. Forst con NADES
+  Universidad: Pontificia Universidad Católica de Valparaíso (PUCV)
 
   Copyright (c) 2026 Cristofher Ferrada.
   Todos los derechos reservados.
@@ -312,17 +313,49 @@ Funcionalidades principales:
   REFERENCIAS PRINCIPALES
 ══════════════════════════════════════════════════════════════════
 
-  Ruiz, A. et al. (2024) Horticulturae 10, 458
-  Espino, M. et al. (2016) Talanta 162, 412-419
-  Benvenutti, L. et al. (2019) Food Res. Int. 119, 710-718
-  Dai, Y. et al. (2013) Anal. Chim. Acta 766, 61-68
-  Mocan, A. et al. (2017) Front. Pharmacol. 8, 234
-  Muñoz, O. et al. (2011) J. Ethnopharmacol. 136, 57
-  Saura-Calixto, F. et al. (2010) J. Agric. Food Chem. 58, 11932
-  Tiwari, B.K. et al. (2010) Food Res. Int. 43, 1956
-  Cacace, J.E. & Mazza, G. (2003) J. Food Eng. 59, 379
-  Florindo, C. et al. (2019) ACS Sustain. Chem. Eng. 7, 3
-  Box, G.E.P. & Behnken, D.W. (1960) Technometrics 2, 455
-  Montgomery, D.C. (2017) Design and Analysis of Experiments, 9th ed.
+  MODELO DE EXTRACCIÓN:
+  Ruiz, A. et al. (2024) Horticulturae 10(5), 458. ISSN 2311-7524
+    → 28 compuestos polifenólicos de B. microphylla (HPLC-DAD)
+
+  Espino, M. et al. (2016) Talanta 162, 412-419.
+    → Modelo fisicoquímico de extracción (polaridad, HBD, pH)
+
+  NADES Y ESTABILIDAD:
+  Benvenutti, L. et al. (2019) Food Res. Int. 119, 710-718.
+    → Estabilidad de NADES y protección antocianinas
+
+  Florindo, C. et al. (2019) ACS Sustain. Chem. Eng. 7, 2509-2523.
+    → NADES: propiedades y aplicaciones sostenibles
+
+  Dai, Y. et al. (2013) Anal. Chim. Acta 766, 61-68.
+    → Aplicación NADES en extracción
+
+  ULTRASONIDO Y CAVITACIÓN:
+  Tiwari, B.K. et al. (2010) Food Res. Int. 43(7), 1956-1966.
+    → UAE: mecanismos de cavitación acústica
+
+  Mason, T.J. et al. (2011) Ultrason. Sonochem. 18, 226-241.
+    → Ultrasonido en extracción: cavitación y mecanismos
+
+  DEGRADACIÓN TÉRMICA:
+  Wang, X. & Xu, Y. (2007) Food Chem. 101(4), 1338-1344.
+    → Degradación térmica de polifenoles (Arrhenius)
+
+  Buchweitz, M. et al. (2016) Food Res. Int. 89, 966-974.
+    → Estabilidad térmica de compuestos fenólicos
+
+  POLIFENOLES NO EXTRAÍBLES:
+  Saura-Calixto, F. et al. (2010) J. Agric. Food Chem. 58(21), 11932-11938.
+    → Métodos para cuantificación de polifenoles no extraíbles (NEP)
+
+  Muñoz, O. et al. (2011) J. Ethnopharmacol. 136(1), 57-62.
+    → Etnofarmacología de Berberis y composición polifenólica
+
+  DISEÑO EXPERIMENTAL:
+  Box, G.E.P. & Behnken, D.W. (1960) Technometrics 2(4), 455-475.
+    → Método Box-Behnken para diseño de experimentos
+
+  Montgomery, D.C. (2017) Design and Analysis of Experiments (9th ed.).
+    → Metodología completa de diseño experimental y CCD
 
 ══════════════════════════════════════════════════════════════════

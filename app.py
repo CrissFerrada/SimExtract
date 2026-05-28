@@ -178,10 +178,10 @@ TR = {
     # ── Header principal ──
     "main_title":   {"es": "Simulador de NADES para extraer polifenoles",
                      "en": "NADES Simulator for Polyphenol Extraction"},
-    "author_line":  {"es": ("© Cristofher Ferrada · Tesis Doctoral 2026 · Beta 0.6 · "
+    "author_line":  {"es": ("© Cristofher Ferrada · Tesis Doctoral PUCV 2026 · Beta 0.6 · "
                             "Todos los derechos reservados · "
                             "Modelos basados en literatura científica indexada (ver pestaña Metodología)"),
-                     "en": ("© Cristofher Ferrada · Doctoral Thesis 2026 · Beta 0.6 · "
+                     "en": ("© Cristofher Ferrada · PhD Thesis PUCV 2026 · Beta 0.6 · "
                             "All rights reserved · "
                             "Models based on indexed scientific literature (see Methodology tab)")},
     "nades_active": {"es": "NADES activo", "en": "Active NADES"},
@@ -935,7 +935,7 @@ with tab1:
      <b>Fecha:</b> 2026-05-26</p>
   <p><b>Autor:</b> Cristofher Ferrada &nbsp;&nbsp;
      <b>Versión:</b> Simulador NADES Beta 0.6 &nbsp;&nbsp;
-     <b>Tesis Doctoral 2026</b></p>
+     <b>Tesis Doctoral PUCV 2026</b></p>
   <p class="badge">Score combinado EP+NEP: {avg_comb:.1f}%
      (peso EP={peso_ep:.0%} · NEP={1-peso_ep:.0%})</p>
 
@@ -968,7 +968,7 @@ with tab1:
 
   <footer>
     Generado por: Simulador de NADES para extracción de polifenoles — Beta 0.6<br>
-    © Cristofher Ferrada · Tesis Doctoral 2026 · Todos los derechos reservados<br>
+    © Cristofher Ferrada · Tesis Doctoral PUCV 2026 · Todos los derechos reservados<br>
     Modelos basados en literatura científica indexada (ver pestaña Metodología en la app)
   </footer>
 </body>
@@ -1062,6 +1062,7 @@ with tab3:
             legend=dict(orientation="h", y=-0.25),
         )
         st.plotly_chart(fig_us_total, use_container_width=True)
+        fig_caption(3, "Índice total de extracción vs frecuencia UAE (kHz). Ref: Tiwari et al. (2010).")
 
     with col_u2:
         st.markdown(t("t3_increment"))
@@ -1100,6 +1101,7 @@ with tab3:
             legend=dict(orientation="h", y=-0.25),
         )
         st.plotly_chart(fig_us_boost, use_container_width=True)
+        fig_caption(3, "Incremento en extracción (%) vs frecuencia UAE. Ref: Vilkhu et al. (2008).")
 
     st.caption(
         "Modelo UAE: Tiwari et al. (2010) Food Res. Int. 43, 1956 — cavitación acústica y extracción de polifenoles · "
@@ -1245,6 +1247,7 @@ with tab3:
                 legend=dict(orientation="h", y=-0.25),
             )
             st.plotly_chart(fig_pasos3, use_container_width=True)
+            fig_caption(3, "Rendimiento EP+NEP por paso del proceso 3-etapas (UAE → centrifugación → filtración).")
 
         with col_3s2:
             st.markdown("#### EP y NEP finales por compuesto")
@@ -1265,6 +1268,7 @@ with tab3:
                 legend=dict(orientation="h", y=-0.35),
             )
             st.plotly_chart(fig_3sc, use_container_width=True)
+            fig_caption(3, "EP y NEP finales por compuesto tras el proceso de 3 pasos.")
 
         st.markdown("#### Tabla detallada — 3 pasos por compuesto")
         st.dataframe(
@@ -1335,6 +1339,7 @@ with tab3:
             yaxis_range=[0, 101],
         )
         st.plotly_chart(fig_arr_bar, use_container_width=True)
+        fig_caption(3, "Retención de polifenoles por clase (%) a T y tiempo del proceso. Modelo Arrhenius.")
 
     st.markdown("#### Curva retención vs temperatura por clase (tiempo fijo)")
     _t_sweep = range(20, 82, 2)
@@ -1361,6 +1366,7 @@ with tab3:
         legend=dict(orientation="h", y=-0.35),
     )
     st.plotly_chart(fig_arr_t, use_container_width=True)
+    fig_caption(3, "Curva de retención vs temperatura (°C) por clase de polifenol. Modelo Arrhenius. Ref: Wang & Xu (2007).")
     st.caption(
         "Arrhenius: k(T) = k_ref × exp(−Ea/R × (1/T_ref − 1/T)) · "
         "Ea (kJ/mol): Antocianinas 75 · Flavonoles 55 · Flavan-3-oles 60 · "
@@ -1559,6 +1565,7 @@ with atab_int:
                    font=dict(size=13, color="#0d1f35"), x=0.5),
     )
     st.plotly_chart(fig_diag, use_container_width=True)
+    fig_caption(2, "Diagrama esquemático de interacción NADES–polifenol (red de H-bonds). Modelo conceptual.")
     st.caption(
         "Diagrama esquemático conceptual — no es una estructura molecular a escala. "
         "🟢 –OH cubiertos = protegidos por puentes H del HBD · "
@@ -1615,6 +1622,7 @@ with atab_int:
         margin=dict(l=120, r=20, t=20, b=100),
     )
     st.plotly_chart(fig_hm, use_container_width=True)
+    fig_caption(2, "Heatmap de compatibilidad NADES–polifenol por factores (polaridad, pH, HBD). Ref: Dai & Verpoorte (2014).")
     st.caption(
         "Ref: Dai & Verpoorte (2014) Anal. Chim. Acta 766, 61 — factores de compatibilidad NADES-polifenol · "
         "Espino et al. (2016) Talanta 162, 412 — modelo de polaridad y HBD para extracción fenólica"
@@ -1658,6 +1666,7 @@ with atab_int:
         margin=dict(l=100),
     )
     st.plotly_chart(fig_hb, use_container_width=True)
+    fig_caption(2, "Cobertura de grupos –OH por el NADES: OH cubiertos vs OH libres por compuesto. Ref: Benvenutti et al. (2019).")
     st.caption(
         "🟢 Verde = OH protegidos por H-bonds del NADES (no accesibles al O₂) · "
         "🔴 Rojo = OH aún expuestos (riesgo de oxidación) · "
@@ -3957,7 +3966,7 @@ with tab8:
     - Torskangerpoll, K. & Andersen, Ø.M. (2005). *Food Chem.* 89, 427 — Antocianinas y pH.
 
     **Modelo novel:**
-    - **Ferrada, C.** (2026). Tesis Doctoral — Score combinado EP+NEP; modelo NEP; extracción simultánea con NADES; hojas y tallo Berberis.
+    - **Ferrada, C.** (2026). Tesis Doctoral, Pontificia Universidad Católica de Valparaíso (PUCV) — Score combinado EP+NEP; modelo NEP; extracción simultánea con NADES; hojas y tallo Berberis.
     """)
 
     st.markdown("---")
