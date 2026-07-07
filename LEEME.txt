@@ -1,6 +1,7 @@
 ══════════════════════════════════════════════════════════════════
   Simulador de NADES para extraer polifenoles — Beta 0.6
-  © Cristofher Ferrada, 2026. Todos los derechos reservados.
+  © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV).
+  Licenciado bajo Apache License 2.0. Ver LICENSE.
   Berberis microphylla G. Forst — Tesis Doctoral
 ══════════════════════════════════════════════════════════════════
 
@@ -296,13 +297,8 @@ Funcionalidades principales:
               Berberis microphylla G. Forst con NADES
   Universidad: Pontificia Universidad Católica de Valparaíso (PUCV)
 
-  Copyright (c) 2026 Cristofher Ferrada.
-  Todos los derechos reservados.
-
-  Este software es parte de un trabajo de tesis doctoral en
-  desarrollo. Queda prohibida su reproducción, distribución
-  o modificación total o parcial sin la autorización expresa
-  y por escrito del autor.
+  © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV).
+  Licenciado bajo Apache License 2.0. Ver LICENSE.
 
   Los modelos de simulación están basados en literatura
   científica indexada (ver pestaña Metodología en el programa).

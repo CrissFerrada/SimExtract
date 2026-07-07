@@ -6,7 +6,7 @@ cd /d "%~dp0"
 echo.
 echo  ================================================================
 echo   Simulador de NADES para extraer polifenoles — Beta 0.6
-echo   (c) Cristofher Ferrada 2026 - Todos los derechos reservados
+echo   (c) Cristofher Ferrada 2026 - Licenciado bajo Apache License 2.0
 echo.
 echo   PREPARADOR DE BUNDLE COMPLETO (SIN INTERNET EN DESTINO)
 echo   -------------------------------------------------------

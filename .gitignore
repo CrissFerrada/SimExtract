@@ -1,6 +1,11 @@
 # Python
 __pycache__/
 *.py[cod]
+python-embed/
+wheels/
+Manual_SimNADES_Beta06.docx
+dev_log.md
+SUGERENCIAS_Y_PROXIMOS_PASOS.md
 *.pyo
 *.pyd
 .Python

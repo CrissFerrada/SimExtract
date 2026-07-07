@@ -22,7 +22,7 @@ if [ -f ".venv/bin/streamlit" ]; then
     echo "   Simulador de NADES para extraer"
     echo "   polifenoles — Beta 0.6"
     echo "   © Cristofher Ferrada 2026"
-    echo "   Todos los derechos reservados"
+    echo "   Licenciado bajo Apache License 2.0"
     echo ""
     echo "   Berberis microphylla G. Forst"
     echo "   Fruto / Hojas / Tallo"

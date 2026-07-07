@@ -1,0 +1,20 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = [".git", ".venv", "python-embed", "wheels", "__pycache__"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+extend-exclude = '''
+(
+  python-embed
+  | wheels
+  | \.venv
+)
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["python-embed", "wheels", ".venv", "__pycache__"]
+
