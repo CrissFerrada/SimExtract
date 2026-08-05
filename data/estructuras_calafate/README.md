@@ -16,6 +16,11 @@ Estructuras químicas de los polifenoles reportados en literatura para
 | `polifenoles_calafate.smi` | SMILES + nombre, una línea por compuesto |
 | `polifenoles_calafate_3D.sdf` | Todas las estructuras en un solo SDF con coordenadas 3D |
 | `sdf/<InChIKey>.sdf` | Una estructura por archivo, nombrada por InChIKey |
+| `estructuras_polifenoles_calafate.pdf` | **Estructuras dibujadas en 2D**, agrupadas por clase, para revisión visual |
+| `png/<InChIKey>.png` | Dibujo 2D individual |
+| `generar_estructuras.py` | Definición de los SMILES + `validar()` |
+| `construir_paquete.py` | Regenera CSV, .smi y SDF; aborta si la validación falla |
+| `generar_pdf_estructuras.py` | Regenera el PDF y los PNG |
 
 **40 estructuras discretas**, cubriendo las siete clases: antocianinas, flavonoles, flavonas,
 flavan-3-oles, ácidos hidroxicinámicos, ácidos hidroxibenzoicos y proantocianidinas
@@ -42,12 +47,20 @@ La columna `estado_ionico` del CSV indica la especie de cada estructura.
 
 ### 2. Lo que está verificado y lo que no
 
-**Verificado computacionalmente:** que cada SMILES parsea, su fórmula molecular, su peso
-molecular y su carga formal. Esto atrapa errores de constitución.
+**Verificado computacionalmente** (`generar_estructuras.py → validar()`): que cada SMILES
+parsea, su fórmula molecular, su peso molecular, su carga formal, el **número de anillos** y
+el **tamaño máximo de anillo**.
 
-**NO verificado:** la **estereoquímica**. El peso molecular no distingue glucósido de
-galactósido, ni catequina de epicatequina. Para COSMO-RS la estereoquímica sí importa, porque
-cambia la geometría y con ella el perfil sigma.
+Los dos últimos no son decorativos. En la primera versión de este conjunto, 21 de las 40
+estructuras salieron con un **macrociclo espurio**: las plantillas y los fragmentos de azúcar
+reusaban los mismos números de cierre de anillo, y el SMILES cerró el anillo contra el átomo
+equivocado. **La fórmula y el peso molecular eran correctos en las 21**, porque son los mismos
+átomos unidos de otra forma. El conteo de anillos es lo que lo detecta, y por eso es parte
+obligatoria de la validación. `construir_paquete.py` aborta si `validar()` reporta algo.
+
+**NO verificado:** la **estereoquímica**. Ni el peso molecular ni el conteo de anillos
+distinguen glucósido de galactósido, ni catequina de epicatequina. Para COSMO-RS la
+estereoquímica sí importa, porque cambia la geometría y con ella el perfil sigma.
 
 **Antes del paso QM, verifica cada estructura por su InChIKey contra PubChem.** El InChIKey
 está en el CSV justamente para que la verificación sea una búsqueda y no una inspección visual
