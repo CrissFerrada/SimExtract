@@ -1,0 +1,41 @@
+grupo,nombre,clase,n_azucares,n_esteres,n_rot_pesados,n_OH,n_OMe,n_torsiones,atomos_pesados,MW,InChIKey
+1,Ácido Protocatéquico,Ác. Hidroxibenzoico,0,0,1,3,0,4,11,154.12,YQUVCSBJEUQKSH-UHFFFAOYSA-N
+1,Ácido Elágico,Ác. Hidroxibenzoico,0,0,0,4,0,4,22,302.19,AFSDNFLWKVMVRB-UHFFFAOYSA-N
+1,"Berberina (*alcaloide, no polifenol)",Alcaloide isoquinolínico,0,0,2,0,2,4,25,336.37,YBHILYKTIRIUTE-UHFFFAOYSA-N
+1,Ácido Vanílico,Ác. Hidroxibenzoico,0,0,2,2,1,5,12,168.15,WKOLLVMJNQIZCI-UHFFFAOYSA-N
+1,Ácido Gálico,Ác. Hidroxibenzoico,0,0,1,4,0,5,12,170.12,LNTHITQWFMADLM-UHFFFAOYSA-N
+1,Ácido Cafeico,Ác. Hidroxicinámico,0,0,2,3,0,5,13,180.16,QAIPRVGONGVQAS-DUXPYHPUSA-N
+1,Luteolina,Flavona,0,0,1,4,0,5,21,286.24,IQPNAANSBPBGFQ-UHFFFAOYSA-N
+1,Ácido Ferúlico,Ác. Hidroxicinámico,0,0,3,2,1,6,14,194.19,KSEBMYQBYZTDHS-HWKANZROSA-N
+1,Catequina,Flavan-3-ol,0,0,1,5,0,6,21,290.27,PFTAWBLQPZVEMU-DZGCQCFKSA-N
+1,Epicatequina,Flavan-3-ol,0,0,1,5,0,6,21,290.27,PFTAWBLQPZVEMU-UKRRQHHQSA-N
+1,Quercetina,Flavonol,0,0,1,5,0,6,22,302.24,REFJWTPEDVJJIY-UHFFFAOYSA-N
+1,Isorhamnetina,Flavonol,0,0,2,4,1,7,23,316.26,IZQSVPBOUDKVDZ-UHFFFAOYSA-N
+2,Ácido Clorogénico (5-cafeoilquínico),Ác. Hidroxicinámico,0,1,4,6,0,10,25,354.31,CWVRJTMFETXNAD-QEPAVKMUSA-N
+2,3-Cafeoilquínico,Ác. Hidroxicinámico,0,1,4,6,0,10,25,354.31,GYFFKZTYYAFCTR-DHLOTTMOSA-N
+2,4-Cafeoilquínico,Ác. Hidroxicinámico,0,1,4,6,0,10,25,354.31,GYFFKZTYYAFCTR-ZZVAFGPTSA-N
+2,Vitexina,Flavona,1,0,3,7,0,10,31,432.38,SGEWCQFRYRRZDC-VPRICQMDSA-N
+2,Quercetín-3-rhamnosido,Flavonol,1,0,3,7,0,10,32,448.38,OXGUCUVFOIWWQJ-VHQAYEMVSA-N
+2,Kaempferol-3-glucósido,Flavonol,1,0,4,7,0,11,32,448.38,JPUKWEQWGBDDQB-QSOFNFLRSA-N
+2,Cianidín-3-glucósido,Antocianina,1,0,4,8,0,12,32,449.39,RKWHWFONKJEUEF-GQUPQBGVSA-O
+2,Quercetín-3-galactosido,Flavonol,1,0,4,8,0,12,33,464.38,OVSQVDMCBVZWGM-DTGCRPNFSA-N
+2,Quercetín-3-glucósido,Flavonol,1,0,4,8,0,12,33,464.38,OVSQVDMCBVZWGM-QSOFNFLRSA-N
+2,Peonidín-3-glucósido,Antocianina,1,0,5,7,1,13,33,463.42,ZZWPMFROUHHAKY-OUUKCGNVSA-O
+2,Delfinidin-3-glucósido,Antocianina,1,0,4,9,0,13,33,465.39,XENHPQQLDPAYIJ-PEVLUNPASA-O
+2,Isorhamnetín-3-galactosido,Flavonol,1,0,5,7,1,13,34,478.41,CQLRUIIRRZYHHS-UVHBULKNSA-N
+2,Petunidín-3-glucósido,Antocianina,1,0,5,8,1,14,34,479.41,CCQDWIRWKWIUKK-QKYBYQKWSA-O
+2,Malvidín-3-glucósido,Antocianina,1,0,6,7,2,15,35,493.44,PXUQTDZNOHRWLI-OXUVVOBNSA-O
+3,Procianidina B1,Tanino Condensado,0,0,3,10,0,13,42,578.53,UPSCCKSYXWBZPX-FSIJYMTBSA-N
+3,Procianidina B2,Tanino Condensado,0,0,3,10,0,13,42,578.53,UPSCCKSYXWBZPX-KWKLTRBOSA-N
+3,"3,5-Dicafeoilquínico",Ác. Hidroxicinámico,0,2,7,7,0,14,37,516.46,KRZBCHWVBQOTNZ-CPYUJKAUSA-N
+3,Cafeoilglucárico (isómeros A–D),Ác. Hidroxicinámico,0,1,8,7,0,15,26,372.28,OMIXKOJEIRRAJW-HLWOJZJGSA-N
+3,Quercetín-3-malonilgalactosido,Flavonol,1,1,7,8,0,15,39,550.43,NBQPHANHNTWDML-YYYZAYPPSA-N
+3,Quercetín-3-malonilglucósido,Flavonol,1,1,7,8,0,15,39,550.43,NBQPHANHNTWDML-UJKBSQBPSA-N
+3,Cianidín-3-rutinosido,Antocianina,2,0,6,10,0,16,42,595.53,USNPULRDBDVJAO-ACXVBFAASA-O
+3,Quercetín-3-rutinosido (Rutina),Flavonol,2,0,6,10,0,16,43,610.52,IKGXIBQEEMLURG-FYIKAPSBSA-N
+3,Peonidín-3-rutinosido,Antocianina,2,0,7,9,1,17,43,609.56,ONQVTPMFYSRRLL-LVQFFINWSA-O
+3,Delfinidin-3-rutinosido,Antocianina,2,0,6,11,0,17,43,611.53,PLKUTZNSKRWCCA-QXVQRCPNSA-O
+3,Isorhamnetín-3-rutinosido,Flavonol,2,0,7,9,1,17,44,624.55,UIDGLYUNOUKLBM-WDJQYGQPSA-N
+3,Petunidín-3-rutinosido,Antocianina,2,0,7,10,1,18,44,625.56,IWTWNQZWPPSSQB-CBJDNGMYSA-O
+3,Dicafeoilglucárico,Ác. Hidroxicinámico,0,2,11,8,0,19,38,534.43,ZQGMKFHEDFDRLZ-BYCAZERCSA-N
+3,Malvidín-3-rutinosido,Antocianina,2,0,8,9,2,19,45,639.58,YCDMGCUGMVVWAB-YAGJAPKFSA-O
