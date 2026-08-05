@@ -72,9 +72,9 @@ def main() -> None:
         nota = (
             "Las antocianinas se representan como CATIÓN FLAVILIO (carga +1),\n"
             "que es la especie dominante a pH 2–4 (rango de los NADES de este trabajo).\n\n"
-            "Fórmula, peso molecular y carga verificados computacionalmente (RDKit).\n"
-            "La estereoquímica NO está verificada: contrastar por InChIKey contra\n"
-            "PubChem antes del paso QM.\n\n"
+            "Fórmula, peso molecular, carga y número de anillos verificados\n"
+            "computacionalmente (RDKit). La estereoquímica NO está verificada:\n"
+            "contrastar por InChIKey contra PubChem antes del paso QM.\n\n"
             "Fuente de la lista: Ruiz et al. (2024) Horticulturae 10, 458 (fruto);\n"
             "Mocan et al. (2017) y Muñoz et al. (2011) para hojas y tallo,\n"
             "con asignaciones generalizadas de Berberis spp."
@@ -92,22 +92,32 @@ def main() -> None:
             fig, axes = plt.subplots(ROWS, COLS, figsize=(8.27, 11.69))
             axes = axes.ravel()
             for ax in axes:
-                ax.axis("off")
+                # Se ocultan marcas y bordes en vez de apagar los ejes: así el
+                # xlabel sigue formando parte del bbox y tight_layout le reserva
+                # espacio. Con ax.axis("off") + ax.text el pie queda fuera del
+                # bbox y se superpone con el título de la fila siguiente.
+                ax.set_xticks([])
+                ax.set_yticks([])
+                for s in ax.spines.values():
+                    s.set_visible(False)
             for ax, r in zip(axes, lote):
                 img = render(r["SMILES_canonico"])
                 img.save(PNG / f"{r['InChIKey']}.png")
                 ax.imshow(img)
                 carga = int(r["carga_formal"])
                 signo = f"  ·  carga {carga:+d}" if carga else ""
-                ax.set_title(r["nombre"], size=9.5, weight="bold", pad=4)
-                ax.text(0.5, -0.06,
-                        f"{r['clase']}  ·  {r['formula']}  ·  {r['MW_calculado']} g/mol{signo}\n"
-                        f"{r['parte_planta']}  ·  {r['InChIKey']}",
-                        transform=ax.transAxes, ha="center", va="top", size=7, color="#333")
+                ax.set_title(r["nombre"], size=9.5, weight="bold", pad=5)
+                ax.set_xlabel(
+                    f"{r['clase']}  ·  {r['formula']}  ·  {r['MW_calculado']} g/mol{signo}\n"
+                    f"{r['parte_planta']}\n{r['InChIKey']}",
+                    size=6.8, color="#333", linespacing=1.5, labelpad=7)
+            for ax in axes[len(lote):]:
+                ax.set_visible(False)
             fig.suptitle("Polifenoles de calafate — estructuras para COSMO-RS",
-                         size=9, color="#666", y=0.985)
-            fig.text(0.5, 0.012, f"página {ini // PPP + 2}", ha="center", size=7, color="#888")
-            fig.tight_layout(rect=[0, 0.02, 1, 0.97])
+                         size=9, color="#666", y=0.99)
+            fig.text(0.5, 0.008, f"página {ini // PPP + 2}", ha="center", size=7, color="#888")
+            fig.tight_layout(rect=[0, 0.02, 1, 0.975])
+            fig.subplots_adjust(hspace=0.35, wspace=0.05)
             pdf.savefig(fig)
             plt.close(fig)
 
