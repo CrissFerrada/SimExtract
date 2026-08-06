@@ -109,7 +109,7 @@ def main() -> None:
                 ax.set_title(r["nombre"], size=9.5, weight="bold", pad=5)
                 ax.set_xlabel(
                     f"{r['clase']}  ·  {r['formula']}  ·  {r['MW_calculado']} g/mol{signo}\n"
-                    f"{r['parte_planta']}\n{r['InChIKey']}",
+                    f"fuente: {r['fuente']}\n{r['InChIKey']}",
                     size=6.8, color="#333", linespacing=1.5, labelpad=7)
             for ax in axes[len(lote):]:
                 ax.set_visible(False)

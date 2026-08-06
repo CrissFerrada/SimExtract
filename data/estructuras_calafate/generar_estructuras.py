@@ -70,9 +70,6 @@ ESTRUCTURAS = [
     ("Isorhamnetina",                   "Flavonol", flavonol(B_PN, "O"), 0, 3),
 
     # ── FLAVONAS ──────────────────────────────────────────────────
-    ("Luteolina", "Flavona", "O=c1cc(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12", 0, 3),
-    ("Vitexina",  "Flavona",
-     "O=c1cc(-c2ccc(O)cc2)oc2c(-[C@@H]3O[C@H](CO)[C@@H](O)[C@H](O)[C@H]3O)c(O)cc(O)c12", 0, 4),
 
     # ── FLAVAN-3-OLES ─────────────────────────────────────────────
     ("Catequina",    "Flavan-3-ol", "O[C@H]1Cc2c(O)cc(O)cc2O[C@@H]1c1ccc(O)c(O)c1", 0, 3),
@@ -87,17 +84,12 @@ ESTRUCTURAS = [
      "O[C@@H]1C[C@](O)(C(=O)O)C[C@H](O)[C@H]1OC(=O)/C=C/c1ccc(O)c(O)c1", 0, 2),
     ("4-Cafeoilquínico", "Ác. Hidroxicinámico",
      "O[C@H]1C[C@](O)(C(=O)O)C[C@H](O)[C@@H]1OC(=O)/C=C/c1ccc(O)c(O)c1", 0, 2),
-    ("3,5-Dicafeoilquínico", "Ác. Hidroxicinámico",
-     "O[C@@H]1[C@@H](OC(=O)/C=C/c2ccc(O)c(O)c2)C[C@](O)(C(=O)O)C[C@H]1OC(=O)/C=C/c1ccc(O)c(O)c1", 0, 3),
     ("Cafeoilglucárico (isómeros A–D)", "Ác. Hidroxicinámico",
      "OC(=O)[C@H](O)[C@@H](O)[C@H](O)[C@@H](OC(=O)/C=C/c1ccc(O)c(O)c1)C(=O)O", 0, 1),
     ("Dicafeoilglucárico", "Ác. Hidroxicinámico",
      "OC(=O)[C@H](O)[C@@H](OC(=O)/C=C/c1ccc(O)c(O)c1)[C@H](O)[C@@H](OC(=O)/C=C/c1ccc(O)c(O)c1)C(=O)O", 0, 2),
 
     # ── ACIDOS HIDROXIBENZOICOS ───────────────────────────────────
-    ("Ácido Gálico",         "Ác. Hidroxibenzoico", "OC(=O)c1cc(O)c(O)c(O)c1", 0, 1),
-    ("Ácido Protocatéquico", "Ác. Hidroxibenzoico", "OC(=O)c1ccc(O)c(O)c1", 0, 1),
-    ("Ácido Vanílico",       "Ác. Hidroxibenzoico", "OC(=O)c1ccc(O)c(OC)c1", 0, 1),
     ("Ácido Elágico",        "Ác. Hidroxibenzoico", "O=c1oc2c(O)c(O)cc3c(=O)oc4c(O)c(O)cc1c4c23", 0, 4),
 
     # ── TANINOS CONDENSADOS (dímeros discretos) ───────────────────
@@ -106,10 +98,24 @@ ESTRUCTURAS = [
     ("Procianidina B2", "Tanino Condensado",
      "O[C@H]1[C@H](c2ccc(O)c(O)c2)Oc2cc(O)cc(O)c2[C@H]1[C@@H]1[C@@H](O)[C@H](c2ccc(O)c(O)c2)Oc2cc(O)cc(O)c21", 0, 6),
 
-    # ── ALCALOIDE (no polifenol; incluido por estar en tallo) ──────
-    ("Berberina (*alcaloide, no polifenol)", "Alcaloide isoquinolínico",
-     "COc1ccc2cc3[n+](cc2c1OC)CCc1cc2OCOc2cc1-3", 1, 5),
 ]
+
+
+FUENTE = {
+    "Ruiz 2024": "Ruiz et al. (2024) Horticulturae 10, 458, Tabla 2 — cuantificado en fruto",
+    "Molecules 2019": "Molecules 24, 3331 — identificado en fruto; isómero no resuelto",
+    "JChromA 2013": "J. Chromatogr. A 1281, 38 — cuantificado en fruto",
+    "Modelo NEP": "Modelo teórico de la tesis; sin literatura previa Berberis + NADES",
+}
+# Compuestos que NO están en Ruiz 2024 y entran por otra fuente de fruto
+PROCEDENCIA = {
+    "Catequina": "Molecules 2019", "Epicatequina": "Molecules 2019",
+    "Quercetina": "Molecules 2019", "Isorhamnetina": "Molecules 2019",
+    "Kaempferol-3-glucósido": "Molecules 2019",
+    "Ácido Cafeico": "Molecules 2019", "Ácido Ferúlico": "JChromA 2013",
+    "Procianidina B1": "Modelo NEP", "Procianidina B2": "Modelo NEP",
+    "Ácido Elágico": "Modelo NEP",
+}
 
 
 def validar(verbose=True):

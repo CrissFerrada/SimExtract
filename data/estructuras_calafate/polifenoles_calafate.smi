@@ -19,8 +19,6 @@ C[C@@H]1O[C@H](Oc2c(-c3ccc(O)c(O)c3)oc3cc(O)cc(O)c3c2=O)[C@H](O)[C@@H](O)[C@H]1O
 O=c1c(O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)c(-c2ccc(O)cc2)oc2cc(O)cc(O)c12	Kaempferol-3-glucósido
 O=c1c(O)c(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12	Quercetina
 COc1cc(-c2oc3cc(O)cc(O)c3c(=O)c2O)ccc1O	Isorhamnetina
-O=c1cc(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12	Luteolina
-O=c1cc(-c2ccc(O)cc2)oc2c([C@@H]3O[C@H](CO)[C@@H](O)[C@H](O)[C@H]3O)c(O)cc(O)c12	Vitexina
 Oc1cc(O)c2c(c1)O[C@H](c1ccc(O)c(O)c1)[C@@H](O)C2	Catequina
 Oc1cc(O)c2c(c1)O[C@H](c1ccc(O)c(O)c1)[C@H](O)C2	Epicatequina
 O=C(O)/C=C/c1ccc(O)c(O)c1	Ácido Cafeico
@@ -28,13 +26,8 @@ COc1cc(/C=C/C(=O)O)ccc1O	Ácido Ferúlico
 O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1C[C@@](O)(C(=O)O)C[C@@H](O)[C@H]1O	Ácido Clorogénico (5-cafeoilquínico)
 O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1[C@H](O)C[C@](O)(C(=O)O)C[C@@H]1O	3-Cafeoilquínico
 O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1[C@@H](O)C[C@@](O)(C(=O)O)C[C@@H]1O	4-Cafeoilquínico
-O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1C[C@](O)(C(=O)O)C[C@@H](OC(=O)/C=C/c2ccc(O)c(O)c2)[C@@H]1O	3,5-Dicafeoilquínico
 O=C(/C=C/c1ccc(O)c(O)c1)O[C@@H](C(=O)O)[C@@H](O)[C@H](O)[C@@H](O)C(=O)O	Cafeoilglucárico (isómeros A–D)
 O=C(/C=C/c1ccc(O)c(O)c1)O[C@@H]([C@H](O)[C@@H](OC(=O)/C=C/c1ccc(O)c(O)c1)C(=O)O)[C@@H](O)C(=O)O	Dicafeoilglucárico
-O=C(O)c1cc(O)c(O)c(O)c1	Ácido Gálico
-O=C(O)c1ccc(O)c(O)c1	Ácido Protocatéquico
-COc1cc(C(=O)O)ccc1O	Ácido Vanílico
 O=c1oc2c(O)c(O)cc3c(=O)oc4c(O)c(O)cc1c4c23	Ácido Elágico
 Oc1cc(O)c2c(c1)O[C@@H](c1ccc(O)c(O)c1)[C@@H](O)[C@@H]2[C@H]1c2c(O)cc(O)cc2O[C@H](c2ccc(O)c(O)c2)[C@H]1O	Procianidina B1
 Oc1cc(O)c2c(c1)O[C@@H](c1ccc(O)c(O)c1)[C@H](O)[C@@H]2[C@H]1c2c(O)cc(O)cc2O[C@@H](c2ccc(O)c(O)c2)[C@@H]1O	Procianidina B2
-COc1ccc2cc3[n+](cc2c1OC)CCc1cc2c(cc1-3)OCO2	Berberina (*alcaloide, no polifenol)

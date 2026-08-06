@@ -26,7 +26,7 @@ laboratory optimization is available.
 
 | Módulo | Descripción |
 |---|---|
-| Diseño de NADES | 11 HBA × 23 HBD con razones molares configurables |
+| Diseño de NADES | 14 HBA × 25 HBD con razones molares configurables, incluidos eutécticos hidrofóbicos (HDES) de timol, mentol, alcanfor y ác. decanoico |
 | Extracción EP | Modelo fisicoquímico para polifenoles extraíbles |
 | Extracción NEP | Modelo mecanístico para polifenoles no extraíbles |
 | Proceso UAE | Simulación de ultrasonido, centrifugación y filtración |

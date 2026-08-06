@@ -15,7 +15,7 @@ AQUI = Path(__file__).parent
 sys.path.insert(0, str(AQUI))
 sys.path.insert(0, str(AQUI.parent.parent))  # raiz del repo, para data.py
 
-from generar_estructuras import ESTRUCTURAS, validar  # noqa: E402
+from generar_estructuras import ESTRUCTURAS, PROCEDENCIA, validar  # noqa: E402
 import data as repo_data  # noqa: E402
 
 RDLogger.DisableLog("rdApp.*")
@@ -27,7 +27,7 @@ ALIAS = {
     "Ácido Clorogénico": "Ácido Clorogénico (5-cafeoilquínico)",
     "Cafeoilquínico (CQ)": "3-Cafeoilquínico",
     "4-Cafeoilquínico (4-CQ)": "4-Cafeoilquínico",
-    "3,5-Dicafeoilquínico (3,5-DCQ)": "3,5-Dicafeoilquínico",
+    "3,5-Dicafeoilglucárico (3,5-DCQ)": "Dicafeoilglucárico",
     "Cafeoilglucárico A (CGI-A)": "Cafeoilglucárico (isómeros A–D)",
     "Cafeoilglucárico B (CGI-B)": "Cafeoilglucárico (isómeros A–D)",
     "Cafeoilglucárico C (CGI-C)": "Cafeoilglucárico (isómeros A–D)",
@@ -68,12 +68,8 @@ def main() -> None:
     print(f"Validación OK: {len(ESTRUCTURAS)} estructuras\n")
 
     repo = {}
-    for parte, fn in [("fruto", repo_data.get_polyphenol_database),
-                      ("hojas", repo_data.get_polyphenol_database_hojas),
-                      ("tallo", repo_data.get_polyphenol_database_tallo)]:
-        for _, r in fn().iterrows():
-            e = repo.setdefault(r["nombre"], {"partes": [], "mw": r["peso_molecular"]})
-            e["partes"].append(parte)
+    for _, r in repo_data.get_polyphenol_database().iterrows():
+        repo[r["nombre"]] = {"mw": r["peso_molecular"]}
 
     png_dir, sdf_dir = AQUI / "png", AQUI / "sdf"
     png_dir.mkdir(exist_ok=True)
@@ -89,10 +85,9 @@ def main() -> None:
         ikey = inchi.MolToInchiKey(m)
         mw = Descriptors.MolWt(m)
 
-        partes, mw_repo, nombres_repo = set(), None, []
+        mw_repo, nombres_repo = None, []
         for nr, info in repo.items():
             if ALIAS.get(nr, nr) == nombre:
-                partes.update(info["partes"])
                 mw_repo = info["mw"]
                 nombres_repo.append(nr)
         if mw_repo is not None and abs(mw_repo - mw) > 1.5:
@@ -103,7 +98,7 @@ def main() -> None:
             sin_3d.append(nombre)
         else:
             for k, v in [("clase", clase), ("carga", str(carga)), ("InChIKey", ikey),
-                         ("parte_planta", "|".join(sorted(partes)) or "n/d")]:
+                         ("fuente", PROCEDENCIA.get(nombre, "Ruiz 2024"))]:
                 conf.SetProp(k, v)
             conf.SetProp("_Name", nombre)
             combinado.write(conf)
@@ -114,7 +109,7 @@ def main() -> None:
         filas.append({
             "nombre": nombre,
             "clase": clase,
-            "parte_planta": "|".join(sorted(partes)) or "n/d",
+            "fuente": PROCEDENCIA.get(nombre, "Ruiz 2024"),
             "nombres_en_repo": "|".join(sorted(nombres_repo)),
             "SMILES_canonico": Chem.MolToSmiles(m),
             "InChIKey": ikey,
