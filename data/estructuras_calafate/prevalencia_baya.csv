@@ -1,5 +1,5 @@
 grupo,compuesto,clase,categoria,max_umol_g,fuente,detalle
-1,Ácido Elágico,Ác. Hidroxibenzoico,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
+1,Ácido Elágico,Ác. Hidroxibenzoico,Sin cuantificar (NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
 1,Quercetina,Flavonol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
 1,Isorhamnetina,Flavonol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
 1,Catequina,Flavan-3-ol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
@@ -30,5 +30,5 @@ grupo,compuesto,clase,categoria,max_umol_g,fuente,detalle
 3,Cianidín-3-rutinosido,Antocianina,Minoritario,0.37,Ruiz 2024,
 3,Quercetín-3-malonilgalactosido,Flavonol,Minoritario,0.11,Ruiz 2024,
 3,Peonidín-3-rutinosido,Antocianina,Minoritario,0.10,Ruiz 2024,
-3,Procianidina B1,Tanino Condensado,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
-3,Procianidina B2,Tanino Condensado,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
+3,Procianidina B1,Tanino Condensado,Sin cuantificar (NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
+3,Procianidina B2,Tanino Condensado,Sin cuantificar (NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación

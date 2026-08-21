@@ -49,7 +49,7 @@ def main():
             valor = f"{mx:.2f}"
             detalle = (f"{len(cuant)} isómeros cuantificados" if len(cuant) > 1 else "")
         elif r["fuente"] == "Modelo NEP":
-            mx, categoria, valor = -1, "Sin cuantificar (modelo NEP)", "—"
+            mx, categoria, valor = -1, "Sin cuantificar (NEP)", "—"
             detalle = "fracción no extraíble; sin literatura de cuantificación"
         else:
             mx, categoria, valor = -2, "Identificado, no cuantificado", "—"
