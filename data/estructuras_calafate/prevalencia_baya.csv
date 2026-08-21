@@ -1,0 +1,34 @@
+grupo,compuesto,clase,categoria,max_umol_g,fuente,detalle
+1,Ácido Elágico,Ác. Hidroxibenzoico,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
+1,Quercetina,Flavonol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+1,Isorhamnetina,Flavonol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+1,Catequina,Flavan-3-ol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+1,Epicatequina,Flavan-3-ol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+1,Ácido Cafeico,Ác. Hidroxicinámico,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+1,Ácido Ferúlico,Ác. Hidroxicinámico,"Identificado, no cuantificado",—,JChromA 2013,asignación por MS; isómero no resuelto
+2,Delfinidin-3-glucósido,Antocianina,Principal,12.21,Ruiz 2024,
+2,Petunidín-3-glucósido,Antocianina,Principal,7.64,Ruiz 2024,
+2,Malvidín-3-glucósido,Antocianina,Principal,7.29,Ruiz 2024,
+2,Ácido Clorogénico (5-cafeoilquínico),Ác. Hidroxicinámico,Principal,2.33,Ruiz 2024,
+2,Cianidín-3-glucósido,Antocianina,Principal,1.88,Ruiz 2024,
+2,Peonidín-3-glucósido,Antocianina,Minoritario,0.88,Ruiz 2024,
+2,Quercetín-3-galactosido,Flavonol,Minoritario,0.71,Ruiz 2024,
+2,Quercetín-3-rhamnosido,Flavonol,Minoritario,0.58,Ruiz 2024,
+2,3-Cafeoilquínico,Ác. Hidroxicinámico,Minoritario,0.51,Ruiz 2024,
+2,4-Cafeoilquínico,Ác. Hidroxicinámico,Minoritario,0.38,Ruiz 2024,
+2,Quercetín-3-glucósido,Flavonol,Minoritario,0.22,Ruiz 2024,
+2,Isorhamnetín-3-galactosido,Flavonol,Minoritario,0.17,Ruiz 2024,
+2,Kaempferol-3-glucósido,Flavonol,"Identificado, no cuantificado",—,Molecules 2019,asignación por MS; isómero no resuelto
+3,Petunidín-3-rutinosido,Antocianina,Principal,1.92,Ruiz 2024,
+3,Cafeoilglucárico (isómeros A–D),Ác. Hidroxicinámico,Principal,1.88,Ruiz 2024,4 isómeros cuantificados
+3,Delfinidin-3-rutinosido,Antocianina,Principal,1.57,Ruiz 2024,
+3,Malvidín-3-rutinosido,Antocianina,Principal,1.06,Ruiz 2024,
+3,Dicafeoilglucárico,Ác. Hidroxicinámico,Minoritario,0.81,Ruiz 2024,3 isómeros cuantificados
+3,Quercetín-3-rutinosido (Rutina),Flavonol,Minoritario,0.74,Ruiz 2024,
+3,Quercetín-3-malonilglucósido,Flavonol,Minoritario,0.49,Ruiz 2024,
+3,Isorhamnetín-3-rutinosido,Flavonol,Minoritario,0.43,Ruiz 2024,
+3,Cianidín-3-rutinosido,Antocianina,Minoritario,0.37,Ruiz 2024,
+3,Quercetín-3-malonilgalactosido,Flavonol,Minoritario,0.11,Ruiz 2024,
+3,Peonidín-3-rutinosido,Antocianina,Minoritario,0.10,Ruiz 2024,
+3,Procianidina B1,Tanino Condensado,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
+3,Procianidina B2,Tanino Condensado,Sin cuantificar (modelo NEP),—,Modelo NEP,fracción no extraíble; sin literatura de cuantificación
