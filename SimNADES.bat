@@ -7,12 +7,14 @@ cd /d "%~dp0"
 ::   PRIORIDAD 1: Python embebido incluido
 ::   (bundle completo, sin instalacion requerida)
 :: ══════════════════════════════════════════════
-if exist "python-embed\Scripts\streamlit.exe" goto :LAUNCH_EMBED
+:: Se comprueba el paquete, no el .exe: los lanzadores .exe de pip guardan
+:: la ruta absoluta con que se crearon y dejan de funcionar si se mueve la carpeta.
+if exist "python-embed\Lib\site-packages\streamlit\__init__.py" goto :LAUNCH_EMBED
 
 :: ══════════════════════════════════════════════
 ::   PRIORIDAD 2: venv local ya instalado
 :: ══════════════════════════════════════════════
-if exist ".venv\Scripts\streamlit.exe" goto :LAUNCH_VENV
+if exist ".venv\Scripts\python.exe" goto :LAUNCH_VENV
 
 :: ══════════════════════════════════════════════
 ::   Primera vez: instalar en venv local
@@ -117,7 +119,7 @@ echo.
 echo  Para cerrar el simulador: cierra esta ventana.
 echo  ==========================================
 echo.
-"python-embed\Scripts\streamlit.exe" run app.py
+"python-embed\python.exe" -m streamlit run app.py
 pause
 exit /b 0
 
@@ -143,5 +145,5 @@ echo.
 echo  Para cerrar el simulador: cierra esta ventana.
 echo  ==========================================
 echo.
-.venv\Scripts\streamlit.exe run app.py
+.venv\Scripts\python.exe -m streamlit run app.py
 pause

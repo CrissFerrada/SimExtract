@@ -13,7 +13,7 @@ echo  ==========================================
 echo.
 
 :: ---- Verificar si ya existe el entorno virtual ----
-if exist ".venv\Scripts\streamlit.exe" (
+if exist ".venv\Scripts\python.exe" (
     echo  [OK] Simulador de NADES — CFERRADA 2026 ya esta instalado.
     echo       Para reinstalar, elimina la carpeta .venv y vuelve a ejecutar.
     echo.

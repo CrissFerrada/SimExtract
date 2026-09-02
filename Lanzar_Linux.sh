@@ -16,7 +16,7 @@
 cd "$(dirname "$0")"
 
 # ── Si ya está instalado, arrancar directo ──
-if [ -f ".venv/bin/streamlit" ]; then
+if [ -x ".venv/bin/python" ]; then
     echo ""
     echo "  =========================================="
     echo "   Simulador de NADES para extraer"
@@ -32,7 +32,7 @@ if [ -f ".venv/bin/streamlit" ]; then
     echo "  Para cerrar: Ctrl+C en esta terminal."
     echo "  =========================================="
     echo ""
-    .venv/bin/streamlit run app.py --server.headless false
+    .venv/bin/python -m streamlit run app.py --server.headless false
     exit 0
 fi
 
@@ -129,4 +129,4 @@ echo "   Para cerrar: Ctrl+C"
 echo "  =========================================="
 echo ""
 
-.venv/bin/streamlit run app.py --server.headless false
+.venv/bin/python -m streamlit run app.py --server.headless false
