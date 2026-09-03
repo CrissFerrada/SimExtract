@@ -17,7 +17,7 @@
 - Rutas con `pathlib.Path`, nunca strings.
 - Commits convencionales en español (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`).
 - `line-length = 100` (black y ruff ya configurados en ambos repos).
-- Repos: `SN = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\Simulador NADES`, `SE = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\SimEluent`.
+- Repos: `SN = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\SimExtract`, `SE = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\SimEluent`.
 - Intérprete SimExtract: `.venv\Scripts\python.exe` (nunca los stubs `.exe` de pip).
 
 ---
