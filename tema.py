@@ -1,7 +1,7 @@
 """Visual theme.
 
 Palette taken from the product's own identity — the calafate purple and the solvent
-teal of `assets/simnades.ico` — rather than from a generic dashboard blue.
+teal of `assets/simextract.ico` — rather than from a generic dashboard blue.
 
 Every transition and keyframe lives inside a `prefers-reduced-motion: no-preference`
 query, so a user who asked their system for less movement gets none: motion is an

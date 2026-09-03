@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Que SimNADES diga, con evidencia citada y vacíos declarados, si un extracto NADES se puede sembrar directo en una placa dada, y que SimEluent deje de tratar σ₀ como determinista.
+**Goal:** Que SimExtract diga, con evidencia citada y vacíos declarados, si un extracto NADES se puede sembrar directo en una placa dada, y que SimEluent deje de tratar σ₀ como determinista.
 
-**Architecture:** Módulo puro `hptlc.py` en SimNADES (sin Streamlit), con registro de evidencia y catálogo de placas reales de Merck. Su veredicto define el régimen de σ₀, que SimEluent consume para propagarlo por Monte Carlo junto a las variables manuales. Las 8 pestañas de SimNADES se reagrupan en tres etapas de flujo de trabajo y "Mis Datos" pasa a persistir en disco.
+**Architecture:** Módulo puro `hptlc.py` en SimExtract (sin Streamlit), con registro de evidencia y catálogo de placas reales de Merck. Su veredicto define el régimen de σ₀, que SimEluent consume para propagarlo por Monte Carlo junto a las variables manuales. Las 8 pestañas de SimExtract se reagrupan en tres etapas de flujo de trabajo y "Mis Datos" pasa a persistir en disco.
 
 **Tech Stack:** Python 3.11 · Streamlit · pandas · NumPy · pytest · black/ruff (line-length 100)
 
@@ -18,7 +18,7 @@
 - Commits convencionales en español (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`).
 - `line-length = 100` (black y ruff ya configurados en ambos repos).
 - Repos: `SN = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\Simulador NADES`, `SE = C:\Users\crist\OneDrive\Desktop\Proyectos\Tesis\SimEluent`.
-- Intérprete SimNADES: `.venv\Scripts\python.exe` (nunca los stubs `.exe` de pip).
+- Intérprete SimExtract: `.venv\Scripts\python.exe` (nunca los stubs `.exe` de pip).
 
 ---
 
@@ -1829,7 +1829,7 @@ git commit -m "feat: el recomendador escribe el NADES activo en vez de solo list
 Patrón elegido: **Data-Dense + Drill-Down**, que es lo que ya hacen la franja fija y el
 desplegable "¿Por qué importa?". La paleta no se toma del recomendador genérico —era azul
 corporativo— sino de la identidad que el programa ya tiene: el morado del calafate y el
-turquesa del disolvente, los mismos del icono en `assets/simnades.ico`.
+turquesa del disolvente, los mismos del icono en `assets/simextract.ico`.
 
 Se aparta a conciencia de dos reglas de la guía: se conservan los emoji como iconos,
 porque en Streamlit sustituirlos por SVG es peleado y la app ya es coherente con ellos; y
@@ -1889,7 +1889,7 @@ Expected: FAIL con `ModuleNotFoundError: No module named 'tema'`
 """Visual theme.
 
 Palette taken from the product's own identity — the calafate purple and the solvent
-teal of `assets/simnades.ico` — rather than from a generic dashboard blue.
+teal of `assets/simextract.ico` — rather than from a generic dashboard blue.
 
 Every transition and keyframe lives inside a `prefers-reduced-motion: no-preference`
 query, so a user who asked their system for less movement gets none: motion is an
@@ -2321,11 +2321,11 @@ class RegimenSigma0:
 
 
 def regimen_sigma0(estado: str, zona_concentracion: bool) -> RegimenSigma0:
-    """Return the sigma0 prior implied by a SimNADES HPTLC verdict.
+    """Return the sigma0 prior implied by a SimExtract HPTLC verdict.
 
     Args:
         estado: Verdict state. "LIMPIA" for a cleaned-up sample; otherwise the
-            value of `hptlc.Estado` from SimNADES.
+            value of `hptlc.Estado` from SimExtract.
         zona_concentracion: Whether the plate carries a concentrating zone.
 
     Returns:
@@ -2432,7 +2432,7 @@ En `SE/engine/optimizer.py`, sustituir el campo `sigma0: float = 1.0` y el méto
 
     @classmethod
     def desde_regimen(cls, regimen, **kwargs) -> "ConditionPrior":
-        """Build a prior whose sigma0 follows a SimNADES verdict regime.
+        """Build a prior whose sigma0 follows a SimExtract verdict regime.
 
         Args:
             regimen: A `engine.sigma0.RegimenSigma0`.
@@ -2516,7 +2516,7 @@ git commit -m "feat: sigma0 se propaga como incierto con matriz NADES"
 - [ ] `cd "$SN" && .venv/Scripts/python.exe -m pytest -q` — toda la suite pasa
 - [ ] `cd "$SE" && python -m pytest -q` — toda la suite pasa
 - [ ] `cd "$SN" && .venv/Scripts/python.exe -m black --check . && .venv/Scripts/python.exe -m ruff check .`
-- [ ] Doble clic en `SimNADES.lnk` del escritorio: la app abre en las cuatro etapas
+- [ ] Doble clic en `SimExtract.lnk` del escritorio: la app abre en las cuatro etapas
 - [ ] La pestaña 🧫 HPTLC da `SIN_EVIDENCIA` gris para RP-18 W y lista los siete vacíos
 - [ ] Un ensayo guardado en ③ Registrar sigue ahí tras cerrar y reabrir la app
 

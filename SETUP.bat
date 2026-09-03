@@ -1,11 +1,11 @@
 @echo off
-title Simulador de NADES — CFERRADA 2026 — Configuracion Inicial
+title SimExtract — CFERRADA 2026 — Configuracion Inicial
 color 0B
 cd /d "%~dp0"
 
 echo.
 echo  ==========================================
-echo   Simulador de NADES para extraer
+echo   SimExtract para extraer
 echo   polifenoles — Beta 0.6
 echo   (c) Cristofher Ferrada 2026
 echo   Configuracion inicial
@@ -14,7 +14,7 @@ echo.
 
 :: ---- Verificar si ya existe el entorno virtual ----
 if exist ".venv\Scripts\python.exe" (
-    echo  [OK] Simulador de NADES — CFERRADA 2026 ya esta instalado.
+    echo  [OK] SimExtract — CFERRADA 2026 ya esta instalado.
     echo       Para reinstalar, elimina la carpeta .venv y vuelve a ejecutar.
     echo.
     pause
@@ -85,7 +85,7 @@ echo  ==========================================
 echo   [LISTO] Instalacion completada.
 echo.
 echo   Ejecuta:
-echo   "Simulador de NADES para extraer
+echo   "SimExtract para extraer
 echo    polifenoles CFERRADA 2026.bat"
 echo  ==========================================
 echo.

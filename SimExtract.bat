@@ -1,5 +1,5 @@
 @echo off
-title SimNADES — Simulador NADES para Polifenoles — CFERRADA 2026 — Beta 0.6
+title SimExtract — extracción de polifenoles — CFERRADA 2026 — Beta 0.6
 color 0A
 cd /d "%~dp0"
 
@@ -22,8 +22,8 @@ if exist ".venv\Scripts\python.exe" goto :LAUNCH_VENV
 color 0E
 echo.
 echo  ==========================================
-echo   SimNADES — Simulador NADES
-echo   para extraccion de polifenoles
+echo   SimExtract
+echo   extraccion de polifenoles de calafate
 echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Primera instalacion
@@ -101,8 +101,8 @@ goto :LAUNCH_VENV
 :: ══════════════════════════════════════════════
 echo.
 echo  ==========================================
-echo   SimNADES — Simulador NADES
-echo   para extraccion de polifenoles
+echo   SimExtract
+echo   extraccion de polifenoles de calafate
 echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Berberis microphylla G. Forst
@@ -128,8 +128,8 @@ exit /b 0
 :: ══════════════════════════════════════════════
 echo.
 echo  ==========================================
-echo   SimNADES — Simulador NADES
-echo   para extraccion de polifenoles
+echo   SimExtract
+echo   extraccion de polifenoles de calafate
 echo   Beta 0.6 — (c) Cristofher Ferrada 2026
 echo.
 echo   Berberis microphylla G. Forst

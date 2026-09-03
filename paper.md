@@ -1,5 +1,5 @@
 ---
-title: "SimNADES: an open simulator for natural deep eutectic solvent design in polyphenol extraction"
+title: "SimExtract: an open simulator for natural deep eutectic solvent design in polyphenol extraction"
 tags:
   - chemistry
   - extraction
@@ -20,7 +20,7 @@ bibliography: paper.bib
 
 # Summary
 
-SimNADES is an open-source Streamlit application and Python model for exploring
+SimExtract is an open-source Streamlit application and Python model for exploring
 natural deep eutectic solvents (NADES) in the extraction of polyphenols from
 *Berberis microphylla* G. Forst. The software combines a curated set of hydrogen
 bond acceptor and donor components, physicochemical descriptors, extraction
@@ -35,7 +35,7 @@ reported calafate phenolic profiles, from non-extractable polyphenols (NEP), whi
 are modeled as matrix-associated compounds whose recovery depends on solvent
 polarity, hydrogen-bonding capacity, viscosity, water fraction, temperature, and
 ultrasound conditions [@ruiz2024calafate; @saura2010nep]. Rather than replacing
-experimental validation, SimNADES provides a reproducible screening layer for
+experimental validation, SimExtract provides a reproducible screening layer for
 green-extraction workflows.
 
 # Statement of need
@@ -46,7 +46,7 @@ tasks [@espino2016designer; @dai2013natural]. However, practical formulation
 work is often fragmented across spreadsheets, literature notes, and ad-hoc
 scripts. This is especially limiting for plant matrices such as calafate, where
 phenolic composition, matrix binding, degradation, ultrasound conditions, and
-solvent handling all influence the experimental design. SimNADES addresses this
+solvent handling all influence the experimental design. SimExtract addresses this
 gap by offering a single, inspectable simulator that links solvent composition to
 model outputs relevant for EP and NEP recovery.
 

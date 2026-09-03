@@ -1,4 +1,4 @@
-"""Genera el icono de SimNADES (calafate sobre gota de disolvente).
+"""Genera el icono de SimExtract (calafate sobre gota de disolvente).
 
 Se ejecuta una sola vez; el .ico resultante se versiona junto al código para que
 los accesos directos no dependan de tener Pillow instalado.
@@ -62,7 +62,7 @@ def construir() -> Image.Image:
 
 
 def main() -> None:
-    destino = Path(__file__).resolve().parent / "simnades.ico"
+    destino = Path(__file__).resolve().parent / "simextract.ico"
     img = construir()
     # Windows escoge el tamaño según el contexto (barra de tareas, escritorio…).
     img.save(destino, format="ICO", sizes=[(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)])

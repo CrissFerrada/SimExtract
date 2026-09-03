@@ -1,6 +1,6 @@
 # Code of Conduct
 
-SimNADES follows the spirit of the Contributor Covenant.
+SimExtract follows the spirit of the Contributor Covenant.
 
 ## Our pledge
 

@@ -1,6 +1,6 @@
 # Módulo de Estabilidad en el Tiempo (almacenamiento)
 
-**Proyecto:** Simulador NADES — Tesis Doctoral PUCV 2026
+**Proyecto:** SimExtract — Tesis Doctoral PUCV 2026
 **Fecha:** 2026-08-04
 **Estado:** diseño aprobado, pendiente de plan de implementación
 **Autor del diseño:** Cristofher Ferrada (con Claude Code)

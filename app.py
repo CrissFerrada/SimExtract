@@ -1,5 +1,5 @@
 """
-Simulador de NADES para extraer polifenoles — Beta 0.6
+SimExtract — simulador de extracción de polifenoles — Beta 0.6
 © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV).
 Licenciado bajo Apache License 2.0. Ver LICENSE.
 
@@ -53,7 +53,7 @@ LICENSE_NOTICE = (
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 st.set_page_config(
-    page_title="Simulador de NADES — CFERRADA 2026 · Beta 0.6",
+    page_title="SimExtract — CFERRADA 2026 · Beta 0.6",
     page_icon="🫐",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -117,7 +117,7 @@ if LANG not in ("es", "en"):
 # ─────────────────────────────────────────────
 TR = {
     # ── Sidebar ──
-    "sidebar_title": {"es": "## 🫐 Simulador de NADES", "en": "## 🫐 NADES Simulator"},
+    "sidebar_title": {"es": "## 🫐 SimExtract", "en": "## 🫐 SimExtract"},
     "sidebar_subtitle": {
         "es": "**para extraer polifenoles · Beta 0.6**",
         "en": "**for polyphenol extraction · Beta 0.6**",
@@ -236,8 +236,8 @@ TR = {
     "comp_run": {"es": "⚖️ Comparar NADES A vs B", "en": "⚖️ Compare NADES A vs B"},
     # ── Header principal ──
     "main_title": {
-        "es": "Simulador de NADES para extraer polifenoles",
-        "en": "NADES Simulator for Polyphenol Extraction",
+        "es": "SimExtract — simulador de extracción de polifenoles",
+        "en": "SimExtract for Polyphenol Extraction",
     },
     "author_line": {
         "es": (
@@ -1208,7 +1208,7 @@ with tab1:
   <p><b>NADES activo:</b> {_nades_name} &nbsp;&nbsp;
      <b>Fecha:</b> 2026-05-26</p>
   <p><b>Autor:</b> Cristofher Ferrada &nbsp;&nbsp;
-     <b>Versión:</b> Simulador NADES Beta 0.6 &nbsp;&nbsp;
+     <b>Versión:</b> SimExtract Beta 0.6 &nbsp;&nbsp;
      <b>Tesis Doctoral PUCV 2026</b></p>
   <p class="badge">Score combinado EP+NEP: {avg_comb:.1f}%
      (peso EP={peso_ep:.0%} · NEP={1-peso_ep:.0%})</p>
@@ -1240,7 +1240,7 @@ with tab1:
   <p>Base de datos de polifenoles: {_tpc_ref}</p>
 
   <footer>
-    Generado por: Simulador de NADES para extracción de polifenoles — Beta 0.6<br>
+    Generado por: SimExtract — simulador de extracción de polifenoles — Beta 0.6<br>
     © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV). Licenciado bajo Apache License 2.0. Ver LICENSE.<br>
     Modelos basados en literatura científica indexada (ver pestaña Metodología en la app)
   </footer>

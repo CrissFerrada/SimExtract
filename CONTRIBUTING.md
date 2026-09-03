@@ -1,6 +1,6 @@
-# Contributing to SimNADES
+# Contributing to SimExtract
 
-Thanks for considering a contribution. SimNADES supports transparent, reproducible
+Thanks for considering a contribution. SimExtract supports transparent, reproducible
 simulation of natural deep eutectic solvent (NADES) systems for polyphenol
 extraction.
 

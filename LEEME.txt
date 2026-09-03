@@ -1,5 +1,5 @@
 ══════════════════════════════════════════════════════════════════
-  Simulador de NADES para extraer polifenoles — Beta 0.6
+  SimExtract — simulador de extracción de polifenoles — Beta 0.6
   © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV).
   Licenciado bajo Apache License 2.0. Ver LICENSE.
   Berberis microphylla G. Forst — Tesis Doctoral
@@ -78,7 +78,7 @@ Funcionalidades principales:
   PASO 3 — Ejecutar en el PC destino:
   -----------------------------------------------
   Doble clic en:
-  >> SimNADES.bat
+  >> SimExtract.bat
 
   El lanzador detecta automáticamente el Python embebido.
   No necesita internet, no necesita instalación.
@@ -99,7 +99,7 @@ Funcionalidades principales:
   PASO 2 — Ejecutar el simulador:
   --------------------------------
   Doble clic en:
-  >> SimNADES.bat
+  >> SimExtract.bat
 
   La primera vez instala los paquetes automáticamente (2-5 min).
   Las siguientes veces abre directamente sin espera.
@@ -183,7 +183,7 @@ Funcionalidades principales:
 ══════════════════════════════════════════════════════════════════
 
   LANZADORES:
-  SimNADES.bat                     → Lanzador Windows (doble clic)
+  SimExtract.bat                     → Lanzador Windows (doble clic)
   Lanzar_macOS.command             → Lanzador macOS   (doble clic)
   Lanzar_Linux.sh                  → Lanzador Linux   (doble clic*)
 

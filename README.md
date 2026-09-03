@@ -1,4 +1,4 @@
-# SimNADES
+# SimExtract
 
 > Tesis Doctoral 2026 · © Cristofher Ferrada · PUCV
 > [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -7,7 +7,7 @@
 Naturales (NADES) aplicados a la extracción de polifenoles de _Berberis microphylla_ G.
 Forst.**
 
-SimNADES forma parte del ecosistema de tesis doctoral de Cristofher Ferrada en la Pontificia
+SimExtract forma parte del ecosistema de tesis doctoral de Cristofher Ferrada en la Pontificia
 Universidad Católica de Valparaíso (PUCV). El software integra modelos fisicoquímicos de
 extracción de polifenoles extraíbles (EP), un modelo mecanístico para polifenoles no
 extraíbles (NEP), estabilidad térmica, ultrasonido asistido (UAE), análisis económico,
@@ -18,7 +18,7 @@ reutilización de NADES y comparación con datos experimentales.
 Natural deep eutectic solvents are increasingly used as greener extraction media for
 phenolics, but selecting a practical NADES formulation still requires balancing polarity,
 viscosity, pH, hydrogen-bonding capacity, water content, ultrasound conditions, thermal
-stability, and cost. SimNADES provides a transparent, reproducible tool for ranking candidate
+stability, and cost. SimExtract provides a transparent, reproducible tool for ranking candidate
 NADES systems and documenting the assumptions behind extraction decisions before full
 laboratory optimization is available.
 
@@ -67,9 +67,9 @@ _Berberis microphylla_. Las referencias principales para JOSS se listan en `pape
 
 ## Cómo citar
 
-Ferrada, C. (2026). *SimNADES: NADES Simulator for polyphenol extraction from Berberis
+Ferrada, C. (2026). *SimExtract: SimExtract for polyphenol extraction from Berberis
 microphylla G. Forst* (Beta 0.6) [Software]. PhD Thesis, Pontificia Universidad Católica de
-Valparaíso (PUCV). https://github.com/CrissFerrada/SimNADES
+Valparaíso (PUCV). https://github.com/CrissFerrada/SimExtract
 
 ## Autor y licencia
 
@@ -82,7 +82,7 @@ Licenciado bajo Apache License 2.0. Ver LICENSE.
 
 ## English version
 
-SimNADES is an interactive simulator for designing and evaluating Natural Deep Eutectic
+SimExtract is an interactive simulator for designing and evaluating Natural Deep Eutectic
 Solvents (NADES) for polyphenol extraction from _Berberis microphylla_ G. Forst. It supports
 NADES formulation, EP/NEP extraction scoring, ultrasound-assisted extraction, thermal
 degradation, kinetic exploration, solid:liquid ratio optimization, experimental-design
@@ -92,7 +92,7 @@ generation, economic analysis, and comparison with user-supplied experimental da
 
 NADES extraction workflows require simultaneous consideration of solvent structure,
 hydrogen-bonding capacity, viscosity, pH, added water, temperature, ultrasound conditions,
-stability, and cost. SimNADES gives researchers a reproducible decision-support tool for
+stability, and cost. SimExtract gives researchers a reproducible decision-support tool for
 screening formulations and recording model assumptions before final experimental calibration.
 
 ### Installation and use

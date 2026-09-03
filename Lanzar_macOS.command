@@ -1,6 +1,6 @@
 #!/bin/bash
 # ══════════════════════════════════════════════════════
-#  Simulador de NADES para extraer polifenoles
+#  SimExtract — simulador de extracción de polifenoles
 #  © Cristofher Ferrada 2026 · Beta 0.6 · macOS
 #  Doble clic en Finder para ejecutar
 # ══════════════════════════════════════════════════════
@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 # ── Función de alerta visual en macOS ──
 alert() {
-    osascript -e "display alert \"Simulador NADES\" message \"$1\"" 2>/dev/null \
+    osascript -e "display alert \"SimExtract\" message \"$1\"" 2>/dev/null \
         || echo "[AVISO] $1"
 }
 
@@ -18,7 +18,7 @@ alert() {
 if [ -x ".venv/bin/python" ]; then
     echo ""
     echo "  =========================================="
-    echo "   Simulador de NADES para extraer"
+    echo "   SimExtract para extraer"
     echo "   polifenoles — Beta 0.6"
     echo "   © Cristofher Ferrada 2026"
     echo "   Licenciado bajo Apache License 2.0"
@@ -38,7 +38,7 @@ fi
 # ── Primera vez: instalación automática ──
 echo ""
 echo "  =========================================="
-echo "   Simulador de NADES — Primera instalación"
+echo "   SimExtract — Primera instalación"
 echo "   (solo ocurre una vez en este Mac)"
 echo "  =========================================="
 echo ""

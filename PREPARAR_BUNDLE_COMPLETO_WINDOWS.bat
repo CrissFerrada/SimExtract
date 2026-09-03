@@ -1,11 +1,11 @@
 @echo off
-title Simulador NADES — Preparar bundle completo sin dependencias (Windows)
+title SimExtract — Preparar bundle completo sin dependencias (Windows)
 color 0B
 cd /d "%~dp0"
 
 echo.
 echo  ================================================================
-echo   Simulador de NADES para extraer polifenoles — Beta 0.6
+echo   SimExtract — simulador de extracción de polifenoles — Beta 0.6
 echo   (c) Cristofher Ferrada 2026 - Licenciado bajo Apache License 2.0
 echo.
 echo   PREPARADOR DE BUNDLE COMPLETO (SIN INTERNET EN DESTINO)
@@ -178,7 +178,7 @@ echo   Esta carpeta ya NO necesita Python instalado en el PC destino.
 echo   Solo copia la carpeta completa (incluyendo python-embed\)
 echo   a cualquier PC con Windows 10/11 (64-bit) y haz doble clic en:
 echo.
-echo   >> Simulador de NADES para extraer polifenoles CFERRADA 2026.bat
+echo   >> SimExtract — simulador de extracción de polifenoles CFERRADA 2026.bat
 echo.
 echo   Tamaño aproximado de la carpeta completa:
 for /f "tokens=3" %%a in ('dir /s /-c /a-d "python-embed" 2^>nul ^| find "bytes"') do set SIZE=%%a

@@ -1,11 +1,11 @@
 @echo off
-title SimNADES — Descargar paquetes para uso offline
+title SimExtract — Descargar paquetes para uso offline
 color 0E
 cd /d "%~dp0"
 
 echo.
 echo  ==========================================
-echo   SimNADES v3  ^|  Descarga offline
+echo   SimExtract v3  ^|  Descarga offline
 echo   Ejecutar en el PC con internet ANTES de
 echo   copiar al pendrive/PC sin internet.
 echo  ==========================================

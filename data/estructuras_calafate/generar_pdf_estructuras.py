@@ -81,7 +81,7 @@ def main() -> None:
         )
         fig.text(0.5, 0.28, nota, ha="center", va="top", size=9, linespacing=1.6,
                  bbox=dict(boxstyle="round,pad=0.8", facecolor="#f4f4f0", edgecolor="#bbb"))
-        fig.text(0.5, 0.05, "Cristofher Ferrada · PUCV 2026 · Simulador NADES",
+        fig.text(0.5, 0.05, "Cristofher Ferrada · PUCV 2026 · SimExtract",
                  ha="center", size=8, color="#666")
         pdf.savefig(fig)
         plt.close(fig)

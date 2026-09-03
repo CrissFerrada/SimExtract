@@ -1,6 +1,6 @@
 # Módulo de Compatibilidad HPTLC + Reordenamiento del programa
 
-**Proyecto:** Simulador NADES — Tesis Doctoral PUCV 2026
+**Proyecto:** SimExtract — Tesis Doctoral PUCV 2026
 **Fecha:** 2026-09-02
 **Estado:** diseño aprobado, pendiente de plan de implementación
 **Autor del diseño:** Cristofher Ferrada (con Claude Code)
@@ -9,7 +9,7 @@
 
 ## 1. Contexto y problema
 
-SimNADES responde hoy *qué NADES extrae mejor*. No responde la pregunta que viene
+SimExtract responde hoy *qué NADES extrae mejor*. No responde la pregunta que viene
 inmediatamente después en el trabajo real: **si ese extracto se puede sembrar directo en la
 placa, o si hay que limpiarlo antes**.
 
@@ -276,7 +276,7 @@ planificar → ensayar → registrar.
 
 ## 10. Acople con SimEluent
 
-Este diseño no termina en SimNADES. SimEluent (`../SimEluent`) optimiza la fase móvil
+Este diseño no termina en SimExtract. SimEluent (`../SimEluent`) optimiza la fase móvil
 HPTLC, y los hallazgos de §3 tocan su supuesto central.
 
 ### 10.1 σ₀ es la variable de acople
@@ -298,7 +298,7 @@ medido**, que es donde se apoyaba el argumento de robustez.
 σ₀ propaga por `conditions.sigma_zone()` → `conditions.plates_N()` → `resolution.py` → la
 función objetivo. Es decir, atraviesa el modelo entero.
 
-**Interfaz entre los dos programas:** el veredicto del módulo HPTLC de SimNADES determina
+**Interfaz entre los dos programas:** el veredicto del módulo HPTLC de SimExtract determina
 el régimen de σ₀; σ₀ es entrada de SimEluent. Mientras el veredicto sea `SIN_EVIDENCIA`,
 SimEluent debe tratar σ₀ como incierto y propagarlo por Monte Carlo junto con las variables
 manuales, en vez de fijarlo.
@@ -328,7 +328,7 @@ Aquí **solo se define la interfaz** (σ₀ y su régimen). Los cambios dentro d
 su propio spec y su propio plan, en el repositorio de SimEluent.
 
 Lo que este spec sí exige: que `hptlc.py` exponga el veredicto en una forma que SimEluent
-pueda consumir sin importar Streamlit ni SimNADES completo.
+pueda consumir sin importar Streamlit ni SimExtract completo.
 
 ## 11. Riesgo principal
 
