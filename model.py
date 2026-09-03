@@ -48,7 +48,27 @@ def calculate_nades_properties(
     total = ratio_hba + ratio_hbd
     x_hba = ratio_hba / total
     x_hbd = ratio_hbd / total
-    w = water_pct / 100.0  # fracción de agua
+    w_nominal = water_pct / 100.0
+
+    # ── Saturación de agua en sistemas hidrofóbicos (HDES) ─────────
+    # Un HDES terpenoide (timol, mentol, alcanfor, ác. grasos) no es miscible
+    # con agua: absorbe sólo hasta saturación (~2–6 % m/m) y el exceso forma
+    # una segunda fase acuosa que NO participa en la solvatación.
+    # Ref: Florindo et al. 2019 ACS Sustain. Chem. Eng. 7, 14054 (contenido de
+    #      agua en equilibrio de HDES); Martins et al. 2018 ibid. 6, 8836.
+    hidrofobico = bool(hba.get("hidrofobico", False) or hbd.get("hidrofobico", False))
+    if hidrofobico:
+        # Un socio hidrofílico (p. ej. ác. láctico) eleva la capacidad de agua
+        # proporcionalmente a su fracción molar.
+        x_hidrofilo = (0.0 if hba.get("hidrofobico") else x_hba) + (
+            0.0 if hbd.get("hidrofobico") else x_hbd
+        )
+        w_max = 0.05 + 0.30 * x_hidrofilo
+        w = min(w_nominal, w_max)
+    else:
+        w_max = 1.0
+        w = w_nominal
+    bifasico = hidrofobico and w_nominal > w + 1e-9
 
     # ── Polaridad ──────────────────────────────────────────────────
     pol_neat = x_hba * hba["polarity"] + x_hbd * hbd["polarity"]
@@ -63,8 +83,9 @@ def calculate_nades_properties(
     eutectic_bonus = 0.35 * np.exp(-2.0 * (x_hba - 0.5) ** 2)
     visc_neat *= 1 - eutectic_bonus
 
-    # Efecto del agua (reducción exponencial empírica)
-    visc_w = visc_neat * np.exp(-0.07 * water_pct)
+    # Efecto del agua (reducción exponencial empírica); sólo el agua realmente
+    # incorporada a la fase eutéctica diluye la red de puentes de H.
+    visc_w = visc_neat * np.exp(-0.07 * (w * 100))
 
     # Efecto de la temperatura (Arrhenius, Ea ≈ 35 kJ/mol típico NADES)
     Ea, R = 35_000, 8.314
@@ -111,7 +132,10 @@ def calculate_nades_properties(
         "cap_hba": round(cap_hba_eff, 2),
         "antioxidant_nades": round(antioxidant, 3),
         "avg_mw": round(avg_mw, 1),
-        "water_pct": water_pct,
+        "water_pct": water_pct,  # nominal, el que fija el usuario
+        "water_pct_efectivo": round(w * 100, 1),  # el que entra en la fase eutéctica
+        "hidrofobico": hidrofobico,
+        "bifasico": bifasico,
         "temp_C": temp_C,
         "x_hba": round(x_hba, 3),
         "x_hbd": round(x_hbd, 3),
@@ -152,8 +176,10 @@ def ep_extraction_score(nades: dict, poly: pd.Series) -> dict:
     # Viscosidad
     s_visc = 1.0 / (1.0 + np.log10(max(nades["viscosidad"], 1)) / 4.0)
 
-    # Bonus agua: óptimo ~25%, gaussiana estrecha
-    water_bonus = float(np.exp(-((nades["water_pct"] - 25) ** 2) / (2 * 15**2)) * 0.10)
+    # Bonus agua: óptimo ~25%, gaussiana estrecha.
+    # En HDES sólo cuenta el agua disuelta en la fase eutéctica (ver saturación).
+    w_ef = nades.get("water_pct_efectivo", nades["water_pct"])
+    water_bonus = float(np.exp(-((w_ef - 25) ** 2) / (2 * 15**2)) * 0.10)
 
     total = 0.35 * s_pol + 0.30 * s_ph + 0.20 * s_hbd + 0.15 * s_visc + water_bonus
 
@@ -220,7 +246,9 @@ def nep_extraction_score(nades: dict, poly: pd.Series) -> dict:
         hp = 0.20  # otros NEP, contribución menor
 
     # 4. Hinchamiento de la matriz celular
-    w = nades["water_pct"]
+    # El agua que hincha la pared es la miscible con el solvente; en un HDES
+    # el exceso se separa en fase acuosa y no moja la matriz vegetal.
+    w = nades.get("water_pct_efectivo", nades["water_pct"])
     ms_agua = float(np.exp(-((w - 30) ** 2) / (2 * 12**2)))  # óptimo ~30%
     ms_polar = nades["polaridad"] * 0.85
     ms = float(0.5 * ms_agua + 0.5 * ms_polar)
@@ -596,6 +624,24 @@ def is_same_compound(hba_name: str, hbd_name: str) -> bool:
     return _compound_base_name(hba_name) == _compound_base_name(hbd_name)
 
 
+def par_inmiscible(hba_name: str, hbd_name: str, hba_db: dict, hbd_db: dict) -> bool:
+    """
+    True si el par HBA/HBD no puede formar una fase eutéctica única.
+
+    Un componente terpenoide/graso (`hidrofobico`) sólo forma HDES con otro
+    hidrofóbico o con los ácidos carboxílicos de cadena corta marcados
+    `apto_hdes`. Mezclarlo con azúcares, polioles o ácidos polihidroxilados
+    da dos fases, no un eutéctico.
+    Ref: Martins et al. 2018 ACS Sustain. Chem. Eng. 6, 8836.
+    """
+    a, d = hba_db[hba_name], hbd_db[hbd_name]
+    fobo_a, fobo_d = a.get("hidrofobico", False), d.get("hidrofobico", False)
+    if fobo_a == fobo_d:
+        return False
+    hidrofilo = d if fobo_a else a
+    return not hidrofilo.get("apto_hdes", False)
+
+
 def sweep_all_nades(
     hba_db: dict,
     hbd_db: dict,
@@ -609,7 +655,8 @@ def sweep_all_nades(
     """
     Barre todas las combinaciones HBA×HBD usando el proceso de 3 Pasos Integrados.
     Incluye UAE (freq_us), temperatura (temp_C) y tiempo (time_min).
-    Excluye combinaciones donde HBA y HBD son el mismo compuesto (no son mezclas).
+    Excluye combinaciones donde HBA y HBD son el mismo compuesto (no son mezclas)
+    y los pares inmiscibles terpenoide/hidrofílico (ver `par_inmiscible`).
     Ref: Ferrada, C. Tesis Doctoral 2026 — metodología UAE-NADES 3 pasos.
     """
     from itertools import product as iproduct
@@ -619,6 +666,8 @@ def sweep_all_nades(
 
     for hba_name, hbd_name, (rh, rd) in iproduct(hba_db, hbd_db, ratios):
         if is_same_compound(hba_name, hbd_name):
+            continue
+        if par_inmiscible(hba_name, hbd_name, hba_db, hbd_db):
             continue
         try:
             props = calculate_nades_properties(
@@ -661,6 +710,8 @@ def sweep_all_nades(
                 "Degrad. T (%)": round(deg_mean, 1),
                 "pH": round(props["pH"], 2),
                 "Viscosidad (cP)": round(props["viscosidad"], 0),
+                "Fase": "2 fases" if props["bifasico"] else "1 fase",
+                "H₂O efec. (%)": props["water_pct_efectivo"],
             }
         )
 
@@ -729,7 +780,9 @@ def extraction_kinetics(props, poly_df, time_max=90, n_points=19, freq_us=0, pes
     """
     # Factores que modifican la constante de velocidad k
     visc_f = max(0.15, 1.0 / (1 + np.log10(max(props["viscosidad"], 10)) / 3.5))
-    water_f = 0.70 + 0.60 * min(1.0, props.get("water_pct", 30) / 50)
+    water_f = 0.70 + 0.60 * min(
+        1.0, props.get("water_pct_efectivo", props.get("water_pct", 30)) / 50
+    )
     temp_C = props.get("temp_C", 40)
     temp_f = np.exp(0.025 * (temp_C - 25))
 

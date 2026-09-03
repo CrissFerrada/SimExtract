@@ -21,9 +21,6 @@ from data import (
     RATIOS_DISPONIBLES,
     THESIS_NADES,
     get_polyphenol_database,
-    get_polyphenol_database_hojas,
-    get_polyphenol_database_tallo,
-    PLANT_PART_INFO,
 )
 from model import (
     calculate_nades_properties,
@@ -34,6 +31,7 @@ from model import (
     compare_thesis_nades,
     sweep_all_nades,
     is_same_compound,
+    par_inmiscible,
     ultrasound_boost,
     economic_analysis,
     extraction_kinetics,
@@ -60,6 +58,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+from tema import inyectar_tema
+
+inyectar_tema()
 
 st.markdown(
     """
@@ -188,6 +190,10 @@ TR = {
     "tab6": {"es": "📊 Mis Datos", "en": "📊 My Data"},
     "tab7": {"es": "🎯 Recomendador", "en": "🎯 Recommender"},
     "tab8": {"es": "📚 Metodología", "en": "📚 Methodology"},
+    "tab9": {"es": "🧫 HPTLC", "en": "🧫 HPTLC"},
+    # ── Navegación de primer nivel ──
+    "nav_disenar": {"es": "🧪 Diseñar", "en": "🧪 Design"},
+    "nav_lab": {"es": "🔬 Laboratorio", "en": "🔬 Laboratory"},
     # ── Sub-tabs tab2 ──
     "atab_ep": {"es": "🟦 Extracción EP", "en": "🟦 EP Extraction"},
     "atab_nep": {"es": "🟥 Extracción NEP", "en": "🟥 NEP Extraction"},
@@ -513,11 +519,8 @@ def fig_caption(tab_n: int, desc: str) -> None:
 # DATOS (cacheados)
 # ─────────────────────────────────────────────
 @st.cache_data
-def load_poly(parte="fruto"):
-    if parte == "hojas":
-        return get_polyphenol_database_hojas()
-    elif parte == "tallo":
-        return get_polyphenol_database_tallo()
+def load_poly():
+    """Base de polifenoles de FRUTO de B. microphylla (Ruiz et al. 2024, Tabla 2)."""
     return get_polyphenol_database()
 
 
@@ -555,52 +558,17 @@ with st.sidebar:
 
     st.divider()
 
-    # ── Selector de parte de planta ──
-    st.markdown(t("plant_header"))
-    _part_map = {
-        t("plant_fruit"): "fruto",
-        t("plant_leaves"): "hojas",
-        t("plant_stem"): "tallo",
-    }
-    parte_label = st.radio(
-        t("plant_radio"),
-        options=list(_part_map.keys()),
-        index=0,
-        help=t("plant_radio_help"),
-    )
-    parte_planta = _part_map[parte_label]
-    pp = PLANT_PART_INFO[parte_planta]
-
-    # Mini-card de contexto en sidebar
-    _sidebar_nota = (
-        f'<br><small style="color:#8b4000"><b>{pp["nota_general"]}</b></small>'
-        if pp["nota_general"]
-        else ""
-    )
-    st.markdown(
-        f'<div class="part-card" style="background:{pp["color_light"]};'
-        f'border-color:{pp["color"]}">'
-        f'<b style="color:{pp["color"]}">{pp["label"]}</b><br>'
-        f'<small style="color:#0d1f35">'
-        f'TPC: {pp["tpc_rango"]}<br>'
-        f'{pp["ep_nep"]}<br>'
-        f'Ref: {pp["ref"]}</small>'
-        f"{_sidebar_nota}"
-        f"</div>",
-        unsafe_allow_html=True,
-    )
-    st.divider()
-
     st.markdown(t("nades_header"))
 
-    hba_sel = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0)
-    hbd_sel = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=0)
+    hba_sel = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0, key="sel_hba")
+    hbd_sel = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=0, key="sel_hbd")
     ratio_sel = st.select_slider(
         t("ratio_label"),
         options=list(RATIOS_DISPONIBLES.keys()),
         value="1:1",
+        key="sel_ratio",
     )
-    water_pct = st.slider(t("water_label"), 0, 50, 30, step=5)
+    water_pct = st.slider(t("water_label"), 0, 50, 30, step=5, key="sel_water")
     temp_C = st.slider(t("temp_label"), 20, 80, 40, step=5)
 
     st.divider()
@@ -707,47 +675,73 @@ with st.sidebar:
             "pure compound. Select different components to form a eutectic mixture."
         )
 
+    if par_inmiscible(hba_sel, hbd_sel, HBA_COMPONENTS, HBD_COMPONENTS):
+        st.error(
+            "⛔ Par **inmiscible**: un componente terpenoide/graso (timol, mentol, alcanfor, "
+            "ác. decanoico) no forma eutéctico único con azúcares, polioles ni ácidos "
+            "polihidroxilados. Combínalo con otro hidrofóbico o con ác. láctico/acético/levulínico."
+            if LANG == "es"
+            else "⛔ **Immiscible** pair: a terpenoid/fatty component (thymol, menthol, camphor, "
+            "decanoic acid) does not form a single eutectic with sugars, polyols or "
+            "polyhydroxy acids. Pair it with another hydrophobic one or with "
+            "lactic/acetic/levulinic acid."
+        )
+    elif props["bifasico"]:
+        st.warning(
+            f"💧 Sistema **hidrofóbico (HDES)**: sólo ~{props['water_pct_efectivo']:.1f}% del "
+            f"{water_pct}% de agua se incorpora a la fase eutéctica; el resto forma una "
+            "segunda fase acuosa. La simulación usa el agua efectiva."
+            if LANG == "es"
+            else f"💧 **Hydrophobic (HDES)** system: only ~{props['water_pct_efectivo']:.1f}% of "
+            f"the {water_pct}% water dissolves in the eutectic phase; the rest forms a "
+            "second aqueous phase. The simulation uses the effective water."
+        )
+
     st.divider()
     st.markdown(t("calc_props"))
 
-    def prop_card(label, value, unit="", color="#1a6fa0"):
-        st.markdown(
-            f'<div class="prop-card" style="border-color:{color}">'
-            f'<div class="prop-label">{label}</div>'
-            f'<div class="prop-value">{value} <span class="prop-unit">{unit}</span></div>'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
+    # Cada propiedad viene con su lectura en lenguaje llano y su fuente: la ficha
+    # anterior mostraba el número pero nunca por qué importaba ni quién lo respalda.
+    from explicacion import explicar_propiedades
+    from tabs.componentes import ficha_explicada
 
-    prop_card(t("prop_pol"), f"{props['polaridad']:.3f}", "")
-    prop_card(t("prop_visc"), f"{props['viscosidad']:.0f}", "cP", "#7a2060")
-    prop_card(t("prop_pH"), f"{props['pH']:.2f}", "", "#c05000" if props["pH"] < 4 else "#006050")
-    prop_card(t("prop_hbd"), f"{props['cap_hbd']:.2f}", "", "#006050")
-    prop_card(t("prop_antioxid"), f"{props['antioxidant_nades']:.2f}", "", "#5a3000")
+    for _lectura in explicar_propiedades(props):
+        ficha_explicada(_lectura)
 
     st.divider()
     st.caption(f"HBA: {HBA_COMPONENTS[hba_sel]['descripcion'][:60]}…")
     st.caption(f"HBD: {HBD_COMPONENTS[hbd_sel]['descripcion'][:60]}…")
 
+
+def seccion(_titulo: str = ""):
+    """Return a container preceded by a rule.
+
+    Replaces a nested `st.tabs` level: the content flows as one scrolling page
+    instead of hiding behind a third row of tabs. Because it returns a container,
+    the existing `with <name>:` blocks keep working untouched.
+
+    No heading is emitted: every block already opens with its own title, so one
+    here would only duplicate it. The argument is kept so call sites read as the
+    section they open.
+    """
+    st.divider()
+    return st.container()
+
+
 # ─────────────────────────────────────────────
 # CARGA DE BASE DE DATOS (según parte de planta)
 # ─────────────────────────────────────────────
-poly_df = load_poly(parte_planta)
+poly_df = load_poly()
 
 # ─────────────────────────────────────────────
 # HEADER
 # ─────────────────────────────────────────────
 st.markdown(f'<p class="main-title">{t("main_title")}</p>', unsafe_allow_html=True)
-_subtitle_ref = {
-    "fruto": "EP: Ruiz et al. (2024) Horticulturae 10, 458 · NEP: modelo teórico novel",
-    "hojas": "Hojas: Mocan et al. (2017) Front. Pharmacol. · Datos generalizados Berberis spp.",
-    "tallo": "Tallo/Corteza: Muñoz et al. (2011) J. Ethnopharmacol. · Datos generalizados Berberis spp.",
-}
 st.markdown(
-    f'<p class="sub-title">Simulación interactiva de NADES para extracción de polifenoles '
-    f'de <em>Berberis microphylla</em> G. Forst · {pp["label"]} · '
-    f"{_subtitle_ref[parte_planta]} · "
-    f"Estabilidad oxidativa · Extracción Simultánea EP+NEP · UAE</p>",
+    '<p class="sub-title">Simulación interactiva de NADES para extracción de polifenoles '
+    "de <em>Berberis microphylla</em> G. Forst · Fruto (baya) · "
+    "EP: Ruiz et al. (2024) Horticulturae 10, 458 · NEP: modelo teórico novel · "
+    "Estabilidad oxidativa · Extracción Simultánea EP+NEP · UAE</p>",
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -755,31 +749,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Tarjeta de contexto de parte de planta
-if parte_planta != "fruto":
-    _nota_html = (
-        f'<br><b style="font-size:.78rem;color:#8b4000">{pp["nota_general"]}</b>'
-        if pp["nota_general"]
-        else ""
-    )
-    st.markdown(
-        f'<div style="background:{pp["color_light"]};border-left:5px solid {pp["color"]}; '
-        f'border-radius:6px;padding:.6rem 1rem;margin-bottom:.5rem">'
-        f'<b style="color:{pp["color"]}">{pp["label"]}: {pp["nombre"]}</b><br>'
-        f'<span style="font-size:.82rem;color:#0d1f35">{pp["descripcion"]}</span><br>'
-        f'<span style="font-size:.78rem;color:#344a5e">'
-        f'TPC: {pp["tpc_dw"]} · Perfil: {pp["perfil"]} · '
-        f'Ref: {pp["ref"]}</span>'
-        f"{_nota_html}"
-        f"</div>",
-        unsafe_allow_html=True,
-    )
+from tabs.componentes import nades_activo
 
-nades_label = (
-    f"**{hba_sel.split('(')[0].strip()} : {hbd_sel}** ({ratio_sel}, {water_pct}% H₂O, {temp_C}°C)"
-)
+nades_label = f"**{nades_activo(props, hba_sel.split('(')[0].strip(), hbd_sel, ratio_sel)}**"
 st.info(
-    f"{t('nades_active')}: {nades_label}  ·  {t('part_lbl')}: {pp['label']}  ·  {pp['n_ep']} EP + {pp['n_nep']} NEP"
+    f"{t('nades_active')}: {nades_label}  ·  Fruto (baya)  ·  "
+    f"{(poly_df['tipo'] == 'EP').sum()} EP + {(poly_df['tipo'] == 'NEP').sum()} NEP"
 )
 
 # ─────────────────────────────────────────────
@@ -804,18 +779,15 @@ avg_comb = sim_display["Combinado (%)"].mean() if len(sim_display) > 0 else 0.0
 # ─────────────────────────────────────────────
 # PESTAÑAS
 # ─────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
-    [
-        t("tab1"),
-        t("tab2"),
-        t("tab3"),
-        t("tab4"),
-        t("tab5"),
-        t("tab6"),
-        t("tab7"),
-        t("tab8"),
-    ]
-)
+# Dos pestañas, un solo nivel de sub-pestañas. Agrupar en etapas habría creado
+# etapa → pestaña → sub-pestaña: tres niveles, y un clic más para llegar a todo.
+nav_disenar, nav_lab = st.tabs([t("nav_disenar"), t("nav_lab")])
+
+with nav_disenar:
+    tab7, tab1, tab2, tab4, tab5 = st.tabs([t("tab7"), t("tab1"), t("tab2"), t("tab4"), t("tab5")])
+
+with nav_lab:
+    tab3, tab9, tab6, tab8 = st.tabs([t("tab3"), t("tab9"), t("tab6"), t("tab8")])
 
 
 # ══════════════════════════════════════════════════════════
@@ -1080,7 +1052,6 @@ with tab1:
                         "Ratio": ratio_sel,
                         "Agua (%)": water_pct,
                         "Temp (°C)": temp_C,
-                        "Parte planta": pp["label"],
                         "EP promedio (%)": round(avg_ep, 1),
                         "NEP promedio (%)": round(avg_nep, 1),
                         "Estab. promedio (%)": round(avg_stab, 1),
@@ -1094,7 +1065,7 @@ with tab1:
         st.download_button(
             label=t("t1_excel_dl"),
             data=buf,
-            file_name=f"NADES_{hba_sel.split('(')[0].strip()[:15]}_{hbd_sel[:15]}_{parte_planta}.xlsx",
+            file_name=f"NADES_{hba_sel.split('(')[0].strip()[:15]}_{hbd_sel[:15]}_fruto.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
         st.success(t("t1_excel_ok"))
@@ -1108,11 +1079,7 @@ with tab1:
     )
     if st.button(t("t1_report_btn"), key="btn_gen_report"):
         # ── Construir el HTML ──
-        _tpc_ref = (
-            "Ruiz et al. (2024) Horticulturae 10, 458"
-            if parte_planta == "fruto"
-            else "Datos generalizados Berberis spp."
-        )
+        _tpc_ref = "Ruiz et al. (2024) Horticulturae 10, 458"
         _nades_name = f"{hba_sel.split('(')[0].strip()} : {hbd_sel} ({ratio_sel})"
         _include_plotly = "cdn"  # primer figura carga Plotly CDN
 
@@ -1190,7 +1157,6 @@ with tab1:
                 {"Propiedad": "Viscosidad (cP)", "Valor": f"{props['viscosidad']:.0f}"},
                 {"Propiedad": "pH efectivo", "Valor": f"{props['pH']:.2f}"},
                 {"Propiedad": "Cap. HBD", "Valor": f"{props['cap_hbd']:.2f}"},
-                {"Propiedad": "Parte de planta", "Valor": pp["label"]},
                 {"Propiedad": "EP promedio (%)", "Valor": f"{avg_ep:.1f}"},
                 {"Propiedad": "NEP promedio (%)", "Valor": f"{avg_nep:.1f}"},
                 {"Propiedad": "Estabilidad promedio (%)", "Valor": f"{avg_stab:.1f}"},
@@ -1240,7 +1206,6 @@ with tab1:
 <body>
   <h1>🫐 Informe de Extracción con NADES</h1>
   <p><b>NADES activo:</b> {_nades_name} &nbsp;&nbsp;
-     <b>Parte de planta:</b> {pp["label"]} &nbsp;&nbsp;
      <b>Fecha:</b> 2026-05-26</p>
   <p><b>Autor:</b> Cristofher Ferrada &nbsp;&nbsp;
      <b>Versión:</b> Simulador NADES Beta 0.6 &nbsp;&nbsp;
@@ -1270,9 +1235,8 @@ with tab1:
   Ref: Dai et al. (2013) Anal. Chim. Acta 766, 61 · Chanioti &amp; Tzia (2017)</p>
 
   <h2>5. Contexto de la Planta</h2>
-  <p><b>{pp["label"]}:</b> {pp["nombre"]}<br>
-  TPC: {pp["tpc_dw"]} · Perfil: {pp["perfil"]}<br>
-  Referencia principal: {pp["ref"]}</p>
+  <p><b>Fruto (baya) de <i>Berberis microphylla</i></b><br>
+  Referencia principal: Ruiz et al. (2024) Horticulturae 10, 458</p>
   <p>Base de datos de polifenoles: {_tpc_ref}</p>
 
   <footer>
@@ -1290,7 +1254,7 @@ with tab1:
         st.download_button(
             label=t("t1_report_dl"),
             data=st.session_state["html_report"].encode("utf-8"),
-            file_name=f"Informe_NADES_{hba_sel.split('(')[0].strip()[:12]}_{hbd_sel[:12]}_{parte_planta}.html",
+            file_name=f"Informe_NADES_{hba_sel.split('(')[0].strip()[:12]}_{hbd_sel[:12]}_fruto.html",
             mime="text/html",
         )
 
@@ -1299,14 +1263,10 @@ with tab1:
 # TAB 2 — ANÁLISIS  (EP · NEP · Estabilidad · Interacción)
 # ══════════════════════════════════════════════════════════
 with tab2:
-    atab_ep, atab_nep, atab_stab, atab_int = st.tabs(
-        [
-            t("atab_ep"),
-            t("atab_nep"),
-            t("atab_stab"),
-            t("atab_int"),
-        ]
-    )
+    atab_ep = seccion(t("atab_ep"))
+    atab_nep = seccion(t("atab_nep"))
+    atab_stab = seccion(t("atab_stab"))
+    atab_int = seccion(t("atab_int"))
 
 
 # ══════════════════════════════════════════════════════════
@@ -2295,12 +2255,10 @@ with atab_int:
 # ── Sub-tab: Extracción EP (dentro de tab2) ──
 with atab_ep:
     st.markdown(t("t2_ep_title"))
-    _ep_caption = {
-        "fruto": "28 compuestos identificados por HPLC-DAD-ESI-MS/MS · Ruiz et al. (2024) Horticulturae 10, 458",
-        "hojas": "12 compuestos EP — perfil general Berberis spp. · Mocan et al. (2017) Front. Pharmacol. 8, 234",
-        "tallo": "9 compuestos EP — perfil general Berberis spp. · Muñoz et al. (2011) J. Ethnopharmacol. 136, 57",
-    }
-    st.caption(_ep_caption[parte_planta])
+    st.caption(
+        "Compuestos identificados por HPLC-DAD-ESI-MS/MS · "
+        "Ruiz et al. (2024) Horticulturae 10, 458, Tabla 2"
+    )
 
     poly_ep_base = poly_df[poly_df["tipo"] == "EP"]
     if solo_principales:
@@ -2435,24 +2393,12 @@ with atab_ep:
 # ── Sub-tab: Extracción NEP (dentro de tab2) ──
 with atab_nep:
     st.markdown(t("t2_nep_title"))
-    _nep_badges = {
-        "fruto": (
-            "⚠️ Modelo teórico original · Sin literatura previa para "
-            "<em>Berberis microphylla</em> fruto + NADES · Contribución novel de esta tesis"
-        ),
-        "hojas": (
-            "⚠️ Modelo teórico original · Sin literatura previa para "
-            "<em>Berberis</em> hojas + NADES · Datos NEP generalizados Berberis spp. · "
-            "Ref: Biswas et al. (2013) Phytomedicine 20, 1051"
-        ),
-        "tallo": (
-            "⚠️ Modelo teórico original · Sin literatura previa para "
-            "<em>Berberis</em> tallo/corteza + NADES · NEP muy alta en corteza (taninos condensados HMW) · "
-            "Ref: Muñoz et al. (2011) J. Ethnopharmacol. 136, 57"
-        ),
-    }
+    _nep_badge = (
+        "⚠️ Modelo teórico original · Sin literatura previa para "
+        "<em>Berberis microphylla</em> + NADES · Contribución novel de la tesis"
+    )
     st.markdown(
-        f'<div class="novel-badge">{_nep_badges[parte_planta]}</div>',
+        f'<div class="novel-badge">{_nep_badge}</div>',
         unsafe_allow_html=True,
     )
     st.markdown("")
@@ -3197,7 +3143,8 @@ with tab5:
 # TAB 4 — OPTIMIZACIÓN  (Cinética · Diseño Experimental)
 # ══════════════════════════════════════════════════════════
 with tab4:
-    otab_kin, otab_dex = st.tabs([t("otab_kin"), t("otab_dex")])
+    otab_kin = seccion(t("otab_kin"))
+    otab_dex = seccion(t("otab_dex"))
 
 
 # ── Sub-tab: Cinética (dentro de tab4) ──
@@ -3568,6 +3515,25 @@ with tab6:
             mime="text/csv",
         )
 
+    # ── Bitácora acumulada entre sesiones ──
+    from experimentos import RUTA_BITACORA, cargar_bitacora
+
+    _bitacora = cargar_bitacora()
+    if not _bitacora.empty:
+        st.markdown("#### 📒 Bitácora acumulada")
+        st.caption(
+            f"{len(_bitacora)} ensayos registrados · se conservan entre sesiones en "
+            f"`{RUTA_BITACORA.name}`"
+        )
+        st.dataframe(_bitacora, use_container_width=True, hide_index=True)
+        st.download_button(
+            "⬇️ Descargar bitácora completa",
+            data=_bitacora.to_csv(index=False),
+            file_name="bitacora_experimentos.csv",
+            mime="text/csv",
+        )
+        st.divider()
+
     # ── Uploader ──
     uploaded = st.file_uploader(
         "Cargar CSV con resultados experimentales",
@@ -3582,6 +3548,14 @@ with tab6:
             st.session_state["exp_df"] = exp_df
             st.success(f"Archivo cargado: {len(exp_df)} filas, {len(exp_df.columns)} columnas")
             st.dataframe(exp_df, use_container_width=True, hide_index=True)
+
+            # La sesión muere al cerrar la app; la bitácora no. Aquí es donde el
+            # resultado real de la placa se confronta con lo que el modelo predijo.
+            from experimentos import anexar_experimentos
+
+            if st.button("💾 Guardar en la bitácora", key="guardar_bitacora"):
+                _total = anexar_experimentos(exp_df)
+                st.success(f"Bitácora actualizada: {len(_total)} ensayos acumulados")
 
             required = {"HBA", "HBD", "Ratio", "Agua (%)", "Temp (°C)", "TPC_exp"}
             missing = required - set(exp_df.columns)
@@ -3807,7 +3781,9 @@ with tab6:
 # TAB 7 — RECOMENDADOR  (Búsqueda global · Cribado Tesis)
 # ══════════════════════════════════════════════════════════
 with tab7:
-    rtab_rec, rtab_comp, rtab_th = st.tabs([t("rtab_rec"), t("rtab_comp"), t("rtab_th")])
+    rtab_rec = seccion(t("rtab_rec"))
+    rtab_comp = seccion(t("rtab_comp"))
+    rtab_th = seccion(t("rtab_th"))
 
 
 # ── Sub-tab: Comparador de NADES F1 (dentro de tab7) ──
@@ -4229,14 +4205,6 @@ with rtab_comp:
 with rtab_th:
     st.markdown(t("t7_th_title"))
     st.markdown(t("t7_th_desc"))
-    if parte_planta != "fruto":
-        st.warning(
-            f"⚠️ El cribado de tesis está diseñado para **fruto (baya)**. "
-            f"Actualmente visualizas **{pp['label']}** (datos generalizados). "
-            f"Los resultados son orientativos — el experimento de tesis usa muestra de fruto.",
-            icon="⚠️",
-        )
-
     thesis_temp = st.slider("Temperatura de cribado (°C)", 20, 80, 40, step=5, key="t_thesis")
     thesis_peso_ep = st.slider(
         "Peso EP en score combinado (cribado)",
@@ -4661,6 +4629,34 @@ with rtab_rec:
             st.caption(
                 "Cada fila = el NADES ganador encontrado para ese nivel de agua específico. "
                 "La fila #1 (arriba) es el óptimo global entre todos los niveles."
+            )
+
+            # ── Adoptar uno del ranking ──
+            # Sin esto el recomendador y el panel lateral afirman cosas distintas sobre
+            # cuál es el NADES activo, y hay que copiar los cuatro campos a mano.
+            st.markdown("#### Adoptar uno de estos")
+            _n_rank = len(best_all_obj)
+            _elegido = st.selectbox(
+                "NADES del ranking",
+                options=list(range(_n_rank)),
+                format_func=lambda i: (
+                    f"#{i + 1} · {best_all_obj.iloc[i]['HBA'].split('(')[0].strip()} : "
+                    f"{best_all_obj.iloc[i]['HBD']} ({best_all_obj.iloc[i]['Ratio']}, "
+                    f"{int(best_all_obj.iloc[i]['Agua óptima (%)'])}% H₂O) — "
+                    f"combinado {best_all_obj.iloc[i]['Combinado (%)']:.1f}%"
+                ),
+                key="rank_elegido",
+            )
+            if st.button("✅ Usar este NADES", type="primary", key="adoptar_nades"):
+                _fila = best_all_obj.iloc[_elegido]
+                st.session_state["sel_hba"] = str(_fila["HBA"])
+                st.session_state["sel_hbd"] = str(_fila["HBD"])
+                st.session_state["sel_ratio"] = str(_fila["Ratio"])
+                st.session_state["sel_water"] = int(_fila["Agua óptima (%)"])
+                st.rerun()
+            st.caption(
+                "Al adoptarlo pasa a ser el NADES activo: la franja superior y todas las "
+                "demás pestañas se recalculan sobre él."
             )
 
         elif obj_target is None:
@@ -5099,18 +5095,18 @@ with rtab_rec:
 with tab8:
     st.markdown(t("t8_title"))
 
-    # ── Panel activo de fuente de datos ──
+    # ── Panel de fuente de datos ──
     st.markdown(
-        f'<div class="part-card" style="background:{pp["color_light"]};border-color:{pp["color"]}">'
-        f'<b style="color:{pp["color"]}">Fuente de datos activa: {pp["label"]}</b><br>'
-        f'<small style="color:#0d1f35">'
-        f'<b>Nombre:</b> {pp["nombre"]}<br>'
-        f'<b>Compuestos:</b> {pp["n_ep"]} EP + {pp["n_nep"]} NEP<br>'
-        f'<b>TPC:</b> {pp["tpc_dw"]}<br>'
-        f'<b>Perfil:</b> {pp["perfil"]}<br>'
-        f'<b>Ref. principal:</b> {pp["ref"]}'
-        + (f'<br><b style="color:#8b4000">{pp["nota_general"]}</b>' if pp["nota_general"] else "")
-        + "</small></div>",
+        '<div class="part-card" style="background:#f3f6fb;border-color:#2E86AB">'
+        '<b style="color:#2E86AB">Fuente de datos: fruto (baya) de '
+        "<i>Berberis microphylla</i> G. Forst</b><br>"
+        '<small style="color:#0d1f35">'
+        f'<b>Compuestos:</b> {(poly_df["tipo"] == "EP").sum()} EP + '
+        f'{(poly_df["tipo"] == "NEP").sum()} NEP<br>'
+        "<b>EP:</b> Ruiz et al. (2024) Horticulturae 10, 458, Tabla 2 — "
+        "cuantificados por HPLC-DAD-ESI-MS/MS<br>"
+        "<b>NEP:</b> modelo teórico original de la tesis"
+        "</small></div>",
         unsafe_allow_html=True,
     )
     st.markdown("")
@@ -5433,3 +5429,12 @@ with tab8:
                     "Mayor incertidumbre (modelo teórico novel sin validación experimental aún) · "
                     "Ref: Saltelli et al. (2004) Sensitivity Analysis in Practice · Ferrada, C. Tesis Doctoral 2026"
                 )
+
+
+# ══════════════════════════════════════════════════════════
+# TAB 9 — COMPATIBILIDAD HPTLC
+# ══════════════════════════════════════════════════════════
+with tab9:
+    from tabs.hptlc_tab import render_hptlc
+
+    render_hptlc(props)

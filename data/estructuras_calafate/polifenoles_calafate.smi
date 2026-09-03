@@ -1,0 +1,33 @@
+OC[C@H]1O[C@@H](Oc2cc3c(O)cc(O)cc3[o+]c2-c2cc(O)c(O)c(O)c2)[C@H](O)[C@@H](O)[C@@H]1O	Delfinidin-3-glucósido
+C[C@@H]1O[C@@H](OC[C@H]2O[C@@H](Oc3cc4c(O)cc(O)cc4[o+]c3-c3cc(O)c(O)c(O)c3)[C@H](O)[C@@H](O)[C@@H]2O)[C@H](O)[C@@H](O)[C@H]1O	Delfinidin-3-rutinosido
+OC[C@H]1O[C@@H](Oc2cc3c(O)cc(O)cc3[o+]c2-c2ccc(O)c(O)c2)[C@H](O)[C@@H](O)[C@@H]1O	Cianidín-3-glucósido
+C[C@@H]1O[C@@H](OC[C@H]2O[C@@H](Oc3cc4c(O)cc(O)cc4[o+]c3-c3ccc(O)c(O)c3)[C@H](O)[C@@H](O)[C@@H]2O)[C@H](O)[C@@H](O)[C@H]1O	Cianidín-3-rutinosido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)cc(O)c1O	Petunidín-3-glucósido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO[C@@H]3O[C@@H](C)[C@H](O)[C@H](O)[C@H]3O)[C@@H](O)[C@H](O)[C@H]2O)cc(O)c1O	Petunidín-3-rutinosido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)ccc1O	Peonidín-3-glucósido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO[C@@H]3O[C@@H](C)[C@H](O)[C@H](O)[C@H]3O)[C@@H](O)[C@H](O)[C@H]2O)ccc1O	Peonidín-3-rutinosido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)cc(OC)c1O	Malvidín-3-glucósido
+COc1cc(-c2[o+]c3cc(O)cc(O)c3cc2O[C@@H]2O[C@H](CO[C@@H]3O[C@@H](C)[C@H](O)[C@H](O)[C@H]3O)[C@@H](O)[C@H](O)[C@H]2O)cc(OC)c1O	Malvidín-3-rutinosido
+C[C@@H]1O[C@@H](OC[C@H]2O[C@@H](Oc3c(-c4ccc(O)c(O)c4)oc4cc(O)cc(O)c4c3=O)[C@H](O)[C@@H](O)[C@@H]2O)[C@H](O)[C@@H](O)[C@H]1O	Quercetín-3-rutinosido (Rutina)
+O=c1c(O[C@@H]2O[C@H](CO)[C@H](O)[C@H](O)[C@H]2O)c(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12	Quercetín-3-galactosido
+O=c1c(O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)c(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12	Quercetín-3-glucósido
+O=C(O)CC(=O)OC[C@H]1O[C@@H](Oc2c(-c3ccc(O)c(O)c3)oc3cc(O)cc(O)c3c2=O)[C@H](O)[C@@H](O)[C@H]1O	Quercetín-3-malonilgalactosido
+O=C(O)CC(=O)OC[C@H]1O[C@@H](Oc2c(-c3ccc(O)c(O)c3)oc3cc(O)cc(O)c3c2=O)[C@H](O)[C@@H](O)[C@@H]1O	Quercetín-3-malonilglucósido
+COc1cc(-c2oc3cc(O)cc(O)c3c(=O)c2O[C@@H]2O[C@H](CO[C@@H]3O[C@@H](C)[C@H](O)[C@H](O)[C@H]3O)[C@@H](O)[C@H](O)[C@H]2O)ccc1O	Isorhamnetín-3-rutinosido
+COc1cc(-c2oc3cc(O)cc(O)c3c(=O)c2O[C@@H]2O[C@H](CO)[C@H](O)[C@H](O)[C@H]2O)ccc1O	Isorhamnetín-3-galactosido
+C[C@@H]1O[C@H](Oc2c(-c3ccc(O)c(O)c3)oc3cc(O)cc(O)c3c2=O)[C@H](O)[C@@H](O)[C@H]1O	Quercetín-3-rhamnosido
+O=c1c(O[C@@H]2O[C@H](CO)[C@@H](O)[C@H](O)[C@H]2O)c(-c2ccc(O)cc2)oc2cc(O)cc(O)c12	Kaempferol-3-glucósido
+O=c1c(O)c(-c2ccc(O)c(O)c2)oc2cc(O)cc(O)c12	Quercetina
+COc1cc(-c2oc3cc(O)cc(O)c3c(=O)c2O)ccc1O	Isorhamnetina
+Oc1cc(O)c2c(c1)O[C@H](c1ccc(O)c(O)c1)[C@@H](O)C2	Catequina
+Oc1cc(O)c2c(c1)O[C@H](c1ccc(O)c(O)c1)[C@H](O)C2	Epicatequina
+O=C(O)/C=C/c1ccc(O)c(O)c1	Ácido Cafeico
+COc1cc(/C=C/C(=O)O)ccc1O	Ácido Ferúlico
+O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1C[C@@](O)(C(=O)O)C[C@@H](O)[C@H]1O	Ácido Clorogénico (5-cafeoilquínico)
+O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1[C@H](O)C[C@](O)(C(=O)O)C[C@@H]1O	3-Cafeoilquínico
+O=C(/C=C/c1ccc(O)c(O)c1)O[C@H]1[C@@H](O)C[C@@](O)(C(=O)O)C[C@@H]1O	4-Cafeoilquínico
+O=C(/C=C/c1ccc(O)c(O)c1)O[C@@H](C(=O)O)[C@@H](O)[C@H](O)[C@@H](O)C(=O)O	Cafeoilglucárico (isómeros A–D)
+O=C(/C=C/c1ccc(O)c(O)c1)O[C@@H]([C@H](O)[C@@H](OC(=O)/C=C/c1ccc(O)c(O)c1)C(=O)O)[C@@H](O)C(=O)O	Dicafeoilglucárico
+O=c1oc2c(O)c(O)cc3c(=O)oc4c(O)c(O)cc1c4c23	Ácido Elágico
+Oc1cc(O)c2c(c1)O[C@@H](c1ccc(O)c(O)c1)[C@@H](O)[C@@H]2[C@H]1c2c(O)cc(O)cc2O[C@H](c2ccc(O)c(O)c2)[C@H]1O	Procianidina B1
+Oc1cc(O)c2c(c1)O[C@@H](c1ccc(O)c(O)c1)[C@H](O)[C@@H]2[C@H]1c2c(O)cc(O)cc2O[C@@H](c2ccc(O)c(O)c2)[C@@H]1O	Procianidina B2

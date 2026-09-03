@@ -6,6 +6,7 @@ from model import (
     combined_score,
     ep_extraction_score,
     nep_extraction_score,
+    par_inmiscible,
     run_full_simulation,
     simulate_3step_process,
     stability_score,
@@ -60,6 +61,55 @@ def test_run_full_simulation_returns_expected_columns() -> None:
     assert len(simulation) == len(poly_df)
     assert {"EP (%)", "NEP (%)", "Estab. (%)", "Combinado (%)"}.issubset(simulation.columns)
     assert simulation["Combinado (%)"].between(0, 100).all()
+
+
+def _hdes_props(water_pct: float) -> dict:
+    return calculate_nades_properties(
+        hba_name="Mentol",
+        hbd_name="Timol",
+        ratio_hba=1,
+        ratio_hbd=1,
+        water_pct=water_pct,
+        temp_C=40,
+        hba_db=HBA_COMPONENTS,
+        hbd_db=HBD_COMPONENTS,
+    )
+
+
+def test_hdes_terpenoide_satura_el_agua_y_marca_bifasico() -> None:
+    seco = _hdes_props(0)
+    inundado = _hdes_props(40)
+
+    assert seco["hidrofobico"] is True
+    assert seco["bifasico"] is False
+    # El exceso sobre la saturación (~5 % m/m) no entra en la fase eutéctica.
+    assert inundado["bifasico"] is True
+    assert inundado["water_pct_efectivo"] <= 5.0
+    assert inundado["water_pct"] == 40
+
+
+def test_hdes_es_apolar_y_castiga_glucosidos_polares() -> None:
+    hdes = _hdes_props(0)
+    hidrofilo = _thesis_props()
+    antocianina = get_polyphenol_database().iloc[0]  # Dp-3-glu, polaridad óptima 0.85
+
+    assert hdes["polaridad"] < 0.40
+    ep_hdes = ep_extraction_score(hdes, antocianina)["total"]
+    ep_hidrofilo = ep_extraction_score(hidrofilo, antocianina)["total"]
+    assert ep_hdes < ep_hidrofilo
+
+
+def test_par_inmiscible_bloquea_terpenoide_con_azucar_y_permite_acido_corto() -> None:
+    assert par_inmiscible("Timol (como HBA)", "Glucosa", HBA_COMPONENTS, HBD_COMPONENTS) is True
+    assert par_inmiscible("Timol (como HBA)", "Sorbitol", HBA_COMPONENTS, HBD_COMPONENTS) is True
+    assert (
+        par_inmiscible("Timol (como HBA)", "Ácido Láctico", HBA_COMPONENTS, HBD_COMPONENTS) is False
+    )
+    assert par_inmiscible("Mentol", "Timol", HBA_COMPONENTS, HBD_COMPONENTS) is False
+    assert (
+        par_inmiscible("Cloruro de Colina (ChCl)", "Glicerol", HBA_COMPONENTS, HBD_COMPONENTS)
+        is False
+    )
 
 
 def test_simulate_3step_process_keeps_final_scores_in_bounds() -> None:

@@ -131,6 +131,48 @@ HBA_COMPONENTS = {
         "descripcion": "Forma anhidra de betaína; mayor concentración activa; osmoprotector natural. "
         "Ref: Paiva et al. 2014 ACS Sustainable Chem. Eng. 2(5), 1063.",
     },
+    # ── Terpenoides — HDES (eutécticos HIDROFÓBICOS) ──────────────
+    # Forman fase única entre sí y con ácidos de cadena corta/media,
+    # NO con azúcares, polioles ni ácidos polihidroxilados.
+    # `hidrofobico: True` activa el modelo de saturación de agua en model.py.
+    "Timol (como HBA)": {
+        "mw": 150.2,
+        "polarity": 0.32,
+        "hbd": 1,
+        "hba": 2,
+        "antioxidant": 0.80,
+        "viscosity_ref": 30,
+        "precio_usd_kg": 40,
+        "hidrofobico": True,
+        "descripcion": "Monoterpeno fenólico (tomillo/orégano); rol HBA frente a ácidos carboxílicos. "
+        "Base de HDES; antioxidante fenólico propio; GRAS (FEMA 3066). "
+        "Ref: Martins et al. 2018 ACS Sustain. Chem. Eng. 6, 8836.",
+    },
+    "Mentol": {
+        "mw": 156.3,
+        "polarity": 0.28,
+        "hbd": 1,
+        "hba": 2,
+        "antioxidant": 0.20,
+        "viscosity_ref": 45,
+        "precio_usd_kg": 32,
+        "hidrofobico": True,
+        "descripcion": "Monoterpeno alcohólico; socio clásico del timol (HDES mentol:timol 1:1, "
+        "líquido a T amb.); GRAS. Ref: Ribeiro et al. 2015 ACS Sustain. Chem. Eng. 3, 2469.",
+    },
+    "Alcanfor": {
+        "mw": 152.2,
+        "polarity": 0.25,
+        "hbd": 0,
+        "hba": 2,
+        "antioxidant": 0.15,
+        "viscosity_ref": 90,
+        "precio_usd_kg": 22,
+        "hidrofobico": True,
+        "descripcion": "Monoterpeno cetónico; HBA puro (sin OH) para HDES con timol; "
+        "mezcla más viscosa y volátil que mentol:timol. "
+        "Ref: Martins et al. 2018 ACS Sustain. Chem. Eng. 6, 8836.",
+    },
 }
 
 # ─────────────────────────────────────────────────────────────────
@@ -430,7 +472,47 @@ HBD_COMPONENTS = {
         "bajo PM y muy fluido; pH ácido; antioxidante vía piruvato-H₂O₂. "
         "Ref: Krystof et al. 2018 Green Chem. 20, 1940.",
     },
+    # ── Terpenoides / ácidos grasos — HDES (HIDROFÓBICOS) ─────────
+    "Timol": {
+        "mw": 150.2,
+        "polarity": 0.32,
+        "hbd": 1,
+        "hba": 2,
+        "antioxidant": 0.80,
+        "pH_puro": 6.0,
+        "viscosity_ref": 30,
+        "acidic": False,
+        "precio_usd_kg": 40,
+        "hidrofobico": True,
+        "descripcion": "⭐ Monoterpeno fenólico (Thymus/Origanum); OH fenólico donador (pKa 10.6 → "
+        "NO acidifica el medio). Base de eutécticos hidrofóbicos (HDES) selectivos hacia "
+        "agliconas y fenoles poco polares; antioxidante y antimicrobiano propio; GRAS. "
+        "Ref: Martins et al. 2018 ACS Sustain. Chem. Eng. 6, 8836; "
+        "Ribeiro et al. 2015 ACS Sustain. Chem. Eng. 3, 2469.",
+    },
+    "Ácido Decanoico (C10)": {
+        "mw": 172.3,
+        "polarity": 0.30,
+        "hbd": 1,
+        "hba": 2,
+        "antioxidant": 0.05,
+        "pH_puro": 4.9,
+        "viscosity_ref": 8,
+        "acidic": False,  # ácido graso: no protona el medio como los ácidos orgánicos cortos
+        "precio_usd_kg": 9,
+        "hidrofobico": True,
+        "descripcion": "Ácido graso de cadena media (cáprico); socio HBD clásico del timol y del "
+        "mentol en HDES de baja viscosidad; natural (coco/leche). "
+        "Ref: Florindo et al. 2019 ACS Sustain. Chem. Eng. 7, 14054.",
+    },
 }
+
+# Componentes hidrofílicos que SÍ forman fase única con terpenoides:
+# ácidos carboxílicos de cadena corta documentados como socios de HDES de timol.
+# Ref: Martins et al. 2018 ACS Sustain. Chem. Eng. 6, 8836 (timol + ác. orgánicos).
+for _nombre in ("Ácido Láctico", "Ácido Acético", "Ácido Levulínico"):
+    HBD_COMPONENTS[_nombre]["apto_hdes"] = True
+HBA_COMPONENTS["Ácido Láctico (como HBA)"]["apto_hdes"] = True
 
 # ─────────────────────────────────────────────────────────────────
 # RATIOS DISPONIBLES HBA:HBD
@@ -537,7 +619,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "clase": "Antocianina",
             "tipo": "EP",
             "is_major": True,
-            "concentracion_max": 12.81,
+            "concentracion_max": 12.21,
             "concentracion_rel": 1.00,
             "polaridad_optima": 0.85,
             "pH_min": 1.0,
@@ -928,7 +1010,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.5,
             "hbd_necesario": 7,
-            "peso_molecular": 370.3,
+            "peso_molecular": 372.28,
             "logP": -0.8,
             "oh_groups": 4,
             "binding_sites": 1,
@@ -948,7 +1030,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.5,
             "hbd_necesario": 7,
-            "peso_molecular": 370.3,
+            "peso_molecular": 372.28,
             "logP": -0.8,
             "oh_groups": 4,
             "binding_sites": 1,
@@ -968,7 +1050,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.5,
             "hbd_necesario": 7,
-            "peso_molecular": 370.3,
+            "peso_molecular": 372.28,
             "logP": -0.8,
             "oh_groups": 4,
             "binding_sites": 1,
@@ -988,7 +1070,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.0,
             "hbd_necesario": 9,
-            "peso_molecular": 516.4,
+            "peso_molecular": 534.43,
             "logP": -1.2,
             "oh_groups": 7,
             "binding_sites": 1,
@@ -1008,7 +1090,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.0,
             "hbd_necesario": 9,
-            "peso_molecular": 516.4,
+            "peso_molecular": 534.43,
             "logP": -1.2,
             "oh_groups": 7,
             "binding_sites": 1,
@@ -1017,7 +1099,7 @@ def get_polyphenol_database() -> pd.DataFrame:
         },
         {
             "id": 25,
-            "nombre": "3,5-Dicafeoilquínico (3,5-DCQ)",
+            "nombre": "3,5-Dicafeoilglucárico (3,5-DCQ)",
             "abrev": "3,5-DCQ",
             "clase": "Ác. Hidroxicinámico",
             "tipo": "EP",
@@ -1028,12 +1110,15 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.0,
             "hbd_necesario": 9,
-            "peso_molecular": 516.4,
+            "peso_molecular": 534.43,
             "logP": -1.2,
-            "oh_groups": 7,
+            "oh_groups": 8,
             "binding_sites": 1,
             "color": "#7B5E22",
-            "descripcion": "Dicafeoilquínico; más hidrofóbico que 5-CQ.",
+            "descripcion": "Diéster cafeoílico del ácido glucárico. La abreviatura 'DCQ' es "
+            "la que usa Ruiz et al. 2024 Tabla 2, pero el compuesto que nombran es "
+            "GLUCÁRICO, no quínico: de ahí venía el PM 516.4 (quínico) que tenía esta "
+            "entrada. Glucárico = C24H22O14 = 534.43.",
         },
         {
             "id": 26,
@@ -1088,7 +1173,7 @@ def get_polyphenol_database() -> pd.DataFrame:
             "pH_min": 2.0,
             "pH_max": 6.5,
             "hbd_necesario": 7,
-            "peso_molecular": 370.3,
+            "peso_molecular": 372.28,
             "logP": -0.8,
             "oh_groups": 4,
             "binding_sites": 1,
@@ -1185,650 +1270,3 @@ def get_polyphenol_database() -> pd.DataFrame:
     ]
     return pd.DataFrame(data)
 
-
-# ─────────────────────────────────────────────────────────────────
-# METADATOS DE PARTES DE PLANTA
-# ─────────────────────────────────────────────────────────────────
-PLANT_PART_INFO = {
-    "fruto": {
-        "label": "🫐 Fruto (Baya)",
-        "nombre": "Berberis microphylla G. Forst — Baya madura",
-        "descripcion": (
-            "Base de datos específica para fruto/baya de calafate. "
-            "28 EP identificados por HPLC-DAD-ESI-MS/MS. "
-            "Dominan antocianinas (~80% del TPC) y flavonoles. "
-            "4 NEP teóricos por analogía con otras Berberis."
-        ),
-        "tpc_rango": "150–400 mg GAE/100g FW",
-        "tpc_dw": "800–1800 mg GAE/100g DW (estimado)",
-        "perfil": "Antocianinas + Flavonoles + Ác. Cafeoilquínicos",
-        "ep_nep": "Alta fracción EP (antocianinas dominantes, >60% del TPC)",
-        "color": "#6a0dad",
-        "color_light": "#f0e8ff",
-        "ref": "Ruiz et al. (2024) Horticulturae 10, 458",
-        "nota_general": "",
-        "n_ep": 28,
-        "n_nep": 4,
-    },
-    "hojas": {
-        "label": "🌿 Hojas",
-        "nombre": "Berberis spp. — Hojas (datos generalizados)",
-        "descripcion": (
-            "Perfil polifenólico general para hojas de Berberis spp. "
-            "Dominan flavonoles (rutina, quercetina) y ácidos hidroxicinámicos. "
-            "Menor concentración de antocianinas que el fruto. "
-            "DATOS GENERALES — no hay literatura específica para B. microphylla hojas + NADES."
-        ),
-        "tpc_rango": "50–150 mg GAE/g DW",
-        "tpc_dw": "50–150 mg GAE/g DW",
-        "perfil": "Flavonoles (rutina, quercetina) + Ác. Hidroxicinámicos + Catequinas",
-        "ep_nep": "Fracción mixta — flavonoles (EP) + procianidinas (NEP, ~30-40%)",
-        "color": "#1a6b30",
-        "color_light": "#e8f5ec",
-        "ref": "Mocan et al. (2017) Front. Pharmacol. 8, 234",
-        "nota_general": "⚠️ Datos generalizados para Berberis spp. — no específico de B. microphylla",
-        "n_ep": 12,
-        "n_nep": 2,
-    },
-    "tallo": {
-        "label": "🪵 Tallo / Corteza",
-        "nombre": "Berberis spp. — Tallo/Corteza (datos generalizados)",
-        "descripcion": (
-            "Perfil polifenólico general para tallo/corteza de Berberis spp. "
-            "Dominan catequinas, ácido gálico y berberina (alcaloide*). "
-            "Alta proporción de NEP (taninos condensados de alto PM). "
-            "*Berberina es un alcaloide isoquinolinico, no un polifenol."
-        ),
-        "tpc_rango": "30–100 mg GAE/g DW (polif.) + 50–200 mg/g DW berberina",
-        "tpc_dw": "30–100 mg GAE/g DW",
-        "perfil": "Catequinas + Ác. Gálico + Berberina* + Taninos condensados (NEP)",
-        "ep_nep": "Alta fracción NEP — taninos condensados dominantes en corteza",
-        "color": "#7a3a10",
-        "color_light": "#fdf0e8",
-        "ref": "Muñoz et al. (2011) J. Ethnopharmacol. 136, 57",
-        "nota_general": "⚠️ Datos generalizados para Berberis spp. — no específico de B. microphylla",
-        "n_ep": 9,
-        "n_nep": 3,
-    },
-}
-
-
-# ─────────────────────────────────────────────────────────────────
-# BASE DE DATOS — HOJAS (Berberis spp., datos generalizados)
-# Ref: Mocan et al. (2017) Front. Pharmacol. 8, 234
-#      Andola et al. (2010) Pharmacogn. Mag. 6, 264
-#      Kharkwal et al. (2012) Orient. Pharm. Exp. Med. 12, 35
-#      Biswas et al. (2013) Phytomedicine 20, 1051
-# Concentraciones: μmol/g DW estimadas por analogía con literatura
-# ─────────────────────────────────────────────────────────────────
-def get_polyphenol_database_hojas():
-    data = [
-        # ══ FLAVONOLES (dominantes en hojas) ══
-        {
-            "id": "H01",
-            "nombre": "Rutina",
-            "abrev": "Rut",
-            "clase": "Flavonol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 52.0,
-            "concentracion_rel": 1.00,
-            "polaridad_optima": 0.75,
-            "pH_min": 3.0,
-            "pH_max": 7.5,
-            "hbd_necesario": 7,
-            "peso_molecular": 610.5,
-            "logP": -0.4,
-            "oh_groups": 9,
-            "binding_sites": 4,
-            "color": "#DAA520",
-            "descripcion": "Flavonol MAYORITARIO en hojas de Berberis spp. "
-            "Ref: Mocan et al. (2017) Front. Pharmacol. 8, 234.",
-        },
-        {
-            "id": "H02",
-            "nombre": "Quercetina",
-            "abrev": "Que",
-            "clase": "Flavonol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 38.0,
-            "concentracion_rel": 0.73,
-            "polaridad_optima": 0.58,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 5,
-            "peso_molecular": 302.2,
-            "logP": 1.54,
-            "oh_groups": 5,
-            "binding_sites": 3,
-            "color": "#B8860B",
-            "descripcion": "Aglicona con alta actividad DPPH/FRAP. "
-            "Ref: Biswas et al. (2013) Phytomedicine 20, 1051.",
-        },
-        {
-            "id": "H03",
-            "nombre": "Kaempferol-3-glucósido",
-            "abrev": "Kae-3-glu",
-            "clase": "Flavonol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 22.0,
-            "concentracion_rel": 0.42,
-            "polaridad_optima": 0.70,
-            "pH_min": 3.0,
-            "pH_max": 7.5,
-            "hbd_necesario": 6,
-            "peso_molecular": 448.4,
-            "logP": 0.3,
-            "oh_groups": 7,
-            "binding_sites": 2,
-            "color": "#CD853F",
-            "descripcion": "Tercer flavonol en hojas; glucosilo aumenta polaridad. "
-            "Ref: Andola et al. (2010) Pharmacogn. Mag. 6, 264.",
-        },
-        {
-            "id": "H04",
-            "nombre": "Isorhamnetina",
-            "abrev": "Isorham",
-            "clase": "Flavonol",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 12.0,
-            "concentracion_rel": 0.23,
-            "polaridad_optima": 0.62,
-            "pH_min": 3.0,
-            "pH_max": 7.5,
-            "hbd_necesario": 4,
-            "peso_molecular": 316.3,
-            "logP": 1.8,
-            "oh_groups": 4,
-            "binding_sites": 2,
-            "color": "#BDB76B",
-            "descripcion": "3'-metoxiquercetina; menos polar que quercetina. "
-            "Ref: Mocan et al. (2017).",
-        },
-        # ══ ÁCIDOS HIDROXICINÁMICOS ══
-        {
-            "id": "H05",
-            "nombre": "Ácido Clorogénico",
-            "abrev": "AcClor",
-            "clase": "Ác. Hidroxicinámico",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 31.0,
-            "concentracion_rel": 0.60,
-            "polaridad_optima": 0.78,
-            "pH_min": 2.0,
-            "pH_max": 6.5,
-            "hbd_necesario": 6,
-            "peso_molecular": 354.3,
-            "logP": -0.4,
-            "oh_groups": 5,
-            "binding_sites": 2,
-            "color": "#8B6914",
-            "descripcion": "Éster cafeoilquínico; abundante en hojas. " "Ref: Mocan et al. (2017).",
-        },
-        {
-            "id": "H06",
-            "nombre": "Ácido Cafeico",
-            "abrev": "AcCaf",
-            "clase": "Ác. Hidroxicinámico",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 18.0,
-            "concentracion_rel": 0.35,
-            "polaridad_optima": 0.74,
-            "pH_min": 2.0,
-            "pH_max": 6.0,
-            "hbd_necesario": 3,
-            "peso_molecular": 180.2,
-            "logP": 1.15,
-            "oh_groups": 3,
-            "binding_sites": 2,
-            "color": "#9E7038",
-            "descripcion": "Alta capacidad antioxidante. " "Ref: Biswas et al. (2013).",
-        },
-        {
-            "id": "H07",
-            "nombre": "Ácido Ferúlico",
-            "abrev": "AcFer",
-            "clase": "Ác. Hidroxicinámico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 11.0,
-            "concentracion_rel": 0.21,
-            "polaridad_optima": 0.70,
-            "pH_min": 2.0,
-            "pH_max": 6.5,
-            "hbd_necesario": 3,
-            "peso_molecular": 194.2,
-            "logP": 1.51,
-            "oh_groups": 3,
-            "binding_sites": 1,
-            "color": "#A07830",
-            "descripcion": "4-OH-3-metoxicinamate; más lipofílico que cafeico. "
-            "Ref: Kharkwal et al. (2012).",
-        },
-        # ══ FLAVAN-3-OLES ══
-        {
-            "id": "H08",
-            "nombre": "Catequina",
-            "abrev": "Cat",
-            "clase": "Flavan-3-ol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 15.0,
-            "concentracion_rel": 0.29,
-            "polaridad_optima": 0.68,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 5,
-            "peso_molecular": 290.3,
-            "logP": 0.5,
-            "oh_groups": 5,
-            "binding_sites": 3,
-            "color": "#4E7C3F",
-            "descripcion": "Monómero de tanino condensado; precursor de PAC. "
-            "Ref: Mocan et al. (2017).",
-        },
-        {
-            "id": "H09",
-            "nombre": "Epicatequina",
-            "abrev": "ECat",
-            "clase": "Flavan-3-ol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 11.0,
-            "concentracion_rel": 0.21,
-            "polaridad_optima": 0.68,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 5,
-            "peso_molecular": 290.3,
-            "logP": 0.5,
-            "oh_groups": 5,
-            "binding_sites": 3,
-            "color": "#3A6B2F",
-            "descripcion": "Epímero de catequina (configuración C-3). "
-            "Ref: Biswas et al. (2013).",
-        },
-        # ══ FLAVONAS ══
-        {
-            "id": "H10",
-            "nombre": "Vitexina",
-            "abrev": "Vit",
-            "clase": "Flavona",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 8.0,
-            "concentracion_rel": 0.15,
-            "polaridad_optima": 0.72,
-            "pH_min": 3.0,
-            "pH_max": 7.5,
-            "hbd_necesario": 6,
-            "peso_molecular": 432.4,
-            "logP": -0.2,
-            "oh_groups": 7,
-            "binding_sites": 3,
-            "color": "#98FB98",
-            "descripcion": "Apigenina-8-C-glucósido; presente en diversas Berberis. "
-            "Ref: Andola et al. (2010).",
-        },
-        {
-            "id": "H11",
-            "nombre": "Luteolina",
-            "abrev": "Lut",
-            "clase": "Flavona",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 7.0,
-            "concentracion_rel": 0.13,
-            "polaridad_optima": 0.60,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 4,
-            "peso_molecular": 286.2,
-            "logP": 1.43,
-            "oh_groups": 4,
-            "binding_sites": 2,
-            "color": "#7CFC00",
-            "descripcion": "Flavona con 4 –OH; menor polaridad que flavonoles. "
-            "Ref: Mocan et al. (2017).",
-        },
-        # ══ ÁCIDOS HIDROXIBENZOICOS ══
-        {
-            "id": "H12",
-            "nombre": "Ácido Gálico",
-            "abrev": "AcGal",
-            "clase": "Ác. Hidroxibenzoico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 5.0,
-            "concentracion_rel": 0.10,
-            "polaridad_optima": 0.80,
-            "pH_min": 1.5,
-            "pH_max": 5.0,
-            "hbd_necesario": 4,
-            "peso_molecular": 170.1,
-            "logP": 0.7,
-            "oh_groups": 4,
-            "binding_sites": 2,
-            "color": "#D2691E",
-            "descripcion": "Liberado por hidrólisis de galotaninos; marcador de taninos hidrolizables.",
-        },
-        # ══ NEP — TANINOS CONDENSADOS (fracción NEP dominante en hojas) ══
-        {
-            "id": "H13",
-            "nombre": "Procianidina B2",
-            "abrev": "PAC-B2",
-            "clase": "Tanino Condensado",
-            "tipo": "NEP",
-            "is_major": True,
-            "concentracion_max": None,
-            "concentracion_rel": 0.50,
-            "polaridad_optima": 0.82,
-            "pH_min": 2.0,
-            "pH_max": 5.0,
-            "hbd_necesario": 9,
-            "peso_molecular": 578.5,
-            "logP": -0.5,
-            "oh_groups": 10,
-            "binding_sites": 7,
-            "color": "#8B0000",
-            "descripcion": "Dímero EC-EC; principal NEP en hojas de Berberis. "
-            "Ref: Biswas et al. (2013). "
-            "SIN LITERATURA para B. microphylla hojas + NADES.",
-        },
-        {
-            "id": "H14",
-            "nombre": "Proantocianidinas poliméricas",
-            "abrev": "PAC-HMW",
-            "clase": "Tanino Condensado",
-            "tipo": "NEP",
-            "is_major": True,
-            "concentracion_max": None,
-            "concentracion_rel": 0.50,
-            "polaridad_optima": 0.85,
-            "pH_min": 2.0,
-            "pH_max": 5.0,
-            "hbd_necesario": 12,
-            "peso_molecular": 2500.0,
-            "logP": -2.0,
-            "oh_groups": 25,
-            "binding_sites": 15,
-            "color": "#DC143C",
-            "descripcion": "Oligómeros > tetrámero; fuertemente unidos a matriz celular. "
-            "Ref: Mocan et al. (2017).",
-        },
-    ]
-    return pd.DataFrame(data)
-
-
-# ─────────────────────────────────────────────────────────────────
-# BASE DE DATOS — TALLO/CORTEZA (Berberis spp., datos generalizados)
-# Ref: Muñoz et al. (2011) J. Ethnopharmacol. 136, 57
-#      Biswas et al. (2013) Phytomedicine 20, 1051
-#      Imenshahidi & Hosseinzadeh (2019) Phytother. Res. 33, 504
-# Concentraciones: μmol/g DW estimadas (corteza/tallo)
-# ─────────────────────────────────────────────────────────────────
-def get_polyphenol_database_tallo():
-    data = [
-        # ══ FLAVAN-3-OLES (mayoritarios en corteza) ══
-        {
-            "id": "T01",
-            "nombre": "Catequina",
-            "abrev": "Cat",
-            "clase": "Flavan-3-ol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 55.0,
-            "concentracion_rel": 1.00,
-            "polaridad_optima": 0.68,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 5,
-            "peso_molecular": 290.3,
-            "logP": 0.5,
-            "oh_groups": 5,
-            "binding_sites": 3,
-            "color": "#4E7C3F",
-            "descripcion": "Compuesto MAYORITARIO en corteza de Berberis. "
-            "Ref: Muñoz et al. (2011) J. Ethnopharmacol. 136, 57.",
-        },
-        {
-            "id": "T02",
-            "nombre": "Epicatequina",
-            "abrev": "ECat",
-            "clase": "Flavan-3-ol",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 38.0,
-            "concentracion_rel": 0.69,
-            "polaridad_optima": 0.68,
-            "pH_min": 3.0,
-            "pH_max": 7.0,
-            "hbd_necesario": 5,
-            "peso_molecular": 290.3,
-            "logP": 0.5,
-            "oh_groups": 5,
-            "binding_sites": 3,
-            "color": "#3A6B2F",
-            "descripcion": "Precursor de taninos condensados. "
-            "Ref: Biswas et al. (2013) Phytomedicine 20, 1051.",
-        },
-        # ══ ÁCIDOS HIDROXIBENZOICOS ══
-        {
-            "id": "T03",
-            "nombre": "Ácido Gálico",
-            "abrev": "AcGal",
-            "clase": "Ác. Hidroxibenzoico",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 45.0,
-            "concentracion_rel": 0.82,
-            "polaridad_optima": 0.80,
-            "pH_min": 1.5,
-            "pH_max": 5.0,
-            "hbd_necesario": 4,
-            "peso_molecular": 170.1,
-            "logP": 0.7,
-            "oh_groups": 4,
-            "binding_sites": 2,
-            "color": "#D2691E",
-            "descripcion": "Marcador de galotaninos; muy abundante en corteza. "
-            "Ref: Muñoz et al. (2011).",
-        },
-        {
-            "id": "T04",
-            "nombre": "Ácido Elágico",
-            "abrev": "AcElag",
-            "clase": "Ác. Hidroxibenzoico",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 28.0,
-            "concentracion_rel": 0.51,
-            "polaridad_optima": 0.75,
-            "pH_min": 1.5,
-            "pH_max": 5.5,
-            "hbd_necesario": 4,
-            "peso_molecular": 302.2,
-            "logP": 1.0,
-            "oh_groups": 4,
-            "binding_sites": 2,
-            "color": "#C84B2F",
-            "descripcion": "Producto de hidrólisis de elagitaninos. " "Ref: Biswas et al. (2013).",
-        },
-        {
-            "id": "T05",
-            "nombre": "Ácido Protocatéquico",
-            "abrev": "AcPro",
-            "clase": "Ác. Hidroxibenzoico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 10.0,
-            "concentracion_rel": 0.18,
-            "polaridad_optima": 0.76,
-            "pH_min": 2.0,
-            "pH_max": 6.0,
-            "hbd_necesario": 3,
-            "peso_molecular": 154.1,
-            "logP": 0.84,
-            "oh_groups": 3,
-            "binding_sites": 2,
-            "color": "#A0522D",
-            "descripcion": "3,4-dihidroxibenzoico; presente en corteza. "
-            "Ref: Imenshahidi & Hosseinzadeh (2019).",
-        },
-        {
-            "id": "T06",
-            "nombre": "Ácido Vanílico",
-            "abrev": "AcVan",
-            "clase": "Ác. Hidroxibenzoico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 6.0,
-            "concentracion_rel": 0.11,
-            "polaridad_optima": 0.70,
-            "pH_min": 2.0,
-            "pH_max": 6.5,
-            "hbd_necesario": 2,
-            "peso_molecular": 168.1,
-            "logP": 1.43,
-            "oh_groups": 2,
-            "binding_sites": 1,
-            "color": "#B8860B",
-            "descripcion": "4-OH-3-metoxibenzoico; derivado de lignina.",
-        },
-        # ══ ÁCIDOS HIDROXICINÁMICOS ══
-        {
-            "id": "T07",
-            "nombre": "Ácido Clorogénico",
-            "abrev": "AcClor",
-            "clase": "Ác. Hidroxicinámico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 8.0,
-            "concentracion_rel": 0.15,
-            "polaridad_optima": 0.78,
-            "pH_min": 2.0,
-            "pH_max": 6.5,
-            "hbd_necesario": 6,
-            "peso_molecular": 354.3,
-            "logP": -0.4,
-            "oh_groups": 5,
-            "binding_sites": 2,
-            "color": "#8B6914",
-            "descripcion": "Presente en corteza aunque menor que en hojas. "
-            "Ref: Muñoz et al. (2011).",
-        },
-        {
-            "id": "T08",
-            "nombre": "Ácido Cafeico",
-            "abrev": "AcCaf",
-            "clase": "Ác. Hidroxicinámico",
-            "tipo": "EP",
-            "is_major": False,
-            "concentracion_max": 5.0,
-            "concentracion_rel": 0.09,
-            "polaridad_optima": 0.74,
-            "pH_min": 2.0,
-            "pH_max": 6.0,
-            "hbd_necesario": 3,
-            "peso_molecular": 180.2,
-            "logP": 1.15,
-            "oh_groups": 3,
-            "binding_sites": 2,
-            "color": "#9E7038",
-            "descripcion": "Ácido fenólico libre; relativamente bajo en corteza. "
-            "Ref: Biswas et al. (2013).",
-        },
-        # ══ ALCALOIDE (berberina — nota especial) ══
-        {
-            "id": "T09",
-            "nombre": "Berberina (*alcaloide)",
-            "abrev": "Berb*",
-            "clase": "Alcaloide isoquinolinico*",
-            "tipo": "EP",
-            "is_major": True,
-            "concentracion_max": 120.0,
-            "concentracion_rel": 2.18,
-            "polaridad_optima": 0.65,
-            "pH_min": 3.0,
-            "pH_max": 8.0,
-            "hbd_necesario": 2,
-            "peso_molecular": 336.4,
-            "logP": 1.3,
-            "oh_groups": 2,
-            "binding_sites": 1,
-            "color": "#FFD700",
-            "descripcion": "(*No es polifenol) Alcaloide isoquinolinico dominante en corteza "
-            "(50-200 mg/g DW). Analizado frecuentemente junto a polifenoles. "
-            "Ref: Imenshahidi & Hosseinzadeh (2019) Phytother. Res. 33, 504.",
-        },
-        # ══ NEP — TANINOS CONDENSADOS (muy altos en tallo/corteza) ══
-        {
-            "id": "T10",
-            "nombre": "Procianidina B1",
-            "abrev": "PAC-B1",
-            "clase": "Tanino Condensado",
-            "tipo": "NEP",
-            "is_major": True,
-            "concentracion_max": None,
-            "concentracion_rel": 0.60,
-            "polaridad_optima": 0.82,
-            "pH_min": 2.0,
-            "pH_max": 5.0,
-            "hbd_necesario": 9,
-            "peso_molecular": 578.5,
-            "logP": -0.5,
-            "oh_groups": 10,
-            "binding_sites": 7,
-            "color": "#8B0000",
-            "descripcion": "Dímero EC-C; MUY ALTO en corteza (mayor que en fruto). "
-            "Ref: Biswas et al. (2013). "
-            "SIN LITERATURA para B. microphylla tallo + NADES.",
-        },
-        {
-            "id": "T11",
-            "nombre": "Procianidina B2",
-            "abrev": "PAC-B2",
-            "clase": "Tanino Condensado",
-            "tipo": "NEP",
-            "is_major": True,
-            "concentracion_max": None,
-            "concentracion_rel": 0.50,
-            "polaridad_optima": 0.82,
-            "pH_min": 2.0,
-            "pH_max": 5.0,
-            "hbd_necesario": 9,
-            "peso_molecular": 578.5,
-            "logP": -0.5,
-            "oh_groups": 10,
-            "binding_sites": 7,
-            "color": "#DC143C",
-            "descripcion": "Dímero CC; segunda forma PAC en corteza. " "Ref: Muñoz et al. (2011).",
-        },
-        {
-            "id": "T12",
-            "nombre": "Taninos condensados (HMW)",
-            "abrev": "PAC-HMW",
-            "clase": "Tanino Condensado",
-            "tipo": "NEP",
-            "is_major": True,
-            "concentracion_max": None,
-            "concentracion_rel": 0.80,
-            "polaridad_optima": 0.85,
-            "pH_min": 2.0,
-            "pH_max": 4.0,
-            "hbd_necesario": 15,
-            "peso_molecular": 4000.0,
-            "logP": -3.0,
-            "oh_groups": 40,
-            "binding_sites": 25,
-            "color": "#FF4500",
-            "descripcion": "Polímeros de alto PM; fracción NEP DOMINANTE en corteza/madera. "
-            "Ref: Biswas et al. (2013).",
-        },
-    ]
-    return pd.DataFrame(data)
