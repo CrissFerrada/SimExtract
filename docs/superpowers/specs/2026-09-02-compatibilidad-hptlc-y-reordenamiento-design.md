@@ -249,7 +249,63 @@ planificar → ensayar → registrar.
 5. `hptlc.py` se importa y se prueba sin Streamlit.
 6. Un experimento cargado en ③ sobrevive al reinicio de la app.
 
-## 10. Riesgo principal
+## 10. Acople con SimEluent
+
+Este diseño no termina en SimNADES. SimEluent (`../SimEluent`) optimiza la fase móvil
+HPTLC, y los hallazgos de §3 tocan su supuesto central.
+
+### 10.1 σ₀ es la variable de acople
+
+`SimEluent/docs/02_VARIABLES_HPTLC.md` declara la siembra como variable 1, **determinista**
+por usar aplicador automático, y la describe como el único parámetro sin incertidumbre.
+Esa nota es explícita en que ahí reside la defensibilidad del modelo: como σ₀ es conocido,
+la incertidumbre queda acotada a las variables 4–7 (cámara, HR, T, Zf). Semilla:
+`σ₀ = 1,0 mm, fijo`.
+
+**Ese supuesto vale para una muestra limpia, no para un extracto NADES sembrado directo.**
+El aplicador entrega un volumen reproducible; el ancho de zona resultante lo fija la matriz.
+Las colas severas de §3.2 son un σ₀ arruinado.
+
+La afirmación defendible no es que σ₀ se dispare en RP-18 — eso es justamente el vacío de
+§4.1. Es que **σ₀ deja de ser determinista y pasa a ser dependiente de la matriz y no
+medido**, que es donde se apoyaba el argumento de robustez.
+
+σ₀ propaga por `conditions.sigma_zone()` → `conditions.plates_N()` → `resolution.py` → la
+función objetivo. Es decir, atraviesa el modelo entero.
+
+**Interfaz entre los dos programas:** el veredicto del módulo HPTLC de SimNADES determina
+el régimen de σ₀; σ₀ es entrada de SimEluent. Mientras el veredicto sea `SIN_EVIDENCIA`,
+SimEluent debe tratar σ₀ como incierto y propagarlo por Monte Carlo junto con las variables
+manuales, en vez de fijarlo.
+
+### 10.2 `Phase` es demasiado delgada
+
+`SimEluent/engine/data_loader.py` define `Phase` con tres campos: `name`, `mode` (NP|RP),
+`w_spec`. `constants.py` instancia tres fases fijas. Eso no alcanza para expresar lo que
+§3.4 documenta:
+
+| Falta en `Phase` | Consecuencia | Fuente |
+|---|---|---|
+| Tamaño de partícula y espesor | No distingue TLC (10–12 µm) de HPTLC (5–6 µm). `docs/02` var. 8 ya dice que entra por `κ` (15) y `N` base (17): **documentado pero no implementado** | §3.4 |
+| Humectabilidad (W) | El optimizador puede recomendar un eluyente muy acuoso sobre una RP-18 que no moja | §3.4 |
+| Indicador F₂₅₄ vs F₂₅₄s | No puede expresar incompatibilidad con eluyentes ácidos | §3.4 |
+| Zona de concentración | Es un control sobre σ₀, no una placa más | §3.5 |
+
+El caso de indicador no es hipotético: las tres referencias de antocianinas de
+`data/referencias.csv` (R001, R002, R003) usan ácido fórmico o fórmico+acético, y las placas
+disponibles en el laboratorio son F₂₅₄. `docs/02` var. 2 ya nombra "RP-18 F254s", pero el
+dataclass no tiene el campo.
+
+### 10.3 Alcance de este spec respecto a SimEluent
+
+Aquí **solo se define la interfaz** (σ₀ y su régimen). Los cambios dentro de SimEluent
+—extender `Phase`, poblar el catálogo de placas de §3.4, propagar σ₀ como incierto— van en
+su propio spec y su propio plan, en el repositorio de SimEluent.
+
+Lo que este spec sí exige: que `hptlc.py` exponga el veredicto en una forma que SimEluent
+pueda consumir sin importar Streamlit ni SimNADES completo.
+
+## 11. Riesgo principal
 
 Que el módulo se lea como una predicción cuando es un mapa de lo que se sabe y lo que no.
 Se mitiga con la insignia obligatoria y con que el estado `SIN_EVIDENCIA` sea visualmente
