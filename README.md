@@ -73,7 +73,7 @@ Valparaíso (PUCV). https://github.com/CrissFerrada/SimNADES
 
 ## Autor y licencia
 
-Autor/Creador: Cristofher Ferrada — Doctorando en Ciencias mención Química, PUCV.
+Autor/Creador: Cristofher Ferrada — Dr(c) en Ciencias mención Química, PUCV.
 
 © 2026 Cristofher Ferrada — Pontificia Universidad Católica de Valparaíso (PUCV).
 Licenciado bajo Apache License 2.0. Ver LICENSE.

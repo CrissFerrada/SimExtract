@@ -42,3 +42,4 @@ desktop.ini
 
 # Dependencias instaladas (se reinstalan con requirements.txt)
 site-packages/
+data/experimentos.csv

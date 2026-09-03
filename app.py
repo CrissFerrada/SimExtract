@@ -59,6 +59,10 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+from tema import inyectar_tema
+
+inyectar_tema()
+
 st.markdown(
     """
 <style>
@@ -186,6 +190,10 @@ TR = {
     "tab6": {"es": "📊 Mis Datos", "en": "📊 My Data"},
     "tab7": {"es": "🎯 Recomendador", "en": "🎯 Recommender"},
     "tab8": {"es": "📚 Metodología", "en": "📚 Methodology"},
+    "tab9": {"es": "🧫 HPTLC", "en": "🧫 HPTLC"},
+    # ── Navegación de primer nivel ──
+    "nav_disenar": {"es": "🧪 Diseñar", "en": "🧪 Design"},
+    "nav_lab": {"es": "🔬 Laboratorio", "en": "🔬 Laboratory"},
     # ── Sub-tabs tab2 ──
     "atab_ep": {"es": "🟦 Extracción EP", "en": "🟦 EP Extraction"},
     "atab_nep": {"es": "🟥 Extracción NEP", "en": "🟥 NEP Extraction"},
@@ -552,14 +560,15 @@ with st.sidebar:
 
     st.markdown(t("nades_header"))
 
-    hba_sel = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0)
-    hbd_sel = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=0)
+    hba_sel = st.selectbox(t("hba_label"), list(HBA_COMPONENTS.keys()), index=0, key="sel_hba")
+    hbd_sel = st.selectbox(t("hbd_label"), list(HBD_COMPONENTS.keys()), index=0, key="sel_hbd")
     ratio_sel = st.select_slider(
         t("ratio_label"),
         options=list(RATIOS_DISPONIBLES.keys()),
         value="1:1",
+        key="sel_ratio",
     )
-    water_pct = st.slider(t("water_label"), 0, 50, 30, step=5)
+    water_pct = st.slider(t("water_label"), 0, 50, 30, step=5, key="sel_water")
     temp_C = st.slider(t("temp_label"), 20, 80, 40, step=5)
 
     st.divider()
@@ -691,24 +700,33 @@ with st.sidebar:
     st.divider()
     st.markdown(t("calc_props"))
 
-    def prop_card(label, value, unit="", color="#1a6fa0"):
-        st.markdown(
-            f'<div class="prop-card" style="border-color:{color}">'
-            f'<div class="prop-label">{label}</div>'
-            f'<div class="prop-value">{value} <span class="prop-unit">{unit}</span></div>'
-            f"</div>",
-            unsafe_allow_html=True,
-        )
+    # Cada propiedad viene con su lectura en lenguaje llano y su fuente: la ficha
+    # anterior mostraba el número pero nunca por qué importaba ni quién lo respalda.
+    from explicacion import explicar_propiedades
+    from tabs.componentes import ficha_explicada
 
-    prop_card(t("prop_pol"), f"{props['polaridad']:.3f}", "")
-    prop_card(t("prop_visc"), f"{props['viscosidad']:.0f}", "cP", "#7a2060")
-    prop_card(t("prop_pH"), f"{props['pH']:.2f}", "", "#c05000" if props["pH"] < 4 else "#006050")
-    prop_card(t("prop_hbd"), f"{props['cap_hbd']:.2f}", "", "#006050")
-    prop_card(t("prop_antioxid"), f"{props['antioxidant_nades']:.2f}", "", "#5a3000")
+    for _lectura in explicar_propiedades(props):
+        ficha_explicada(_lectura)
 
     st.divider()
     st.caption(f"HBA: {HBA_COMPONENTS[hba_sel]['descripcion'][:60]}…")
     st.caption(f"HBD: {HBD_COMPONENTS[hbd_sel]['descripcion'][:60]}…")
+
+
+def seccion(_titulo: str = ""):
+    """Return a container preceded by a rule.
+
+    Replaces a nested `st.tabs` level: the content flows as one scrolling page
+    instead of hiding behind a third row of tabs. Because it returns a container,
+    the existing `with <name>:` blocks keep working untouched.
+
+    No heading is emitted: every block already opens with its own title, so one
+    here would only duplicate it. The argument is kept so call sites read as the
+    section they open.
+    """
+    st.divider()
+    return st.container()
+
 
 # ─────────────────────────────────────────────
 # CARGA DE BASE DE DATOS (según parte de planta)
@@ -731,9 +749,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-nades_label = (
-    f"**{hba_sel.split('(')[0].strip()} : {hbd_sel}** ({ratio_sel}, {water_pct}% H₂O, {temp_C}°C)"
-)
+from tabs.componentes import nades_activo
+
+nades_label = f"**{nades_activo(props, hba_sel.split('(')[0].strip(), hbd_sel, ratio_sel)}**"
 st.info(
     f"{t('nades_active')}: {nades_label}  ·  Fruto (baya)  ·  "
     f"{(poly_df['tipo'] == 'EP').sum()} EP + {(poly_df['tipo'] == 'NEP').sum()} NEP"
@@ -761,18 +779,15 @@ avg_comb = sim_display["Combinado (%)"].mean() if len(sim_display) > 0 else 0.0
 # ─────────────────────────────────────────────
 # PESTAÑAS
 # ─────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(
-    [
-        t("tab1"),
-        t("tab2"),
-        t("tab3"),
-        t("tab4"),
-        t("tab5"),
-        t("tab6"),
-        t("tab7"),
-        t("tab8"),
-    ]
-)
+# Dos pestañas, un solo nivel de sub-pestañas. Agrupar en etapas habría creado
+# etapa → pestaña → sub-pestaña: tres niveles, y un clic más para llegar a todo.
+nav_disenar, nav_lab = st.tabs([t("nav_disenar"), t("nav_lab")])
+
+with nav_disenar:
+    tab7, tab1, tab2, tab4, tab5 = st.tabs([t("tab7"), t("tab1"), t("tab2"), t("tab4"), t("tab5")])
+
+with nav_lab:
+    tab3, tab9, tab6, tab8 = st.tabs([t("tab3"), t("tab9"), t("tab6"), t("tab8")])
 
 
 # ══════════════════════════════════════════════════════════
@@ -1248,14 +1263,10 @@ with tab1:
 # TAB 2 — ANÁLISIS  (EP · NEP · Estabilidad · Interacción)
 # ══════════════════════════════════════════════════════════
 with tab2:
-    atab_ep, atab_nep, atab_stab, atab_int = st.tabs(
-        [
-            t("atab_ep"),
-            t("atab_nep"),
-            t("atab_stab"),
-            t("atab_int"),
-        ]
-    )
+    atab_ep = seccion(t("atab_ep"))
+    atab_nep = seccion(t("atab_nep"))
+    atab_stab = seccion(t("atab_stab"))
+    atab_int = seccion(t("atab_int"))
 
 
 # ══════════════════════════════════════════════════════════
@@ -3132,7 +3143,8 @@ with tab5:
 # TAB 4 — OPTIMIZACIÓN  (Cinética · Diseño Experimental)
 # ══════════════════════════════════════════════════════════
 with tab4:
-    otab_kin, otab_dex = st.tabs([t("otab_kin"), t("otab_dex")])
+    otab_kin = seccion(t("otab_kin"))
+    otab_dex = seccion(t("otab_dex"))
 
 
 # ── Sub-tab: Cinética (dentro de tab4) ──
@@ -3503,6 +3515,25 @@ with tab6:
             mime="text/csv",
         )
 
+    # ── Bitácora acumulada entre sesiones ──
+    from experimentos import RUTA_BITACORA, cargar_bitacora
+
+    _bitacora = cargar_bitacora()
+    if not _bitacora.empty:
+        st.markdown("#### 📒 Bitácora acumulada")
+        st.caption(
+            f"{len(_bitacora)} ensayos registrados · se conservan entre sesiones en "
+            f"`{RUTA_BITACORA.name}`"
+        )
+        st.dataframe(_bitacora, use_container_width=True, hide_index=True)
+        st.download_button(
+            "⬇️ Descargar bitácora completa",
+            data=_bitacora.to_csv(index=False),
+            file_name="bitacora_experimentos.csv",
+            mime="text/csv",
+        )
+        st.divider()
+
     # ── Uploader ──
     uploaded = st.file_uploader(
         "Cargar CSV con resultados experimentales",
@@ -3517,6 +3548,14 @@ with tab6:
             st.session_state["exp_df"] = exp_df
             st.success(f"Archivo cargado: {len(exp_df)} filas, {len(exp_df.columns)} columnas")
             st.dataframe(exp_df, use_container_width=True, hide_index=True)
+
+            # La sesión muere al cerrar la app; la bitácora no. Aquí es donde el
+            # resultado real de la placa se confronta con lo que el modelo predijo.
+            from experimentos import anexar_experimentos
+
+            if st.button("💾 Guardar en la bitácora", key="guardar_bitacora"):
+                _total = anexar_experimentos(exp_df)
+                st.success(f"Bitácora actualizada: {len(_total)} ensayos acumulados")
 
             required = {"HBA", "HBD", "Ratio", "Agua (%)", "Temp (°C)", "TPC_exp"}
             missing = required - set(exp_df.columns)
@@ -3742,7 +3781,9 @@ with tab6:
 # TAB 7 — RECOMENDADOR  (Búsqueda global · Cribado Tesis)
 # ══════════════════════════════════════════════════════════
 with tab7:
-    rtab_rec, rtab_comp, rtab_th = st.tabs([t("rtab_rec"), t("rtab_comp"), t("rtab_th")])
+    rtab_rec = seccion(t("rtab_rec"))
+    rtab_comp = seccion(t("rtab_comp"))
+    rtab_th = seccion(t("rtab_th"))
 
 
 # ── Sub-tab: Comparador de NADES F1 (dentro de tab7) ──
@@ -4590,6 +4631,34 @@ with rtab_rec:
                 "La fila #1 (arriba) es el óptimo global entre todos los niveles."
             )
 
+            # ── Adoptar uno del ranking ──
+            # Sin esto el recomendador y el panel lateral afirman cosas distintas sobre
+            # cuál es el NADES activo, y hay que copiar los cuatro campos a mano.
+            st.markdown("#### Adoptar uno de estos")
+            _n_rank = len(best_all_obj)
+            _elegido = st.selectbox(
+                "NADES del ranking",
+                options=list(range(_n_rank)),
+                format_func=lambda i: (
+                    f"#{i + 1} · {best_all_obj.iloc[i]['HBA'].split('(')[0].strip()} : "
+                    f"{best_all_obj.iloc[i]['HBD']} ({best_all_obj.iloc[i]['Ratio']}, "
+                    f"{int(best_all_obj.iloc[i]['Agua óptima (%)'])}% H₂O) — "
+                    f"combinado {best_all_obj.iloc[i]['Combinado (%)']:.1f}%"
+                ),
+                key="rank_elegido",
+            )
+            if st.button("✅ Usar este NADES", type="primary", key="adoptar_nades"):
+                _fila = best_all_obj.iloc[_elegido]
+                st.session_state["sel_hba"] = str(_fila["HBA"])
+                st.session_state["sel_hbd"] = str(_fila["HBD"])
+                st.session_state["sel_ratio"] = str(_fila["Ratio"])
+                st.session_state["sel_water"] = int(_fila["Agua óptima (%)"])
+                st.rerun()
+            st.caption(
+                "Al adoptarlo pasa a ser el NADES activo: la franja superior y todas las "
+                "demás pestañas se recalculan sobre él."
+            )
+
         elif obj_target is None:
             st.info(
                 "👆 Ajusta temperatura y UAE, luego presiona uno de los tres botones para encontrar el NADES óptimo."
@@ -5030,13 +5099,13 @@ with tab8:
     st.markdown(
         '<div class="part-card" style="background:#f3f6fb;border-color:#2E86AB">'
         '<b style="color:#2E86AB">Fuente de datos: fruto (baya) de '
-        '<i>Berberis microphylla</i> G. Forst</b><br>'
+        "<i>Berberis microphylla</i> G. Forst</b><br>"
         '<small style="color:#0d1f35">'
         f'<b>Compuestos:</b> {(poly_df["tipo"] == "EP").sum()} EP + '
         f'{(poly_df["tipo"] == "NEP").sum()} NEP<br>'
-        '<b>EP:</b> Ruiz et al. (2024) Horticulturae 10, 458, Tabla 2 — '
-        'cuantificados por HPLC-DAD-ESI-MS/MS<br>'
-        '<b>NEP:</b> modelo teórico original de la tesis'
+        "<b>EP:</b> Ruiz et al. (2024) Horticulturae 10, 458, Tabla 2 — "
+        "cuantificados por HPLC-DAD-ESI-MS/MS<br>"
+        "<b>NEP:</b> modelo teórico original de la tesis"
         "</small></div>",
         unsafe_allow_html=True,
     )
@@ -5360,3 +5429,12 @@ with tab8:
                     "Mayor incertidumbre (modelo teórico novel sin validación experimental aún) · "
                     "Ref: Saltelli et al. (2004) Sensitivity Analysis in Practice · Ferrada, C. Tesis Doctoral 2026"
                 )
+
+
+# ══════════════════════════════════════════════════════════
+# TAB 9 — COMPATIBILIDAD HPTLC
+# ══════════════════════════════════════════════════════════
+with tab9:
+    from tabs.hptlc_tab import render_hptlc
+
+    render_hptlc(props)

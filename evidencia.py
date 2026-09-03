@@ -72,10 +72,7 @@ EVIDENCIA: dict[str, Fuente] = {
     ),
     "merck-placas": Fuente(
         id="merck-placas",
-        cita=(
-            "Merck Millipore, folleto técnico 'Fast and precise Thin Layer "
-            "Chromatography'."
-        ),
+        cita=("Merck Millipore, folleto técnico 'Fast and precise Thin Layer " "Chromatography'."),
         doi="catalogo-merck",
         afirma=(
             "TLC: 10-12 um de partícula, capa 250 um en vidrio. HPTLC: 5-6 um, capa "
