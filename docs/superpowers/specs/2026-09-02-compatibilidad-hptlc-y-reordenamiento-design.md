@@ -89,6 +89,31 @@ En sílica el agua es eluyente **fuerte**; en RP es **débil**. El signo se invi
 el fracaso documentado en fase normal **no se traslada** a RP-18 — pero tampoco hay
 publicación que lo confirme con NADES (§4.1).
 
+### 3.3.b El aplicador automático pierde su mecanismo de enfoque 🟨
+
+Documentación CAMAG del Linomat 5 (técnica spray-on): el disolvente se evapora casi por
+completo durante la aplicación, y por eso la muestra se concentra en banda angosta. Es lo
+que permite aplicar volúmenes grandes en disolventes polares como metanol o agua obteniendo
+zonas compactas.
+
+Combinado con §3.1 (el NADES tiene baja presión de vapor por definición), se sigue que
+**el mecanismo de enfoque no opera sobre la fracción NADES**: el disolvente volátil se va,
+el NADES permanece como película líquida sobre la capa. El aplicador sigue dosificando un
+volumen reproducible, pero pierde el paso que convierte ese volumen en banda estrecha.
+
+Explica mecanísticamente el resultado de §3.2: diluir 1/10 reduce la masa depositada, pero
+no restituye el mecanismo de enfoque.
+
+Dos consecuencias de diseño:
+
+1. Refuerza §10.1. La siembra se declara determinista en SimEluent *porque* enfoca.
+2. La zona de concentración (§3.5) enfoca por migración cromatográfica, no por evaporación:
+   es un mecanismo independiente que sigue operando con matriz no volátil. Deja de ser una
+   comodidad y pasa a ser la vía que restituye el supuesto.
+
+Vacío asociado ⬜: obstrucción de aguja/boquilla y arrastre entre muestras con líquido
+viscoso. Sin fuente; no se afirma.
+
 ### 3.4 Especificaciones de placa 🟩
 
 Folleto técnico Merck Millipore *Fast and precise Thin Layer Chromatography*.
