@@ -26,7 +26,11 @@
 
 | Archivo | Responsabilidad | Fase |
 |---|---|---|
-| `SN/hptlc.py` | Evidencia, catálogo de placas, evaluación, veredicto | 1 |
+| `SN/evidencia.py` | Registro único de fuentes y niveles de evidencia | 1 |
+| `SN/hptlc.py` | Catálogo de placas, evaluación, veredicto | 1 |
+| `SN/explicacion.py` | Lectura en lenguaje llano de cada propiedad | 4 |
+| `SN/tabs/componentes.py` | Ficha explicada y franja de NADES activo | 4-5 |
+| `SN/tema.py` | Paleta, tipografía y movimiento | 6 |
 | `SN/tests/test_hptlc.py` | Pruebas del módulo puro | 1 |
 | `SN/tabs/hptlc_tab.py` | UI de la sección HPTLC | 2 |
 | `SN/experimentos.py` | Persistencia de la bitácora experimental | 3 |
@@ -46,17 +50,21 @@ Núcleo del trabajo. Produce software probable sin tocar UI.
 ### Task 1: Registro de evidencia y catálogo de placas
 
 **Files:**
-- Create: `SN/hptlc.py`
+- Create: `SN/evidencia.py`, `SN/hptlc.py`
 - Test: `SN/tests/test_hptlc.py`
 
 **Interfaces:**
-- Produces: `Fuente`, `EVIDENCIA: dict[str, Fuente]`, `Placa`, `PLACAS: dict[str, Placa]`
+- Produces: `Fuente`, `Nivel`, `EVIDENCIA: dict[str, Fuente]` en `evidencia.py`; `Placa`, `PLACAS: dict[str, Placa]` en `hptlc.py`
+
+El registro vive en su propio módulo porque lo comparten el veredicto HPTLC (Fase 1) y la
+capa de explicación (Fase 4): una sola fuente de verdad bibliográfica para todo el programa.
 
 - [ ] **Step 1: Write the failing test**
 
 ```python
 # SN/tests/test_hptlc.py
-from hptlc import EVIDENCIA, PLACAS
+from evidencia import EVIDENCIA
+from hptlc import PLACAS
 
 
 def test_toda_fuente_tiene_doi_y_afirmacion() -> None:
@@ -95,21 +103,25 @@ Expected: FAIL con `ModuleNotFoundError: No module named 'hptlc'`
 - [ ] **Step 3: Write minimal implementation**
 
 ```python
-# SN/hptlc.py
-"""HPTLC direct-spotting compatibility for NADES extracts.
+# SN/evidencia.py
+"""Single bibliographic registry for the whole program.
 
-Every emitted value carries a resolvable source. Where the literature is silent
-the module declares the gap instead of producing a number: that distinction is
-the point of the module, not a limitation of it.
-
-This module imports neither Streamlit nor the extraction model, so it can be
-tested and reused (notably by SimEluent) on its own.
+Shared by the HPTLC verdict and by the property explanations, so a source is
+described once and cited from anywhere. Imports nothing from the rest of the app.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+
+
+class Nivel(str, Enum):
+    """Evidence level attached to every claim the program makes."""
+
+    MEDIDO = "MEDIDO"
+    INFERIDO = "INFERIDO"
+    SIN_FUENTE = "SIN_FUENTE"
 
 
 @dataclass(frozen=True)
@@ -204,6 +216,27 @@ EVIDENCIA: dict[str, Fuente] = {
     ),
 }
 """Verifiable sources. Every factor with a value must name one of these."""
+```
+
+```python
+# SN/hptlc.py
+"""HPTLC direct-spotting compatibility for NADES extracts.
+
+Every emitted value carries a resolvable source. Where the literature is silent
+the module declares the gap instead of producing a number: that distinction is
+the point of the module, not a limitation of it.
+
+Imports neither Streamlit nor the extraction model, so it can be tested and reused
+(notably by SimEluent) on its own.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from enum import Enum
+
+from evidencia import EVIDENCIA, Nivel
 
 
 @dataclass(frozen=True)
@@ -304,7 +337,7 @@ Expected: PASS, 4 pruebas
 - [ ] **Step 5: Commit**
 
 ```bash
-git add hptlc.py tests/test_hptlc.py
+git add evidencia.py hptlc.py tests/test_hptlc.py
 git commit -m "feat: registro de evidencia y catalogo de placas HPTLC"
 ```
 
@@ -329,7 +362,8 @@ claves: `viscosidad` (cP), `water_pct` (%) y `pH`. No se importa `model`.
 # añadir a SN/tests/test_hptlc.py
 import pytest
 
-from hptlc import EVIDENCIA, PLACAS, Estado, Nivel, evaluar_placa
+from evidencia import EVIDENCIA, Nivel
+from hptlc import PLACAS, Estado, evaluar_placa
 
 PROPS_ACIDO = {"viscosidad": 120.0, "water_pct": 30.0, "pH": 3.1}
 
@@ -410,14 +444,6 @@ Expected: FAIL con `ImportError: cannot import name 'Estado' from 'hptlc'`
 Añadir al final de `SN/hptlc.py`:
 
 ```python
-class Nivel(str, Enum):
-    """Evidence level attached to every factor."""
-
-    MEDIDO = "MEDIDO"
-    INFERIDO = "INFERIDO"
-    SIN_FUENTE = "SIN_FUENTE"
-
-
 class Estado(str, Enum):
     """Verdict for one plate."""
 
@@ -877,7 +903,8 @@ git commit -m "feat: protocolo candidato con volumen anclado en Ph. Eur."
 
 ```python
 # SN/tests/test_hptlc_tab.py
-from hptlc import Estado, Nivel
+from evidencia import Nivel
+from hptlc import Estado
 
 
 def test_insignia_por_nivel() -> None:
@@ -919,7 +946,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from hptlc import EVIDENCIA, PLACAS, Estado, Nivel, evaluar_placa, protocolo_candidato
+from evidencia import EVIDENCIA, Nivel
+from hptlc import PLACAS, Estado, evaluar_placa, protocolo_candidato
 
 _INSIGNIAS = {
     Nivel.MEDIDO: "🟩 MEDIDO",
@@ -1242,99 +1270,825 @@ git commit -m "feat: bitacora experimental persistente entre sesiones"
 
 ---
 
-# FASE 4 — Reordenamiento en tres etapas
+# FASE 4 — La capa de explicación
 
-### Task 6: Reagrupar las pestañas por flujo de trabajo
+El diagnóstico del autor: *"tiene referencias pero no explica el porqué de las
+decisiones"*. Las fuentes ya están en la app, pero como nota al pie de los gráficos. Esta
+fase las pega al número que justifican.
+
+Reutiliza `evidencia.py` (Task 1), de modo que haya **un solo registro de fuentes** para el
+módulo HPTLC y para la interpretación de propiedades.
+
+### Task 6: `explicacion.py` — valor, lectura, porqué y fuente
 
 **Files:**
-- Modify: `SN/app.py` (líneas 181-189 y 764-776)
+- Create: `SN/explicacion.py`, `SN/tests/test_explicacion.py`
+- Modify: `SN/evidencia.py` (tres fuentes nuevas)
 
 **Interfaces:**
-- Consumes: las nueve pestañas existentes
-- Produces: tres `st.tabs` de etapa, con las pestañas actuales como sub-pestañas
+- Consumes: `Fuente`, `Nivel`, `EVIDENCIA` de `evidencia.py` (Task 1)
+- Produces: `Lectura`, `explicar_propiedades(props: dict) -> tuple[Lectura, ...]`
 
-- [ ] **Step 1: Añadir las etiquetas de etapa**
-
-En `SN/app.py`, junto a las etiquetas `tab1`-`tab9` (cerca de la línea 181):
+- [ ] **Step 1: Write the failing test**
 
 ```python
-    "etapa1": {"es": "① Diseñar", "en": "① Design"},
-    "etapa2": {"es": "② Ejecutar", "en": "② Run"},
-    "etapa3": {"es": "③ Registrar", "en": "③ Record"},
-    "etapa4": {"es": "📚 Metodología", "en": "📚 Methodology"},
+# SN/tests/test_explicacion.py
+from evidencia import EVIDENCIA
+from explicacion import explicar_propiedades
+
+PROPS = {
+    "polaridad": 0.815,
+    "viscosidad": 15.0,
+    "pH": 4.17,
+    "cap_hbd": 3.05,
+    "antioxidant_nades": 0.53,
+}
+
+
+def test_devuelve_una_lectura_por_propiedad() -> None:
+    lecturas = explicar_propiedades(PROPS)
+    assert {lectura.clave for lectura in lecturas} == set(PROPS)
+
+
+def test_cada_lectura_explica_por_que_importa_y_cita() -> None:
+    for lectura in explicar_propiedades(PROPS):
+        assert lectura.por_que, f"{lectura.clave} sin porque"
+        assert lectura.fuente_id in EVIDENCIA, f"{lectura.clave} sin fuente resoluble"
+
+
+def test_el_calificativo_cambia_con_el_valor() -> None:
+    alta = explicar_propiedades({**PROPS, "polaridad": 0.95})
+    baja = explicar_propiedades({**PROPS, "polaridad": 0.35})
+    cal_alta = next(x for x in alta if x.clave == "polaridad").calificativo
+    cal_baja = next(x for x in baja if x.clave == "polaridad").calificativo
+    assert cal_alta != cal_baja
+
+
+def test_ph_acido_se_lee_como_favorable_para_antocianinas() -> None:
+    lecturas = explicar_propiedades({**PROPS, "pH": 3.0})
+    lectura = next(x for x in lecturas if x.clave == "pH")
+    assert "flavilio" in lectura.por_que.lower()
 ```
 
-- [ ] **Step 2: Reemplazar la construcción de pestañas**
+- [ ] **Step 2: Run test to verify it fails**
 
-Sustituir el bloque de la línea 764 por:
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_explicacion.py -v`
+Expected: FAIL con `ModuleNotFoundError: No module named 'explicacion'`
+
+- [ ] **Step 3: Añadir las tres fuentes a `evidencia.py`**
+
+Estas referencias ya estaban en la app, al pie de los gráficos. Aquí pasan al registro
+único para poder colgarlas de cada número.
 
 ```python
-etapa1, etapa2, etapa3, etapa4 = st.tabs(
-    [t("etapa1"), t("etapa2"), t("etapa3"), t("etapa4")]
-)
-
-with etapa1:
-    tab7, tab1, tab2, tab4 = st.tabs([t("tab7"), t("tab1"), t("tab2"), t("tab4")])
-
-with etapa2:
-    tab3, tab9, tab5 = st.tabs([t("tab3"), t("tab9"), t("tab5")])
-
-with etapa3:
-    (tab6,) = st.tabs([t("tab6")])
-
-with etapa4:
-    (tab8,) = st.tabs([t("tab8")])
+    "espino2016": Fuente(
+        id="espino2016",
+        cita=(
+            "Espino M., de los Ángeles Fernández M., Gomez F.J.V., Silva M.F. (2016). "
+            "Natural designer solvents for greening analytical chemistry. "
+            "Talanta 162:412."
+        ),
+        doi="10.1016/j.talanta.2016.10.078",
+        afirma=(
+            "Modelo de extracción por polaridad, capacidad HBD y pH. Es la referencia "
+            "que el simulador ya citaba al pie de los gráficos de índice EP."
+        ),
+    ),
+    "dai2013": Fuente(
+        id="dai2013",
+        cita=(
+            "Dai Y., van Spronsen J., Witkamp G.-J., Verpoorte R., Choi Y.H. (2013). "
+            "Natural deep eutectic solvents as new potential media for green "
+            "technology. Anal. Chim. Acta 766:61."
+        ),
+        doi="10.1016/j.aca.2012.12.019",
+        afirma=(
+            "Efecto del contenido de agua sobre la red supramolecular del NADES y sobre "
+            "la estabilidad de los compuestos disueltos."
+        ),
+    ),
+    "ruiz2024": Fuente(
+        id="ruiz2024",
+        cita=(
+            "Ruiz A. et al. (2024). Calafate (Berberis microphylla G. Forst) "
+            "populations from Chilean Patagonia exhibit similar structuring at the "
+            "genetic and metabolic levels. Horticulturae 10:458."
+        ),
+        doi="10.3390/horticulturae10050458",
+        afirma=(
+            "Perfil de 28 polifenoles de Berberis microphylla por HPLC-DAD-ESI-MS/MS. "
+            "Es la base de la fracción EP del simulador."
+        ),
+    ),
 ```
 
-Los bloques `with tabN:` existentes no se tocan: siguen funcionando porque las
-variables `tabN` ahora apuntan a las sub-pestañas.
+- [ ] **Step 4: Write minimal implementation**
 
-- [ ] **Step 3: Verificar en el navegador**
+```python
+# SN/explicacion.py
+"""Plain-language reading of each computed property.
 
-Run: `cd "$SN" && .venv/Scripts/python.exe -m streamlit run app.py --server.headless true --server.port 8512`
-Comprobar las cuatro etapas y que cada sub-pestaña sigue renderizando su contenido.
-Detener con Ctrl+C.
+The simulator already cited its sources, but as footnotes under charts: the number
+and the reason it matters were never in the same place. This module pairs each
+computed quantity with what its value means for Berberis polyphenols, and with the
+source that backs the claim.
 
-- [ ] **Step 4: Commit**
+Imports neither Streamlit nor the model: it reads the properties dict and nothing else.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from evidencia import EVIDENCIA, Nivel
+
+
+@dataclass(frozen=True)
+class Lectura:
+    """One property, read in plain language and backed by a source."""
+
+    clave: str
+    titulo: str
+    valor: float
+    unidad: str
+    calificativo: str
+    por_que: str
+    fuente_id: str
+    nivel: Nivel
+
+    def __post_init__(self) -> None:
+        """Keep the project-wide rule: no claim without a resolvable source."""
+        if self.fuente_id not in EVIDENCIA:
+            raise ValueError(f"lectura '{self.clave}' sin fuente resoluble")
+
+
+def _tramo(
+    valor: float, bajo: float, alto: float, etiquetas: tuple[str, str, str]
+) -> str:
+    """Return the qualitative label for a value against two cut points."""
+    if valor < bajo:
+        return etiquetas[0]
+    if valor > alto:
+        return etiquetas[2]
+    return etiquetas[1]
+
+
+def explicar_propiedades(props: dict) -> tuple[Lectura, ...]:
+    """Read the five NADES properties in plain language.
+
+    Args:
+        props: Output of `model.calculate_nades_properties`.
+
+    Returns:
+        One `Lectura` per property, each carrying its source.
+    """
+    return (
+        Lectura(
+            clave="polaridad",
+            titulo="Polaridad (ETN)",
+            valor=float(props["polaridad"]),
+            unidad="",
+            calificativo=_tramo(
+                float(props["polaridad"]), 0.45, 0.80, ("baja", "media", "alta")
+            ),
+            por_que=(
+                "Las antocianinas 3-glicosiladas del calafate son muy polares: el azúcar "
+                "unido al flavilio las lleva hacia la fracción acuosa. Un NADES de "
+                "polaridad alta las solvata mejor, pero se aleja de los flavonoles, que "
+                "son menos polares. Por eso el óptimo no es el máximo, y por eso el "
+                "score combinado penaliza la asimetría entre fracciones."
+            ),
+            fuente_id="espino2016",
+            nivel=Nivel.MEDIDO,
+        ),
+        Lectura(
+            clave="viscosidad",
+            titulo="Viscosidad",
+            valor=float(props["viscosidad"]),
+            unidad="cP",
+            calificativo=_tramo(
+                float(props["viscosidad"]), 50.0, 200.0, ("baja", "media", "alta")
+            ),
+            por_que=(
+                "La viscosidad gobierna la difusión del soluto desde la matriz vegetal: "
+                "más viscoso extrae más lento y satura antes, y por eso el agua añadida "
+                "sube el rendimiento aunque baje la polaridad relativa del solvente. Es "
+                "además uno de los dos obstáculos que la literatura atribuye a los NADES "
+                "en el análisis posterior por capa fina."
+            ),
+            fuente_id="liu2017",
+            nivel=Nivel.MEDIDO,
+        ),
+        Lectura(
+            clave="pH",
+            titulo="pH efectivo",
+            valor=float(props["pH"]),
+            unidad="",
+            calificativo=_tramo(
+                float(props["pH"]), 3.5, 5.5, ("muy ácido", "ácido", "cercano a neutro")
+            ),
+            por_que=(
+                "El pH decide en qué forma está la antocianina. Bajo pH 3 domina el "
+                "catión flavilio, rojo y estable; sobre pH 4 aparecen la pseudobase "
+                "carbinol y la chalcona, incoloras y lábiles. Un NADES ácido no solo "
+                "extrae el pigmento: lo mantiene en la forma que se puede medir."
+            ),
+            fuente_id="espino2016",
+            nivel=Nivel.MEDIDO,
+        ),
+        Lectura(
+            clave="cap_hbd",
+            titulo="Capacidad HBD efectiva",
+            valor=float(props["cap_hbd"]),
+            unidad="",
+            calificativo=_tramo(
+                float(props["cap_hbd"]), 1.5, 3.0, ("baja", "media", "alta")
+            ),
+            por_que=(
+                "Los donadores de puente de hidrógeno del solvente compiten con la pared "
+                "celular por los hidroxilos fenólicos. Más capacidad HBD libera más "
+                "polifenol unido a la matriz, que es justamente el mecanismo detrás de "
+                "la fracción no extraíble (NEP)."
+            ),
+            fuente_id="espino2016",
+            nivel=Nivel.MEDIDO,
+        ),
+        Lectura(
+            clave="antioxidant_nades",
+            titulo="Antioxidante del NADES",
+            valor=float(props["antioxidant_nades"]),
+            unidad="",
+            calificativo=_tramo(
+                float(props["antioxidant_nades"]), 0.25, 0.55, ("bajo", "medio", "alto")
+            ),
+            por_que=(
+                "En este trabajo el NADES sustituye a la atmósfera inerte: el "
+                "laboratorio no tiene línea de nitrógeno, y la hipótesis es que la red "
+                "supramolecular del solvente aporta por sí sola la protección frente a "
+                "oxidación. Este número es esa hipótesis, cuantificada."
+            ),
+            fuente_id="dai2013",
+            nivel=Nivel.INFERIDO,
+        ),
+    )
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_explicacion.py -v`
+Expected: PASS, 4 pruebas
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add app.py
-git commit -m "refactor: agrupa las pestanas en etapas de flujo de trabajo"
+git add explicacion.py evidencia.py tests/test_explicacion.py
+git commit -m "feat: capa de explicacion que pega cada fuente al numero que justifica"
 ```
 
 ---
 
-### Task 7: Reordenar los bloques del fuente
+### Task 7: Ficha explicada en lugar de `prop_card`
 
 **Files:**
-- Modify: `SN/app.py`
+- Create: `SN/tabs/componentes.py`, `SN/tests/test_componentes.py`
+- Modify: `SN/app.py:694-707`
 
-- [ ] **Step 1: Mover el bloque de tab5**
+**Interfaces:**
+- Consumes: `Lectura` (Task 6), `Nivel`, `EVIDENCIA` (Task 1)
+- Produces: `ficha_explicada(lectura: Lectura) -> None`, `texto_ficha(lectura: Lectura) -> str`
 
-El bloque `with tab5:` empieza en la línea 2854 y `with tab4:` en la 3134: tab5 está
-escrito **antes** que tab4 en el fuente. Mover el bloque completo de tab5 (2854 hasta la
-línea anterior a `with tab4:`) para que quede después del bloque de tab4, de modo que el
-orden del fuente sea tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9.
+- [ ] **Step 1: Write the failing test**
 
-Es un movimiento puro de texto: no cambia ni una línea de lógica.
+```python
+# SN/tests/test_componentes.py
+from evidencia import Nivel
+from explicacion import Lectura
 
-- [ ] **Step 2: Verificar que la app sigue igual**
 
-Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest -q && .venv/Scripts/python.exe -m streamlit run app.py --server.headless true --server.port 8512`
-Comprobar las mismas cuatro etapas. Detener con Ctrl+C.
+def _lectura() -> Lectura:
+    return Lectura(
+        clave="polaridad",
+        titulo="Polaridad (ETN)",
+        valor=0.815,
+        unidad="",
+        calificativo="alta",
+        por_que="Las antocianinas glicosiladas son muy polares.",
+        fuente_id="espino2016",
+        nivel=Nivel.MEDIDO,
+    )
 
-- [ ] **Step 3: Commit**
+
+def test_el_texto_muestra_valor_y_calificativo_juntos() -> None:
+    from tabs.componentes import texto_ficha
+
+    texto = texto_ficha(_lectura())
+
+    assert "0.815" in texto
+    assert "alta" in texto
+    assert "Polaridad" in texto
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_componentes.py -v`
+Expected: FAIL con `ModuleNotFoundError: No module named 'tabs.componentes'`
+
+- [ ] **Step 3: Write minimal implementation**
+
+```python
+# SN/tabs/componentes.py
+"""Shared display components.
+
+The explained card replaces `prop_card`: a bare number in a coloured box told the
+user what the value was, but never why it mattered nor who says so.
+"""
+
+from __future__ import annotations
+
+import streamlit as st
+
+from evidencia import EVIDENCIA, Nivel
+from explicacion import Lectura
+
+_INSIGNIAS = {
+    Nivel.MEDIDO: "🟩",
+    Nivel.INFERIDO: "🟨",
+    Nivel.SIN_FUENTE: "⬜",
+}
+
+
+def texto_ficha(lectura: Lectura) -> str:
+    """Return the one-line headline for a reading."""
+    unidad = f" {lectura.unidad}" if lectura.unidad else ""
+    return f"{lectura.titulo}: {lectura.valor:g}{unidad} — {lectura.calificativo}"
+
+
+def ficha_explicada(lectura: Lectura) -> None:
+    """Render one reading with its value, its meaning and its source."""
+    unidad = f" {lectura.unidad}" if lectura.unidad else ""
+    st.metric(lectura.titulo, f"{lectura.valor:g}{unidad}", lectura.calificativo)
+    with st.expander("¿Por qué importa?", expanded=False):
+        st.write(lectura.por_que)
+        fuente = EVIDENCIA[lectura.fuente_id]
+        st.caption(f"{_INSIGNIAS[lectura.nivel]} {fuente.cita}")
+        st.caption(f"DOI: {fuente.doi}")
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_componentes.py -v`
+Expected: PASS, 1 prueba
+
+- [ ] **Step 5: Reemplazar `prop_card` en el panel lateral**
+
+En `SN/app.py`, sustituir las líneas 694-707 (la definición de `prop_card` y sus cinco
+llamadas) por:
+
+```python
+    from explicacion import explicar_propiedades
+    from tabs.componentes import ficha_explicada
+
+    for lectura in explicar_propiedades(props):
+        ficha_explicada(lectura)
+```
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add app.py
-git commit -m "refactor: ordena los bloques de pestanas en el fuente"
+git add tabs/componentes.py tests/test_componentes.py app.py
+git commit -m "feat: ficha explicada con porque y fuente en vez de prop_card"
 ```
 
 ---
 
-# FASE 5 — SimEluent: catálogo de placas
+# FASE 5 — Dos pestañas y una sola fuente de verdad
 
-### Task 8: `Phase` extendida y `data/placas.csv`
+Se descarta la agrupación en tres etapas del spec §7: creaba **etapa → pestaña →
+sub-pestaña**, tres niveles de profundidad, y habría añadido un clic para llegar a todo.
+La guía de UX consultada marca los 3+ niveles como el punto donde hace falta indicar la
+ubicación del usuario; la respuesta correcta es reducir niveles, no señalizarlos.
+
+### Task 8: Franja de NADES activo y dos pestañas
+
+**Files:**
+- Modify: `SN/app.py` (etiquetas cerca de 181, construcción de pestañas en 764)
+- Modify: `SN/tabs/componentes.py`
+- Create: `SN/tests/test_navegacion.py`
+
+**Interfaces:**
+- Consumes: `texto_ficha` (Task 7)
+- Produces: `nades_activo(props: dict, hba: str, hbd: str, ratio: str) -> str`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+# SN/tests/test_navegacion.py
+def test_la_franja_nombra_el_nades_activo_con_sus_condiciones() -> None:
+    from tabs.componentes import nades_activo
+
+    texto = nades_activo(
+        {"water_pct": 30, "temp_C": 40},
+        hba="Cloruro de Colina (ChCl)",
+        hbd="Ácido Ascórbico (Vit. C)",
+        ratio="1:1",
+    )
+
+    assert "Cloruro de Colina" in texto
+    assert "Ácido Ascórbico" in texto
+    assert "1:1" in texto
+    assert "30" in texto
+    assert "40" in texto
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_navegacion.py -v`
+Expected: FAIL con `ImportError: cannot import name 'nades_activo'`
+
+- [ ] **Step 3: Write minimal implementation**
+
+Añadir a `SN/tabs/componentes.py`:
+
+```python
+def nades_activo(props: dict, hba: str, hbd: str, ratio: str) -> str:
+    """Return the one-line description of the mixture currently being shown."""
+    return (
+        f"{hba} : {hbd} ({ratio}, {props['water_pct']:.0f}% H₂O, "
+        f"{props['temp_C']:.0f} °C)"
+    )
+```
+
+- [ ] **Step 4: Añadir las etiquetas de las dos pestañas**
+
+En `SN/app.py`, junto a las etiquetas existentes (cerca de la línea 181):
+
+```python
+    "nav_disenar": {"es": "🧪 Diseñar", "en": "🧪 Design"},
+    "nav_lab": {"es": "🔬 Laboratorio", "en": "🔬 Laboratory"},
+```
+
+- [ ] **Step 5: Reemplazar la construcción de pestañas**
+
+Antes de escribir, confirmar los nombres reales de las variables del panel lateral:
+
+```bash
+grep -n "hba_sel\|hbd_sel\|ratio_sel\|selectbox" app.py | head -10
+```
+
+Sustituir el bloque de la línea 764 por, usando los nombres reales:
+
+```python
+from tabs.componentes import nades_activo
+
+st.info(f"**NADES activo** · {nades_activo(props, hba_sel, hbd_sel, ratio_sel)}")
+
+nav_disenar, nav_lab = st.tabs([t("nav_disenar"), t("nav_lab")])
+
+with nav_disenar:
+    tab7, tab1, tab2, tab4, tab5 = st.tabs(
+        [t("tab7"), t("tab1"), t("tab2"), t("tab4"), t("tab5")]
+    )
+
+with nav_lab:
+    tab3, tab9, tab6, tab8 = st.tabs([t("tab3"), t("tab9"), t("tab6"), t("tab8")])
+```
+
+- [ ] **Step 6: Verificar en el navegador**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m streamlit run app.py --server.headless true --server.port 8512`
+Comprobar: la franja de NADES activo aparece sobre las pestañas y cambia al mover el panel
+lateral. Dos pestañas, un solo nivel de sub-pestañas. Detener con Ctrl+C.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add app.py tabs/componentes.py tests/test_navegacion.py
+git commit -m "refactor: dos pestanas y franja de NADES activo"
+```
+
+---
+
+### Task 9: El Recomendador escribe el NADES activo
+
+**Files:**
+- Modify: `SN/app.py` (sub-pestaña del Recomendador Global, cerca de 4307)
+
+- [ ] **Step 1: Localizar el DataFrame del ranking**
+
+Run: `grep -n "ranking\|df_rank\|top_nades\|sweep_all_nades" app.py | head -10`
+Anotar el nombre real de la variable; abajo se la llama `ranking_df`.
+
+- [ ] **Step 2: Añadir el adoptador tras la tabla del ranking**
+
+Hoy el ranking lista los mejores NADES pero no hay forma de adoptarlos: hay que copiar
+HBA, HBD, razón y agua a mano al panel lateral. Ese copiado manual es la queja principal,
+y es también la razón de que convivan dos fuentes de verdad sobre cuál es el NADES activo.
+
+```python
+        st.markdown("#### Adoptar uno de estos")
+        elegido = st.selectbox(
+            "NADES del ranking",
+            options=list(range(len(ranking_df))),
+            format_func=lambda i: (
+                f"#{i + 1} · {ranking_df.iloc[i]['HBA']} : "
+                f"{ranking_df.iloc[i]['HBD']} ({ranking_df.iloc[i]['Ratio']})"
+            ),
+        )
+        if st.button("✅ Usar este NADES", type="primary"):
+            fila = ranking_df.iloc[elegido]
+            st.session_state["sel_hba"] = str(fila["HBA"])
+            st.session_state["sel_hbd"] = str(fila["HBD"])
+            st.session_state["sel_ratio"] = str(fila["Ratio"])
+            st.rerun()
+```
+
+- [ ] **Step 3: Enganchar el panel lateral a `session_state`**
+
+Los `st.selectbox` del panel lateral que eligen HBA, HBD y razón deben recibir
+`key="sel_hba"`, `key="sel_hbd"` y `key="sel_ratio"` respectivamente, para que el botón
+anterior los sobrescriba.
+
+- [ ] **Step 4: Verificar el ciclo completo**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m streamlit run app.py --server.headless true --server.port 8512`
+En Diseñar → Recomendador, elegir el #1 del ranking y pulsar "Usar este NADES". Comprobar
+que la franja superior cambia y que las demás sub-pestañas muestran ese NADES.
+Detener con Ctrl+C.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app.py
+git commit -m "feat: el recomendador escribe el NADES activo en vez de solo listarlo"
+```
+
+---
+
+# FASE 6 — Tema visual y movimiento
+
+Patrón elegido: **Data-Dense + Drill-Down**, que es lo que ya hacen la franja fija y el
+desplegable "¿Por qué importa?". La paleta no se toma del recomendador genérico —era azul
+corporativo— sino de la identidad que el programa ya tiene: el morado del calafate y el
+turquesa del disolvente, los mismos del icono en `assets/simnades.ico`.
+
+Se aparta a conciencia de dos reglas de la guía: se conservan los emoji como iconos,
+porque en Streamlit sustituirlos por SVG es peleado y la app ya es coherente con ellos; y
+la monoespaciada se reserva para **cifras**, donde alinea columnas, en vez de para títulos.
+
+### Task 10: Tema y animaciones respetuosas del movimiento
+
+**Files:**
+- Create: `SN/tema.py`, `SN/tests/test_tema.py`
+- Modify: `SN/app.py` (llamada tras `st.set_page_config`)
+
+**Interfaces:**
+- Produces: `PALETA: dict[str, str]`, `css() -> str`, `inyectar_tema() -> None`
+
+- [ ] **Step 1: Write the failing test**
+
+```python
+# SN/tests/test_tema.py
+import re
+
+from tema import PALETA, css
+
+
+def test_la_paleta_es_la_del_calafate_no_azul_generico() -> None:
+    assert PALETA["primario"] == "#4A2A7A"
+    assert PALETA["acento"] == "#60CDD6"
+
+
+def test_toda_animacion_queda_bajo_prefers_reduced_motion() -> None:
+    hoja = css()
+    assert "prefers-reduced-motion: no-preference" in hoja
+    # Ninguna transicion ni animacion puede vivir fuera de esa consulta.
+    fuera = hoja.split("@media (prefers-reduced-motion: no-preference)")[0]
+    assert "transition:" not in fuera
+    assert "animation:" not in fuera
+
+
+def test_las_transiciones_estan_en_la_ventana_recomendada() -> None:
+    duraciones = [int(x) for x in re.findall(r"(\d+)ms", css())]
+    assert duraciones, "no se declaro ninguna duracion"
+    assert all(150 <= d <= 300 for d in duraciones), duraciones
+
+
+def test_el_texto_principal_es_oscuro_para_contraste() -> None:
+    assert PALETA["texto"] == "#1E1633"
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_tema.py -v`
+Expected: FAIL con `ModuleNotFoundError: No module named 'tema'`
+
+- [ ] **Step 3: Write minimal implementation**
+
+```python
+# SN/tema.py
+"""Visual theme.
+
+Palette taken from the product's own identity — the calafate purple and the solvent
+teal of `assets/simnades.ico` — rather than from a generic dashboard blue.
+
+Every transition and keyframe lives inside a `prefers-reduced-motion: no-preference`
+query, so a user who asked their system for less movement gets none: motion is an
+enhancement here, never a carrier of information.
+"""
+
+from __future__ import annotations
+
+import streamlit as st
+
+PALETA: dict[str, str] = {
+    "primario": "#4A2A7A",
+    "primario_claro": "#8A5CBA",
+    "acento": "#60CDD6",
+    "llamada": "#F59E0B",
+    "fondo": "#F8FAFC",
+    "superficie": "#FFFFFF",
+    "texto": "#1E1633",
+    "texto_tenue": "#475569",
+    "borde": "#E2E8F0",
+}
+"""Calafate purple over a near-white ground, teal for accents, amber for actions."""
+
+_DURACION_MS = 180
+
+
+def css() -> str:
+    """Return the stylesheet injected into the app."""
+    p = PALETA
+    return f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {{
+    --sn-primario: {p["primario"]};
+    --sn-primario-claro: {p["primario_claro"]};
+    --sn-acento: {p["acento"]};
+    --sn-llamada: {p["llamada"]};
+    --sn-superficie: {p["superficie"]};
+    --sn-texto: {p["texto"]};
+    --sn-texto-tenue: {p["texto_tenue"]};
+    --sn-borde: {p["borde"]};
+}}
+
+html, body, [class*="css"] {{
+    font-family: 'Fira Sans', system-ui, -apple-system, sans-serif;
+    color: var(--sn-texto);
+}}
+
+h1, h2, h3, h4 {{
+    font-family: 'Fira Sans', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--sn-primario);
+}}
+
+/* Monoespaciada solo para cifras: alinea columnas y digitos entre filas. */
+[data-testid="stMetricValue"] {{
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--sn-primario);
+}}
+
+[data-testid="stMetric"] {{
+    background: var(--sn-superficie);
+    border: 1px solid var(--sn-borde);
+    border-left: 3px solid var(--sn-acento);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}}
+
+.stTabs [data-baseweb="tab"] {{
+    font-weight: 500;
+}}
+
+.stTabs [aria-selected="true"] {{
+    color: var(--sn-primario);
+    border-bottom-color: var(--sn-primario);
+}}
+
+.stButton > button {{
+    border-radius: 8px;
+    font-weight: 500;
+}}
+
+/* El cursor debe decir que algo se puede pulsar. */
+.stButton > button,
+.stTabs [data-baseweb="tab"],
+[data-testid="stExpander"] summary {{
+    cursor: pointer;
+}}
+
+/* Foco visible: la navegacion por teclado no puede quedarse a ciegas. */
+.stButton > button:focus-visible,
+[data-testid="stExpander"] summary:focus-visible {{
+    outline: 2px solid var(--sn-acento);
+    outline-offset: 2px;
+}}
+
+@media (prefers-reduced-motion: no-preference) {{
+    [data-testid="stMetric"] {{
+        transition: border-left-color {_DURACION_MS}ms ease,
+                    box-shadow {_DURACION_MS}ms ease;
+    }}
+    [data-testid="stMetric"]:hover {{
+        border-left-color: var(--sn-primario);
+        box-shadow: 0 2px 12px rgba(74, 42, 122, 0.12);
+    }}
+
+    .stButton > button {{
+        transition: background-color {_DURACION_MS}ms ease,
+                    transform {_DURACION_MS}ms ease;
+    }}
+    /* Se mueve con transform, no con width/height: no reflow, no salto de layout. */
+    .stButton > button:hover {{
+        transform: translateY(-1px);
+    }}
+
+    .stTabs [data-baseweb="tab"] {{
+        transition: color {_DURACION_MS}ms ease;
+    }}
+
+    [data-testid="stDataFrame"] tbody tr {{
+        transition: background-color {_DURACION_MS}ms ease;
+    }}
+    [data-testid="stDataFrame"] tbody tr:hover {{
+        background-color: rgba(96, 205, 214, 0.10);
+    }}
+
+    @keyframes sn-entrada {{
+        from {{ opacity: 0; transform: translateY(6px); }}
+        to   {{ opacity: 1; transform: translateY(0); }}
+    }}
+    [data-testid="stMetric"],
+    [data-testid="stAlert"] {{
+        animation: sn-entrada {_DURACION_MS}ms ease-out;
+    }}
+}}
+</style>
+"""
+
+
+def inyectar_tema() -> None:
+    """Inject the stylesheet. Call once, right after `st.set_page_config`."""
+    st.markdown(css(), unsafe_allow_html=True)
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m pytest tests/test_tema.py -v`
+Expected: PASS, 4 pruebas
+
+- [ ] **Step 5: Enganchar en `app.py`**
+
+Justo después de la llamada a `st.set_page_config(...)`:
+
+```python
+from tema import inyectar_tema
+
+inyectar_tema()
+```
+
+- [ ] **Step 6: Comprobar el contraste**
+
+El texto principal `#1E1633` sobre fondo `#F8FAFC` supera con holgura el 4.5:1 que exige
+WCAG AA. Verificarlo:
+
+```bash
+cd "$SN" && .venv/Scripts/python.exe -c "
+def lum(h):
+    c = [int(h[i:i+2], 16) / 255 for i in (1, 3, 5)]
+    c = [x / 12.92 if x <= 0.03928 else ((x + 0.055) / 1.055) ** 2.4 for x in c]
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+a, b = lum('#1E1633'), lum('#F8FAFC')
+print('contraste texto/fondo:', round((max(a, b) + 0.05) / (min(a, b) + 0.05), 2))
+a = lum('#4A2A7A')
+print('contraste primario/fondo:', round((max(a, b) + 0.05) / (min(a, b) + 0.05), 2))
+"
+```
+Expected: ambos por encima de 4.5
+
+- [ ] **Step 7: Verificar en el navegador y con movimiento reducido**
+
+Run: `cd "$SN" && .venv/Scripts/python.exe -m streamlit run app.py --server.headless true --server.port 8512`
+Comprobar el hover de fichas, botones y filas de tabla. Luego activar "reducir movimiento"
+en Windows (Configuración → Accesibilidad → Efectos visuales → Efectos de animación:
+desactivado), recargar, y comprobar que no queda ninguna animación. Detener con Ctrl+C.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add tema.py tests/test_tema.py app.py
+git commit -m "feat: tema de calafate con movimiento sujeto a prefers-reduced-motion"
+```
+
+---
+# FASE 7 — SimEluent: catálogo de placas
+
+### Task 11: `Phase` extendida y `data/placas.csv`
 
 **Files:**
 - Create: `SE/data/placas.csv`
@@ -1482,9 +2236,9 @@ git commit -m "feat: catalogo de placas con especificaciones de fabricante"
 
 ---
 
-# FASE 6 — SimEluent: σ₀ deja de ser determinista
+# FASE 8 — SimEluent: σ₀ deja de ser determinista
 
-### Task 9: Régimen de σ₀ según veredicto
+### Task 12: Régimen de σ₀ según veredicto
 
 **Files:**
 - Create: `SE/engine/sigma0.py`, `SE/tests/test_sigma0.py`
@@ -1620,14 +2374,14 @@ git commit -m "feat: regimen de sigma0 segun el veredicto de siembra"
 
 ---
 
-### Task 10: Propagar σ₀ por Monte Carlo
+### Task 13: Propagar σ₀ por Monte Carlo
 
 **Files:**
 - Modify: `SE/engine/optimizer.py` (líneas 18-49)
 - Test: `SE/tests/test_optimizer.py`
 
 **Interfaces:**
-- Consumes: `RegimenSigma0` (Task 9)
+- Consumes: `RegimenSigma0` (Task 12)
 - Produces: `ConditionPrior` con `sigma0_mu` y `sigma0_sigma`, y `ConditionPrior.desde_regimen(regimen) -> ConditionPrior`
 
 - [ ] **Step 1: Write the failing test**
@@ -1793,9 +2547,9 @@ git commit -m "feat: sigma0 se propaga como incierto con matriz NADES"
 
 | Punto del spec | Tarea |
 |---|---|
-| §10.1 σ₀ deja de ser determinista | Task 9, Task 10 |
-| §10.2 `Phase` sin tamaño de partícula | Task 8 |
-| §10.2 `Phase` sin humectabilidad (W) | Task 8 |
-| §10.2 `Phase` sin indicador F254/F254s | Task 8 |
-| §10.2 Zona de concentración como control de σ₀ | Task 8, Task 9 |
+| §10.1 σ₀ deja de ser determinista | Task 12, Task 13 |
+| §10.2 `Phase` sin tamaño de partícula | Task 11 |
+| §10.2 `Phase` sin humectabilidad (W) | Task 11 |
+| §10.2 `Phase` sin indicador F254/F254s | Task 11 |
+| §10.2 Zona de concentración como control de σ₀ | Task 11, Task 12 |
 | §10.3 `hptlc.py` consumible sin Streamlit | Task 2 Step 5 |
