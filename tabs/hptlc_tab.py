@@ -6,8 +6,11 @@ without Streamlit.
 
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
+from aplicador import TEMP_APLICACION_C, lectura_aplicador
+from data import HBA_COMPONENTS, HBD_COMPONENTS
 from evidencia import EVIDENCIA, Nivel
 from hptlc import PLACAS, Estado, evaluar_placa, protocolo_candidato
 
@@ -35,6 +38,79 @@ def insignia(nivel: Nivel) -> str:
 def color_estado(estado: Estado) -> str:
     """Return the Streamlit colour name for a verdict state."""
     return _COLORES[estado]
+
+
+def _render_aplicador(props: dict) -> None:
+    """Show the viscosity the syringe sees, and how it drifts as water leaves.
+
+    The properties panel reports viscosity at the extraction temperature; the
+    applicator works at room temperature, where a NADES is roughly twice as thick.
+    """
+    st.markdown("#### 💉 Lo que ve el aplicador")
+
+    hba = st.session_state.get("sel_hba")
+    hbd = st.session_state.get("sel_hbd")
+    ratio = st.session_state.get("sel_ratio", "1:1")
+    if not hba or not hbd:
+        st.caption("Sin NADES activo.")
+        return
+
+    partes = ratio.split(":")
+    r_hba, r_hbd = (float(partes[0]), float(partes[1])) if len(partes) == 2 else (1.0, 1.0)
+
+    temp_ap = st.number_input(
+        "Temperatura en el aplicador (°C)",
+        10.0,
+        40.0,
+        TEMP_APLICACION_C,
+        1.0,
+        help="La sala donde está el equipo, no la de extracción.",
+    )
+
+    lec = lectura_aplicador(
+        hba,
+        hbd,
+        r_hba,
+        r_hbd,
+        float(props["water_pct"]),
+        float(props["temp_C"]),
+        HBA_COMPONENTS,
+        HBD_COMPONENTS,
+        temp_aplicacion=temp_ap,
+    )
+
+    c1, c2 = st.columns(2)
+    c1.metric(
+        f"En extracción · {lec.temp_extraccion:.0f} °C",
+        f"{lec.visc_extraccion:.0f} cP",
+    )
+    c2.metric(
+        f"En el aplicador · {lec.temp_aplicacion:.0f} °C",
+        f"{lec.visc_aplicacion:.0f} cP",
+        f"×{lec.factor_temperatura:.1f}",
+        delta_color="inverse",
+    )
+
+    if len(lec.deriva) > 1:
+        st.markdown("**Si el agua se evapora dentro del capilar:**")
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {"Agua (%)": a, f"Viscosidad a {temp_ap:.0f} °C (cP)": round(v)}
+                    for a, v in lec.deriva
+                ]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+        st.warning(
+            f"Perder el agua añadida multiplica la viscosidad por "
+            f"**{lec.factor_secado:.0f}**. El agua es el único componente volátil: en un "
+            "capilar de mucha superficie la mezcla se aleja del eutéctico hidratado, y "
+            "el cloruro de colina puro funde a 302 °C. Ningún estudio publicado cubre "
+            "este cruce — se resuelve con la prueba en frío de la pestaña «Qué medir», "
+            "en un capilar desechable y nunca directo en el equipo."
+        )
 
 
 def render_hptlc(props: dict) -> None:
@@ -80,6 +156,8 @@ def render_hptlc(props: dict) -> None:
     )
     st.write(f"Limpieza previa: **{'sí' if protocolo.limpieza_previa else 'no'}**")
     st.info(protocolo.notas)
+
+    _render_aplicador(props)
 
     st.markdown("#### Qué falta medir")
     st.caption("Esto es el diseño del próximo ensayo, no una carencia del módulo.")

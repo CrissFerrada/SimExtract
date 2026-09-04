@@ -41,6 +41,44 @@ class Ensayo:
 
 ENSAYOS: tuple[Ensayo, ...] = (
     Ensayo(
+        id="prueba-aplicador",
+        titulo="Prueba en frío del aplicador",
+        pregunta="¿Pasa el NADES por el capilar sin taparlo ni cristalizar?",
+        cierra=("hptlc:obstruccion-aplicador",),
+        condiciones=(
+            (
+                "Primero en capilar de vidrio desechable o sembrador manual, NUNCA "
+                "directo en el aplicador automático"
+            ),
+            "El NADES tal como se va a sembrar, y también diluido, para comparar",
+            "Dejar una gota cargada en el capilar 30 min y volver a mirarla",
+            (
+                "Pesar una gota, esperar 30 min, volver a pesarla: da la velocidad de "
+                "pérdida de agua, que es lo que dispara el problema"
+            ),
+        ),
+        que_medir=(
+            "Si sube y baja con fluidez; si al reposar aparece turbidez, sólido o "
+            "anillo en la pared; cuánta masa pierde por evaporación en media hora. "
+            "Un capilar que arrastra o deja residuo ya avisa antes de arriesgar la "
+            "jeringa del equipo."
+        ),
+        como_entra=(
+            "Cierra el vacío de obstrucción y arrastre del módulo HPTLC, que hoy está "
+            "declarado sin fuente porque no hay literatura del cruce NADES × aplicador "
+            "automático. También fija si hace falta diluir y cuánto."
+        ),
+        esfuerzo="Diez minutos y un capilar. Antes que cualquier otra cosa.",
+        porque_ahora=(
+            "Es lo único que puede dañar material caro. El agua es el único componente "
+            "volátil del NADES: al perderse en un capilar de mucha superficie, la "
+            "mezcla se aleja del eutéctico hidratado y la viscosidad sube unas ocho "
+            "veces; el cloruro de colina puro funde a 302 °C, así que lo que quede no "
+            "es un líquido espeso. La literatura reporta ChCl:ácido cítrico estable en "
+            "frasco, pero nadie ha publicado qué pasa dentro de una aguja."
+        ),
+    ),
+    Ensayo(
         id="serie-etanol",
         titulo="Serie de composición de etanol",
         pregunta="¿Cuál es la polaridad que realmente prefieren tus polifenoles?",
