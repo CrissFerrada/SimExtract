@@ -5,15 +5,21 @@ the temperature the syringe works at. For a NADES the difference is not cosmetic
 the Arrhenius term the model already uses gives roughly a factor of two between
 40 °C and a climatised room.
 
-Worse for the capillary is composition drift. Water is the only volatile component
-of a hydrated NADES, so in a fine bore with a large surface-to-volume ratio the
-mixture moves toward the anhydrous eutectic as water leaves — and viscosity climbs
-steeply while the melting point rises (choline chloride itself melts at 302 °C).
+Composition also drifts, but the direction is set by humidity, not by volatility.
+A NADES is hygroscopic and its water activity sits well below unity — betaine-based
+systems measure about 0.4 at 14-22 wt% water — so the deposit exchanges water with
+the room until the two match. Above that relative humidity the NADES *takes up*
+water and thins; below it, it dries and thickens toward the anhydrous eutectic,
+whose melting point is far higher (choline chloride alone melts at 302 °C).
 
-Nothing here is a prediction of whether a given applicator will clog: that has no
-published answer for NADES and is settled with a bench test, not a model. The
-module reports the numbers the operator should have in front of them before
-putting a NADES through an expensive instrument.
+Both directions are reported because both occur, and which one applies is a
+property of the room, not of the solvent. A sample prepared in humid air and
+applied in dry air crosses from one branch to the other on the way, so the branch
+that matters is the one at the applicator — which has to be measured there, with a
+hygrometer, not assumed from where the extraction was done.
+
+Nothing here predicts whether a given applicator will clog: that has no published
+answer for NADES and is settled with a bench test, not a model.
 
 Imports no Streamlit.
 """
@@ -28,7 +34,18 @@ TEMP_APLICACION_C = 22.0
 """Default room temperature at the applicator. Overridable: it matters a lot."""
 
 AGUA_RESIDUAL = (30.0, 20.0, 10.0, 0.0)
-"""Water contents explored as the capillary loses the volatile fraction."""
+"""Water contents explored on the drying branch."""
+
+AGUA_GANADA = (10.0, 20.0)
+"""Extra water explored on the humid branch, in points above the current content."""
+
+ACTIVIDAD_AGUA_TIPICA = 0.4
+"""Water activity measured for betaine-based NADES at 14-22 wt% water.
+
+The deposit exchanges water with the room until its activity matches the relative
+humidity. Above this figure the NADES gains water; below it, it loses water. A
+NADES at 30 % water sits higher than this, so treat it as a lower bound.
+"""
 
 
 @dataclass(frozen=True)
@@ -40,6 +57,7 @@ class LecturaAplicador:
     visc_aplicacion: float
     temp_aplicacion: float
     deriva: tuple[tuple[float, float], ...]
+    hidratacion: tuple[tuple[float, float], ...]
 
     @property
     def factor_temperatura(self) -> float:
@@ -52,6 +70,29 @@ class LecturaAplicador:
         if not self.deriva:
             return 1.0
         return self.deriva[-1][1] / max(self.visc_aplicacion, 1e-9)
+
+    @property
+    def factor_humedo(self) -> float:
+        """How much thinner it becomes if it takes up water from the room."""
+        if not self.hidratacion:
+            return 1.0
+        return self.hidratacion[-1][1] / max(self.visc_aplicacion, 1e-9)
+
+    def rama_probable(self, humedad_relativa: float) -> str:
+        """Return which branch a given room humidity puts the deposit on.
+
+        Args:
+            humedad_relativa: Room relative humidity, as a percentage.
+
+        Returns:
+            "hidratacion", "secado", or "equilibrio" when the two are close.
+        """
+        cruce = ACTIVIDAD_AGUA_TIPICA * 100
+        if humedad_relativa > cruce + 5:
+            return "hidratacion"
+        if humedad_relativa < cruce - 5:
+            return "secado"
+        return "equilibrio"
 
 
 def lectura_aplicador(
@@ -89,10 +130,12 @@ def lectura_aplicador(
         )["viscosidad"]
 
     aguas = tuple(a for a in AGUA_RESIDUAL if a <= water_pct) or (water_pct,)
+    ganadas = tuple(min(water_pct + d, 90.0) for d in AGUA_GANADA)
     return LecturaAplicador(
         visc_extraccion=_visc(water_pct, temp_extraccion),
         temp_extraccion=temp_extraccion,
         visc_aplicacion=_visc(water_pct, temp_aplicacion),
         temp_aplicacion=temp_aplicacion,
         deriva=tuple((a, _visc(a, temp_aplicacion)) for a in aguas),
+        hidratacion=tuple((a, _visc(a, temp_aplicacion)) for a in ganadas),
     )

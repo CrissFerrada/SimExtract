@@ -91,8 +91,46 @@ def _render_aplicador(props: dict) -> None:
         delta_color="inverse",
     )
 
-    if len(lec.deriva) > 1:
-        st.markdown("**Si el agua se evapora dentro del capilar:**")
+    hr = st.slider(
+        "Humedad relativa de la sala (%)",
+        10,
+        95,
+        60,
+        5,
+        help=(
+            "Decide la dirección del intercambio de agua. Un NADES es higroscópico: "
+            "su actividad de agua ronda 0,4, así que por encima de ~40 % de humedad "
+            "absorbe en vez de secarse."
+        ),
+    )
+    rama = lec.rama_probable(hr)
+
+    if rama == "hidratacion":
+        st.info(
+            f"**Con {hr} % de humedad el depósito absorbe agua, no se seca.** La "
+            f"viscosidad baja hasta ×{lec.factor_humedo:.2f} — dosificar se vuelve más "
+            "fácil, no más difícil. El riesgo no es que se tape la aguja: es que **el "
+            "origen no llegue a secarse nunca** en la placa, y la banda se ensanche. "
+            "Explica por qué a la referencia publicada no le sirvió diluir 1/10: el "
+            "depósito se reequilibra con la sala sin importar la dilución."
+        )
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {"Agua (%)": a, f"Viscosidad a {temp_ap:.0f} °C (cP)": round(v)}
+                    for a, v in ((float(props["water_pct"]), lec.visc_aplicacion), *lec.hidratacion)
+                ]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+    elif rama == "secado":
+        st.warning(
+            f"**Con {hr} % de humedad el depósito pierde agua.** La viscosidad sube "
+            f"hasta ×{lec.factor_secado:.0f}, y la mezcla se aleja del eutéctico "
+            "hidratado hacia el anhidro — el cloruro de colina puro funde a 302 °C. "
+            "Aquí sí conviene la prueba en frío antes de cargar el equipo."
+        )
         st.dataframe(
             pd.DataFrame(
                 [
@@ -103,14 +141,18 @@ def _render_aplicador(props: dict) -> None:
             use_container_width=True,
             hide_index=True,
         )
-        st.warning(
-            f"Perder el agua añadida multiplica la viscosidad por "
-            f"**{lec.factor_secado:.0f}**. El agua es el único componente volátil: en un "
-            "capilar de mucha superficie la mezcla se aleja del eutéctico hidratado, y "
-            "el cloruro de colina puro funde a 302 °C. Ningún estudio publicado cubre "
-            "este cruce — se resuelve con la prueba en frío de la pestaña «Qué medir», "
-            "en un capilar desechable y nunca directo en el equipo."
+    else:
+        st.caption(
+            f"Con {hr} % de humedad el depósito está cerca del equilibrio con la sala: "
+            "poco intercambio en cualquier dirección."
         )
+
+    st.caption(
+        "⬜ Sin fuente para este sistema. La actividad de agua de 0,4 está medida en un "
+        "NADES de betaína a 14–22 % de agua; el tuyo tiene más agua, así que su "
+        "actividad es mayor y el punto de cruce se desplaza. El signo del argumento no "
+        "cambia, pero el umbral exacto hay que medirlo."
+    )
 
 
 def render_hptlc(props: dict) -> None:

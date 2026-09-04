@@ -53,8 +53,19 @@ ENSAYOS: tuple[Ensayo, ...] = (
             "El NADES tal como se va a sembrar, y también diluido, para comparar",
             "Dejar una gota cargada en el capilar 30 min y volver a mirarla",
             (
-                "Pesar una gota, esperar 30 min, volver a pesarla: da la velocidad de "
-                "pérdida de agua, que es lo que dispara el problema"
+                "Pesar una gota, esperar 30 min, volver a pesarla — y anotar la humedad "
+                "de la sala. Puede GANAR masa: un NADES es higroscópico y su actividad "
+                "de agua ronda 0,4, así que sobre ~40 % de humedad absorbe en vez de "
+                "secarse"
+            ),
+            (
+                "Hacerlo EN LA SALA DEL APLICADOR, con higrómetro. La muestra se prepara "
+                "en la costa y se siembra en el interior: cruza dos regímenes de "
+                "humedad, y la rama que importa es la del sitio donde se siembra"
+            ),
+            (
+                "Si se puede, repetirlo un día seco y otro húmedo: si la dirección del "
+                "intercambio se invierte con la humedad, queda demostrado el mecanismo"
             ),
         ),
         que_medir=(
@@ -70,12 +81,13 @@ ENSAYOS: tuple[Ensayo, ...] = (
         ),
         esfuerzo="Diez minutos y un capilar. Antes que cualquier otra cosa.",
         porque_ahora=(
-            "Es lo único que puede dañar material caro. El agua es el único componente "
-            "volátil del NADES: al perderse en un capilar de mucha superficie, la "
-            "mezcla se aleja del eutéctico hidratado y la viscosidad sube unas ocho "
-            "veces; el cloruro de colina puro funde a 302 °C, así que lo que quede no "
-            "es un líquido espeso. La literatura reporta ChCl:ácido cítrico estable en "
-            "frasco, pero nadie ha publicado qué pasa dentro de una aguja."
+            "Es lo único que puede dañar material caro, y además decide en qué "
+            "dirección corre el problema. En aire seco el depósito pierde agua y la "
+            "viscosidad sube unas ocho veces hacia el eutéctico anhidro; en aire húmedo "
+            "ocurre lo contrario — absorbe, se aligera, y el riesgo pasa a ser un origen "
+            "que no seca nunca sobre la placa. Como el extracto se prepara en un sitio y "
+            "se siembra en otro, la rama no se puede deducir: se mide. Media hora, una "
+            "balanza y un higrómetro de diez dólares."
         ),
     ),
     Ensayo(
