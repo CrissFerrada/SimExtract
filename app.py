@@ -1267,6 +1267,7 @@ with tab2:
     atab_nep = seccion(t("atab_nep"))
     atab_stab = seccion(t("atab_stab"))
     atab_int = seccion(t("atab_int"))
+    atab_sens = seccion("sensibilidad")
 
 
 # ══════════════════════════════════════════════════════════
@@ -5438,3 +5439,36 @@ with tab9:
     from tabs.hptlc_tab import render_hptlc
 
     render_hptlc(props)
+
+
+# ══════════════════════════════════════════════════════════
+# SENSIBILIDAD — cuánto depende el resultado de lo no medido
+# ══════════════════════════════════════════════════════════
+with atab_sens:
+    from tabs.sensibilidad_tab import render_sensibilidad
+
+    # El patrón de referencia real de la literatura de antocianinas: hidroalcohólico
+    # acidificado. ETN por las ecuaciones de Spange 2024 (Liquids 4:191).
+    _REFERENCIAS_CONVENCIONALES = {
+        "EtOH:H₂O 70:30 acidificado": {
+            "polaridad": 0.716,
+            "pH": 2.5,
+            "cap_hbd": 1.58,
+            "viscosidad": 2.0,
+            "water_pct": 30,
+            "water_pct_efectivo": 30,
+        },
+        "MeOH:H₂O 70:30 acidificado": {
+            "polaridad": 0.813,
+            "pH": 2.5,
+            "cap_hbd": 1.49,
+            "viscosidad": 2.0,
+            "water_pct": 30,
+            "water_pct_efectivo": 30,
+        },
+    }
+
+    render_sensibilidad(
+        {"NADES activo": props, **_REFERENCIAS_CONVENCIONALES},
+        poly_df,
+    )

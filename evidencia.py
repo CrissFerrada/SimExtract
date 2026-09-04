@@ -146,3 +146,67 @@ EVIDENCIA: dict[str, Fuente] = {
     ),
 }
 """Verifiable sources. Every claim with a value must name one of these."""
+
+
+@dataclass(frozen=True)
+class ParametroSinFuente:
+    """A model parameter that carries no published backing.
+
+    Registered explicitly rather than left as a literal in the code, so the
+    program can say which of its numbers are assumptions and how much the
+    conclusions lean on them.
+    """
+
+    id: str
+    titulo: str
+    valor_actual: str
+    donde: str
+    afecta: str
+    hallazgo: str
+    como_cerrarlo: str
+
+
+PARAMETROS_SIN_FUENTE: dict[str, ParametroSinFuente] = {
+    "polaridad-optima": ParametroSinFuente(
+        id="polaridad-optima",
+        titulo="Polaridad óptima por polifenol",
+        valor_actual="antocianinas 0,82–0,87 · flavonoles 0,71–0,75",
+        donde="data.py, columna `polaridad_optima` de la base de polifenoles",
+        afecta=(
+            "El término de polaridad, que pesa 35 % en EP — el mayor del motor — y "
+            "aporta la mayor parte de la ventaja de los NADES sobre los hidroalcohólicos."
+        ),
+        hallazgo=(
+            "Los óptimos de extracción publicados para bayas implican ETN 0,73–0,78 "
+            "(Berberis kaschgarica 56,5 % EtOH → 0,742; arándano acidificado 60,65 % → "
+            "0,734; saúco 40,9 % → 0,779), frente al 0,842 que asume el modelo para "
+            "antocianinas: un desfase de +0,09. La sensibilidad muestra que un "
+            "desplazamiento de −0,10 invierte el orden y el etanol acuoso gana. "
+            "Matiz: el óptimo empírico convoluciona solvatación, viscosidad y "
+            "penetración, y el modelo ya trata la viscosidad aparte, así que igualarlos "
+            "contaría dos veces."
+        ),
+        como_cerrarlo=(
+            "Calibrar con extracciones propias a distinta composición de etanol y "
+            "cargarlas en la bitácora: convierte el punto más atacable en un resultado "
+            "experimental propio."
+        ),
+    ),
+    "sigma-polaridad": ParametroSinFuente(
+        id="sigma-polaridad",
+        titulo="Ancho de la gaussiana de polaridad",
+        valor_actual="σ = 0,08 en EP · σ = 0,10 en NEP",
+        donde="model.py, SIGMA_POLARIDAD_EP y SIGMA_POLARIDAD_NEP",
+        afecta="Cuán rápido cae el puntaje al alejarse de la polaridad óptima.",
+        hallazgo=(
+            "Con σ = 0,30 los tres sistemas quedan casi empatados (0,982 / 0,947 / "
+            "0,939); con σ = 0,08 la brecha es 0,121. La ventaja de los NADES existe "
+            "en buena medida porque la gaussiana es estrecha."
+        ),
+        como_cerrarlo=(
+            "Ajustar el ancho contra una serie propia de composiciones, junto con la "
+            "polaridad óptima."
+        ),
+    ),
+}
+"""Parameters the program uses but cannot cite. Shown, not hidden."""

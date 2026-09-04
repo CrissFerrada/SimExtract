@@ -14,6 +14,21 @@ import pandas as pd
 from itertools import product as _iproduct
 
 # ─────────────────────────────────────────────────────────────────
+# PARÁMETROS SIN FUENTE
+# ─────────────────────────────────────────────────────────────────
+# Anchos de la gaussiana de afinidad por polaridad. Estaban escritos como
+# literales dentro de las funciones; se sacan aquí porque son supuestos, no
+# constantes físicas, y el resultado depende fuertemente de ellos.
+#
+# Auditoría 2026-09-03: con sigma = 0.30 los NADES, el metanol acidificado y el
+# etanol acuoso quedan prácticamente empatados (0.982 / 0.947 / 0.939); con el
+# 0.08 actual la brecha es de 0.121. Ninguno de los dos anchos tiene respaldo
+# publicado. Ver `sensibilidad.py` y evidencia.PARAMETROS_SIN_FUENTE.
+SIGMA_POLARIDAD_EP = 0.08
+SIGMA_POLARIDAD_NEP = 0.10
+
+
+# ─────────────────────────────────────────────────────────────────
 # CÁLCULO DE PROPIEDADES EFECTIVAS DEL NADES
 # ─────────────────────────────────────────────────────────────────
 
@@ -159,7 +174,11 @@ def ep_extraction_score(nades: dict, poly: pd.Series) -> dict:
       Agua     (bonus)— el % de agua óptimo (~25%) mejora la extracción EP
     """
     # Polaridad: función gaussiana
-    s_pol = float(np.exp(-((nades["polaridad"] - poly["polaridad_optima"]) ** 2) / (2 * 0.08**2)))
+    s_pol = float(
+        np.exp(
+            -((nades["polaridad"] - poly["polaridad_optima"]) ** 2) / (2 * SIGMA_POLARIDAD_EP**2)
+        )
+    )
 
     # pH
     ph = nades["pH"]
@@ -254,7 +273,11 @@ def nep_extraction_score(nades: dict, poly: pd.Series) -> dict:
     ms = float(0.5 * ms_agua + 0.5 * ms_polar)
 
     # 5. Solubilización del NEP una vez liberado
-    sp = float(np.exp(-((nades["polaridad"] - poly["polaridad_optima"]) ** 2) / (2 * 0.10**2)))
+    sp = float(
+        np.exp(
+            -((nades["polaridad"] - poly["polaridad_optima"]) ** 2) / (2 * SIGMA_POLARIDAD_NEP**2)
+        )
+    )
 
     raw = 0.20 * cwp + 0.25 * hbd_dis + 0.25 * hp + 0.15 * ms + 0.15 * sp
 
