@@ -191,6 +191,7 @@ TR = {
     "tab7": {"es": "🎯 Recomendador", "en": "🎯 Recommender"},
     "tab8": {"es": "📚 Metodología", "en": "📚 Methodology"},
     "tab9": {"es": "🧫 HPTLC", "en": "🧫 HPTLC"},
+    "tab10": {"es": "🧾 Qué medir", "en": "🧾 What to measure"},
     # ── Navegación de primer nivel ──
     "nav_disenar": {"es": "🧪 Diseñar", "en": "🧪 Design"},
     "nav_lab": {"es": "🔬 Laboratorio", "en": "🔬 Laboratory"},
@@ -787,7 +788,9 @@ with nav_disenar:
     tab7, tab1, tab2, tab4, tab5 = st.tabs([t("tab7"), t("tab1"), t("tab2"), t("tab4"), t("tab5")])
 
 with nav_lab:
-    tab3, tab9, tab6, tab8 = st.tabs([t("tab3"), t("tab9"), t("tab6"), t("tab8")])
+    tab3, tab9, tab10, tab6, tab8 = st.tabs(
+        [t("tab3"), t("tab9"), t("tab10"), t("tab6"), t("tab8")]
+    )
 
 
 # ══════════════════════════════════════════════════════════
@@ -5472,3 +5475,12 @@ with atab_sens:
         {"NADES activo": props, **_REFERENCIAS_CONVENCIONALES},
         poly_df,
     )
+
+
+# ══════════════════════════════════════════════════════════
+# TAB 10 — PLAN EXPERIMENTAL
+# ══════════════════════════════════════════════════════════
+with tab10:
+    from tabs.plan_tab import render_plan
+
+    render_plan()

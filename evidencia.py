@@ -164,6 +164,21 @@ class ParametroSinFuente:
     afecta: str
     hallazgo: str
     como_cerrarlo: str
+    naturaleza: str = "sin_fuente"
+
+    def __post_init__(self) -> None:
+        """Validate the epistemic status, which changes what may be concluded."""
+        if self.naturaleza not in {"sin_fuente", "calibrado"}:
+            raise ValueError("naturaleza debe ser 'sin_fuente' o 'calibrado'")
+
+    @property
+    def circular(self) -> bool:
+        """Whether the parameter reproduces published values by construction.
+
+        A calibrated parameter cannot serve as evidence for the very ranges it was
+        fitted to: doing so restates the literature instead of testing it.
+        """
+        return self.naturaleza == "calibrado"
 
 
 PARAMETROS_SIN_FUENTE: dict[str, ParametroSinFuente] = {
@@ -207,6 +222,46 @@ PARAMETROS_SIN_FUENTE: dict[str, ParametroSinFuente] = {
             "Ajustar el ancho contra una serie propia de composiciones, junto con la "
             "polaridad óptima."
         ),
+    ),
+    "estabilidad-pesos": ParametroSinFuente(
+        id="estabilidad-pesos",
+        titulo="Pesos del índice de estabilidad",
+        valor_actual="hbp 0,26 · o2b 0,17 · ac 0,22 · phs 0,13 · ts 0,07",
+        donde="model.py, stability_score",
+        afecta="El índice de estabilidad completo, y con él la comparación de conservación.",
+        hallazgo=(
+            "El propio código lo declara: «Pesos calibrados para dar 73-90 % en NADES "
+            "representativos». Los pesos se eligieron para reproducir el rango que "
+            "reporta la literatura (Benvenutti 2019; Chanioti & Tzia 2017), no se "
+            "derivaron de un mecanismo. Consecuencia: el índice NO puede usarse como "
+            "evidencia de que los NADES conservan mejor que un hidroalcohólico, porque "
+            "reproduce ese resultado por construcción. Repetirlo es citar, no medir."
+        ),
+        como_cerrarlo=(
+            "Cinética de almacenamiento propia: extraer y medir a día 0, 7, 15 y 30 en "
+            "NADES y en hidroalcohólico. Sustituye la calibración por datos propios, y "
+            "es el experimento que sostiene la hipótesis de la tesis — que el NADES "
+            "reemplaza a la atmósfera inerte."
+        ),
+        naturaleza="calibrado",
+    ),
+    "bonus-des": ParametroSinFuente(
+        id="bonus-des",
+        titulo="Bono estructural DES",
+        valor_actual="0,15 constante",
+        donde="model.py, stability_score, variable des_bonus",
+        afecta="Se suma directo al índice de estabilidad de cualquier sistema.",
+        hallazgo=(
+            "Es una constante plana que hoy recibe cualquier solvente que pase por la "
+            "función, incluido un hidroalcohólico que no tiene red supramolecular. "
+            "Medido: al etanol acidificado le aporta 0,15 más 0,22 × 0,28 de base "
+            "antioxidante = 21,2 puntos no merecidos. Pero quitárselos lo hunde a "
+            "37,4 %, muy por debajo del 60-75 % que reporta la literatura para "
+            "convencionales: el bono mezcla ventaja del DES con estabilidad basal que "
+            "cualquier solvente aporta, y separarlos requiere medir, no reponderar."
+        ),
+        como_cerrarlo="La misma cinética de almacenamiento, corrida en ambos solventes.",
+        naturaleza="calibrado",
     ),
 }
 """Parameters the program uses but cannot cite. Shown, not hidden."""

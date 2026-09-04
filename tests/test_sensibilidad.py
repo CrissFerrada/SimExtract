@@ -28,11 +28,39 @@ def _nades() -> dict:
 # ── El registro de parámetros sin fuente ──────────────────────────
 
 
-def test_los_dos_parametros_sin_fuente_estan_declarados() -> None:
-    assert set(PARAMETROS_SIN_FUENTE) == {"polaridad-optima", "sigma-polaridad"}
+def test_los_parametros_auditados_estan_declarados() -> None:
+    assert set(PARAMETROS_SIN_FUENTE) == {
+        "polaridad-optima",
+        "sigma-polaridad",
+        "estabilidad-pesos",
+        "bonus-des",
+    }
     for p in PARAMETROS_SIN_FUENTE.values():
         assert p.hallazgo, f"{p.id} sin hallazgo de la auditoria"
         assert p.como_cerrarlo, f"{p.id} sin via para cerrarlo"
+
+
+def test_lo_calibrado_se_distingue_de_lo_no_medido() -> None:
+    """Un parametro ajustado para reproducir la literatura no la evidencia."""
+    circulares = {k for k, v in PARAMETROS_SIN_FUENTE.items() if v.circular}
+    assert circulares == {"estabilidad-pesos", "bonus-des"}
+    assert PARAMETROS_SIN_FUENTE["polaridad-optima"].circular is False
+
+
+def test_naturaleza_invalida_es_error() -> None:
+    from evidencia import ParametroSinFuente
+
+    with pytest.raises(ValueError, match="naturaleza"):
+        ParametroSinFuente(
+            id="x",
+            titulo="",
+            valor_actual="",
+            donde="",
+            afecta="",
+            hallazgo="",
+            como_cerrarlo="",
+            naturaleza="inventada",
+        )
 
 
 def test_los_sigmas_son_constantes_con_nombre_no_literales() -> None:
